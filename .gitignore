@@ -7,16 +7,18 @@ Thumbs.db
 .idea/
 *.swp
 
-# Node / tooling (for future app + contracts)
+# Node / app tooling
 node_modules/
 dist/
 build/
-out/
-cache/
 .env
 .env.*
 !.env.example
 
-# Foundry (future)
+# Foundry build artifacts (libraries are tracked as git submodules)
+out/
+cache/
 broadcast/
-lib/
+contracts/out/
+contracts/cache/
+contracts/broadcast/

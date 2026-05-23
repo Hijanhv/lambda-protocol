@@ -1,0 +1,19 @@
+[profile.default]
+src = "contracts/src"
+test = "contracts/test"
+script = "contracts/script"
+out = "out"
+libs = ["lib"]
+solc = "0.8.26"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "solady/=lib/solady/src/",
+    "v4-core/=lib/v4-core/",
+]
+
+[fuzz]
+runs = 512
+max_test_rejects = 200000
