@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node / tooling (for future app + contracts)
+node_modules/
+dist/
+build/
+out/
+cache/
+.env
+.env.*
+!.env.example
+
+# Foundry (future)
+broadcast/
+lib/

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Lambda mark">
+  <defs>
+    <linearGradient id="lam" x1="20" y1="92" x2="82" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8862B"/>
+      <stop offset="0.55" stop-color="#E8B45A"/>
+      <stop offset="1" stop-color="#F8D597"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#lam)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 84 L60 14"/>
+    <path d="M46 40 L84 84"/>
+  </g>
+</svg>

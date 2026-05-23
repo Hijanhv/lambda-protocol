@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" fill="none" role="img" aria-label="Lambda — Yield-Protected Liquidity for Uniswap v4">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0C1117"/>
+      <stop offset="0.55" stop-color="#0A0E13"/>
+      <stop offset="1" stop-color="#080B0F"/>
+    </linearGradient>
+    <linearGradient id="lamB" x1="80" y1="250" x2="240" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8862B"/>
+      <stop offset="0.55" stop-color="#E8B45A"/>
+      <stop offset="1" stop-color="#F8D597"/>
+    </linearGradient>
+    <radialGradient id="glowB" cx="0.14" cy="0.5" r="0.32">
+      <stop offset="0" stop-color="#E8B45A" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#E8B45A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="word" x1="300" y1="120" x2="640" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D8DEE6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="320" rx="20" fill="url(#bg)"/>
+
+  <!-- subtle vertical grid -->
+  <g stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1">
+    <path d="M120 0V320M240 0V320M360 0V320M480 0V320M600 0V320M720 0V320M840 0V320M960 0V320M1080 0V320"/>
+  </g>
+
+  <!-- AMM hyperbola motif (x*y=k), the curve Lambda protects -->
+  <path d="M60 296 C 360 296 560 150 1170 96" stroke="#2DD4BF" stroke-opacity="0.20" stroke-width="2.5" fill="none"/>
+  <circle cx="60" cy="296" r="4" fill="#2DD4BF" fill-opacity="0.5"/>
+  <circle cx="1170" cy="96" r="4" fill="#2DD4BF" fill-opacity="0.5"/>
+
+  <!-- gold glow behind the mark -->
+  <rect width="1200" height="320" rx="20" fill="url(#glowB)"/>
+
+  <!-- Lambda mark -->
+  <g transform="translate(78 70) scale(1.78)" stroke="url(#lamB)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 84 L60 14"/>
+    <path d="M46 40 L84 84"/>
+  </g>
+
+  <!-- wordmark + tagline -->
+  <text x="300" y="170" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="6" fill="url(#word)">LAMBDA</text>
+  <text x="304" y="214" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="25" font-weight="500" letter-spacing="1.5" fill="#9AA4B2">Yield-Protected Liquidity for Uniswap v4</text>
+  <text x="304" y="252" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="16.5" font-weight="400" letter-spacing="0.6" fill="#5E6875">Real cross-chain delta hedging  ·  Uniswap v4  ×  Reactive Network  ×  Hyperliquid</text>
+
+  <!-- formula watermark -->
+  <text x="1150" y="150" text-anchor="end" font-family="'SF Mono', 'DejaVu Sans Mono', monospace" font-size="30" fill="#E8B45A" fill-opacity="0.55" font-style="italic">&#955;/V = &#963;&#178;/8</text>
+  <text x="1150" y="186" text-anchor="end" font-family="'SF Mono', 'DejaVu Sans Mono', monospace" font-size="18" fill="#6B7686" fill-opacity="0.8">loss &#8594; funding yield</text>
+</svg>
