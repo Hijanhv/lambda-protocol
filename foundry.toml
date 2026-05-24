@@ -19,6 +19,7 @@ runs = 512
 max_test_rejects = 200000
 
 [lint]
-# We intentionally follow Uniswap's Q64.96 naming convention (sqrtPriceAX96,
-# sqrtPriceBX96) so the math reads identically to v4-core. Silence the casing note.
-exclude_lints = ["mixed-case-variable"]
+# We intentionally follow Uniswap's naming conventions so the code reads identically to
+# v4-core: the Q64.96 names (sqrtPriceAX96, sqrtPriceBX96) and the canonical lower-case
+# `poolManager` immutable that every v4 hook exposes as its accessor. Silence those notes.
+exclude_lints = ["mixed-case-variable", "screaming-snake-case-immutable"]
