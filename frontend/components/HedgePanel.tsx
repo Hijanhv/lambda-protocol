@@ -22,36 +22,40 @@ export function HedgePanel() {
   const dec = tokenMeta.token0.decimals;
 
   return (
-    <div className="card">
-      <h2>The hedge</h2>
-      <div className="stat">
-        <span className="k">Live LP delta ({tokenMeta.token0.symbol})</span>
-        <span className="v">{fmt(delta as bigint, dec)}</span>
+    <section className="panel">
+      <h2 className="eyebrow mb-4">The hedge</h2>
+
+      <div className="stat-row">
+        <span className="stat-key">Live LP delta ({tokenMeta.token0.symbol})</span>
+        <span className="stat-val">{fmt(delta as bigint, dec)}</span>
       </div>
-      <div className="stat">
-        <span className="k">Hedged delta (last signal)</span>
-        <span className="v">{fmt(state?.hedgedDelta, dec)}</span>
+      <div className="stat-row">
+        <span className="stat-key">Hedged delta (last signal)</span>
+        <span className="stat-val">{fmt(state?.hedgedDelta, dec)}</span>
       </div>
-      <div className="stat">
-        <span className="k">Hedge signals sent (nonce)</span>
-        <span className="v">{state ? String(state.hedgeNonce) : "—"}</span>
+      <div className="stat-row">
+        <span className="stat-key">Hedge signals sent (nonce)</span>
+        <span className="stat-val">{state ? String(state.hedgeNonce) : "—"}</span>
       </div>
-      <div className="stat">
-        <span className="k">Hedge ratio h</span>
-        <span className="v">{state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—"}</span>
+      <div className="stat-row">
+        <span className="stat-key">Hedge ratio h</span>
+        <span className="stat-val text-gold">
+          {state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—"}
+        </span>
       </div>
-      <div className="stat">
-        <span className="k">Directional fee — buy / sell</span>
-        <span className="v">
+      <div className="stat-row">
+        <span className="stat-key">Directional fee — buy / sell</span>
+        <span className="stat-val">
           {feePctFromPips(feeBuy as bigint)} / {feePctFromPips(feeSell as bigint)}
         </span>
       </div>
-      <p className="note">
-        The short is opened on Hyperliquid through the Reactive → CoreWriter loop whenever the
-        live delta drifts past the band τ; each drift bumps the nonce. The directional fee makes
+
+      <p className="note mt-4">
+        The short is opened on Hyperliquid through the Reactive → CoreWriter loop whenever the live
+        delta drifts past the band τ; each drift bumps the nonce. The directional fee makes
         trend-continuing (informed) flow pay more — the on-chain half of the LVR defense.
       </p>
-    </div>
+    </section>
   );
 }
 

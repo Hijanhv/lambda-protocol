@@ -26,26 +26,41 @@ export function FundingPanel() {
 
   const dec1 = tokenMeta.token1.decimals;
   const claimable = (pending as bigint) ?? 0n;
+  const hasClaim = claimable > 0n;
 
   return (
-    <div className="card">
-      <h2>Funding income</h2>
-      <div className="stat">
-        <span className="k">Claimable now ({tokenMeta.token1.symbol})</span>
-        <span className={`v ${claimable > 0n ? "pos" : ""}`}>{fmt(claimable, dec1)}</span>
-      </div>
-      <div className="stat">
-        <span className="k">Your share of the vault</span>
-        <span className="v">{fmt(mirrored as bigint, 18)}</span>
-      </div>
-      <div className="stat">
-        <span className="k">Pool funding outstanding</span>
-        <span className="v">{fmt((pool as any)?.unclaimed, dec1)}</span>
-      </div>
-      <div style={{ marginTop: 14 }}>
+    <section className="panel overflow-hidden">
+      {/* Jade wash to mark this as the income card. */}
+      <div
+        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-60 blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(92,208,160,0.22), transparent 70%)" }}
+      />
+
+      <h2 className="eyebrow mb-4">Funding income</h2>
+
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="font-sans text-[12px] text-muted">Claimable now · {tokenMeta.token1.symbol}</div>
+          <div
+            className={`mt-1 font-display text-[44px] font-500 leading-none tabular-nums tracking-tight ${
+              hasClaim ? "text-jade" : "text-paper"
+            }`}
+          >
+            {fmt(claimable, dec1)}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[12.5px] tabular-nums text-muted">
+            <span>
+              your share <span className="text-paper">{fmt(mirrored as bigint, 18)}</span>
+            </span>
+            <span>
+              pool outstanding <span className="text-paper">{fmt((pool as any)?.unclaimed, dec1)}</span>
+            </span>
+          </div>
+        </div>
+
         <button
-          className="btn accent2"
-          disabled={!address || isPending || claimable === 0n}
+          className="btn btn-jade shrink-0 px-6 py-3 text-[14px]"
+          disabled={!address || isPending || !hasClaim}
           onClick={() =>
             writeContract(
               { ...funding, functionName: "claim", args: [addresses.poolId] },
@@ -56,10 +71,11 @@ export function FundingPanel() {
           {isPending ? "Claiming…" : "Claim funding"}
         </button>
       </div>
-      <p className="note">
-        Funding the Hyperliquid short collects flows back here and accrues to your shares
-        pro-rata, time-weighted. This is the LVR loss, routed back to you as income.
+
+      <p className="note mt-5 max-w-2xl">
+        Funding the Hyperliquid short collects flows back here and accrues to your shares pro-rata,
+        time-weighted. This is the LVR loss, routed back to you as income.
       </p>
-    </div>
+    </section>
   );
 }

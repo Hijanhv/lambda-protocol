@@ -48,47 +48,50 @@ export function PositionPanel() {
     );
 
   return (
-    <div className="card">
-      <h2>Your position</h2>
-      <div className="stat">
-        <span className="k">Vault shares</span>
-        <span className="v">{fmt(shares as bigint, 18)}</span>
+    <section className="panel">
+      <h2 className="eyebrow mb-4">Your position</h2>
+
+      <div className="mb-5 rounded-xl border border-white/[0.06] bg-ink-950/40 px-4 py-3.5">
+        <div className="font-sans text-[12px] text-muted">Vault shares</div>
+        <div className="mt-0.5 font-display text-[30px] font-500 tabular-nums tracking-tight text-paper">
+          {fmt(shares as bigint, 18)}
+        </div>
       </div>
 
-      <div className="field">
+      <div className="flex gap-2">
         <input
           inputMode="decimal"
+          className="field-input"
           placeholder="liquidity to add"
           value={liq}
           onChange={(e) => setLiq(e.target.value.replace(/[^0-9.]/g, ""))}
         />
-        <button className="btn" disabled={!address || isPending || liquidity === 0n} onClick={deposit}>
+        <button className="btn shrink-0" disabled={!address || isPending || liquidity === 0n} onClick={deposit}>
           Deposit
         </button>
       </div>
 
-      <div className="row" style={{ marginTop: 10 }}>
-        <button className="btn ghost" disabled={!address} onClick={() => approve(addresses.token0)}>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button className="btn btn-ghost" disabled={!address} onClick={() => approve(addresses.token0)}>
           Approve {tokenMeta.token0.symbol}
         </button>
-        <button className="btn ghost" disabled={!address} onClick={() => approve(addresses.token1)}>
+        <button className="btn btn-ghost" disabled={!address} onClick={() => approve(addresses.token1)}>
           Approve {tokenMeta.token1.symbol}
         </button>
         <button
-          className="btn ghost"
+          className="btn btn-ghost ml-auto"
           disabled={!address || !shares || (shares as bigint) === 0n}
           onClick={withdrawAll}
-          style={{ marginLeft: "auto" }}
         >
           Withdraw all
         </button>
       </div>
 
-      <p className="note">
-        Approve both tokens once, enter a liquidity amount, and deposit — the hook pulls the
-        matching token amounts, mints your shares, and (if delta has moved enough) fires the
-        first hedge. Withdraw burns shares and returns your tokens plus accrued LP fees.
+      <p className="note mt-4">
+        Approve both tokens once, enter a liquidity amount, and deposit — the hook pulls the matching
+        token amounts, mints your shares, and (if delta has moved enough) fires the first hedge.
+        Withdraw burns shares and returns your tokens plus accrued LP fees.
       </p>
-    </div>
+    </section>
   );
 }
