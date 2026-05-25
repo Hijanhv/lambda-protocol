@@ -39,6 +39,8 @@ contract MockAavePool is IAaveV3Pool {
 ///         (yield), access control, and an end-to-end {InsuranceVault} reserve earning Aave
 ///         yield through the adapter.
 contract AaveV3VenueTest is Test {
+    using SafeTransferLib for address;
+
     MockERC20 internal usdc;
     MockERC20 internal aUsdc;
     MockAavePool internal pool;
@@ -56,7 +58,7 @@ contract AaveV3VenueTest is Test {
 
     function _fund(uint256 amount) internal {
         usdc.mint(address(this), amount);
-        usdc.transfer(address(venue), amount); // vault transfers in, then calls deposit
+        address(usdc).safeTransfer(address(venue), amount); // vault transfers in, then calls deposit
         venue.deposit(amount);
     }
 
