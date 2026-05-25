@@ -2,7 +2,7 @@
 
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { funding } from "@/lib/contracts";
-import { addresses, tokenMeta } from "@/lib/config";
+import { addresses, currency1 } from "@/lib/config";
 import { fmt } from "@/lib/format";
 
 /** The income side: funding accrued to the connected LP, with a claim button. */
@@ -24,7 +24,7 @@ export function FundingPanel() {
     query: { enabled: !!address },
   });
 
-  const dec1 = tokenMeta.token1.decimals;
+  const dec1 = currency1.decimals;
   const claimable = (pending as bigint) ?? 0n;
   const hasClaim = claimable > 0n;
 
@@ -40,7 +40,7 @@ export function FundingPanel() {
 
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="font-sans text-[12px] text-muted">Claimable now · {tokenMeta.token1.symbol}</div>
+          <div className="font-sans text-[12px] text-muted">Claimable now · {currency1.symbol}</div>
           <div
             className={`mt-1 font-display text-[44px] font-semibold leading-none tabular-nums tracking-tight ${
               hasClaim ? "text-brand" : "text-ink"

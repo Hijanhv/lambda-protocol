@@ -264,8 +264,8 @@ function Sponsors() {
             logo="/reactive-wordmark.svg"
             name="Reactive Network"
             role="Cross-chain automation"
-            body="A Reactive Smart Contract subscribes to the hook's HedgeNeeded event and triggers the hedge on another chain — no off-chain bot. The cross-chain coordination isn't a convenience here; it's the thing that makes the product possible."
-            wide
+            body="A Reactive Smart Contract subscribes to the hook's HedgeRequested event and triggers the hedge on another chain — no off-chain bot. The cross-chain coordination isn't a convenience here; it's the thing that makes the product possible."
+            darkChip
           />
         </div>
 
@@ -296,18 +296,27 @@ function SponsorCard({
   role,
   body,
   wide,
+  darkChip,
 }: {
   logo: string;
   name: string;
   role: string;
   body: string;
   wide?: boolean;
+  darkChip?: boolean;
 }) {
   return (
     <div className="panel flex flex-col">
       <div className="flex h-12 items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} alt={name} className={wide ? "h-6" : "h-9"} />
+        {darkChip ? (
+          <span className="inline-flex items-center rounded-lg bg-ink px-3.5 py-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logo} alt={name} className="h-5" />
+          </span>
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={logo} alt={name} className={wide ? "h-6" : "h-9"} />
+        )}
       </div>
       <div className="mt-4 flex items-baseline gap-2">
         <span className="font-display text-[19px] font-semibold text-ink">{name}</span>

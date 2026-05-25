@@ -46,6 +46,20 @@ export const tokenMeta = {
   },
 };
 
+/**
+ * Uniswap sorts a pool's currencies by address (currency0 = the lower one). The hook reports
+ * `currentDelta` in currency0 units and {Funding} pays in currency1, so we sort the *display*
+ * metadata to match the on-chain order. This way the dashboard labels and scales every value
+ * correctly no matter which way round the env TOKEN0/TOKEN1 happen to be set.
+ */
+const token0IsLower = addresses.token0.toLowerCase() < addresses.token1.toLowerCase();
+export const currency0 = token0IsLower
+  ? { address: addresses.token0, ...tokenMeta.token0 }
+  : { address: addresses.token1, ...tokenMeta.token1 };
+export const currency1 = token0IsLower
+  ? { address: addresses.token1, ...tokenMeta.token1 }
+  : { address: addresses.token0, ...tokenMeta.token0 };
+
 export const isConfigured =
   addresses.hook !== "0x0000000000000000000000000000000000000000" &&
   addresses.funding !== "0x0000000000000000000000000000000000000000";

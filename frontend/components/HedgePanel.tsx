@@ -2,7 +2,7 @@
 
 import { useReadContract } from "wagmi";
 import { hook } from "@/lib/contracts";
-import { addresses, tokenMeta } from "@/lib/config";
+import { addresses, currency0 } from "@/lib/config";
 import { fmt, feePctFromPips } from "@/lib/format";
 
 /**
@@ -19,14 +19,14 @@ export function HedgePanel() {
   const { data: feeSell } = useReadContract({ ...hook, functionName: "previewFee", args: [poolKey?.[0], true] });
 
   const state = ps as any;
-  const dec = tokenMeta.token0.decimals;
+  const dec = currency0.decimals;
 
   return (
     <section className="panel">
       <h2 className="eyebrow mb-4">The hedge</h2>
 
       <div className="stat-row">
-        <span className="stat-key">Live LP delta ({tokenMeta.token0.symbol})</span>
+        <span className="stat-key">Live LP delta ({currency0.symbol})</span>
         <span className="stat-val">{fmt(delta as bigint, dec)}</span>
       </div>
       <div className="stat-row">
