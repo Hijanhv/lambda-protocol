@@ -15,11 +15,15 @@ export function Connect() {
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
 
-  // Dedupe by name; drop the generic "Injected" fallback when named wallets exist.
+  // Wallets we don't offer.
+  const EXCLUDED = ["phantom"];
+
+  // Dedupe by name; drop excluded wallets and the generic "Injected" fallback when named wallets exist.
   const seen = new Set<string>();
   const unique = connectors.filter((c) => {
     const key = c.name.toLowerCase();
     if (seen.has(key)) return false;
+    if (EXCLUDED.some((x) => key.includes(x))) return false;
     seen.add(key);
     return true;
   });
