@@ -179,6 +179,30 @@ Restart `npm run dev` → the dashboard leaves "Demo mode" and reads live data.
 
 ---
 
+## 7 · Seed the demo (one command)
+
+After ① (and ③, so the callback routes), seed the pool and fire a hedge in one shot. This
+deposits liquidity (fires the first `HedgeRequested`) then swaps to move the price (fires a
+second, drift-triggered one). It also makes the dashboard's deposit quoter work (it needs a
+non-empty pool to quote against). Uses the tokens minted in step 1.
+
+```bash
+export HOOK=0x...          # from leg ①
+# POOL_MANAGER, TOKEN0, TOKEN1 already exported from step 2
+# export SEED_LIQ=1000000000000000000000   # optional, default 1e21
+# export SWAP_AMOUNT=1000000000000000000   # optional, default 1e18 (raise if no 2nd hedge fires)
+
+forge script contracts/script/SeedDemo.s.sol \
+  --rpc-url "$UNICHAIN_RPC" --private-key "$PRIVATE_KEY" --broadcast
+# → prints seeded shares, pool liquidity, hedge nonce, poolId
+```
+
+Watch the hedge land: the `HedgeRequested` tx on uniscan → the callback on reactscan → on testnet
+it hits the `LambdaHedgeReceiver` (Unichain Sepolia). The real CoreWriter perp is shown separately
+on HyperEVM 998 (leg ②).
+
+---
+
 ## Verified fixed addresses (baked into `LambdaConfig.sol`, no env needed)
 
 | What | Address | Chain |

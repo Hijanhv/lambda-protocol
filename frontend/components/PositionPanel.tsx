@@ -4,20 +4,22 @@ import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { maxUint256, parseUnits } from "viem";
 import { hook, erc20Abi } from "@/lib/contracts";
-import { addresses, tokenMeta } from "@/lib/config";
+import { addresses, tokenMeta, currency0 } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { usePoolKeyArg } from "./HedgePanel";
 
 /**
- * Deposit and withdraw. The hook takes a liquidity amount (front-ends convert token amounts to
- * L); for the demo we accept a raw liquidity figure and pass generous slippage bounds, which is
- * the simplest honest mapping until a quoter is wired in.
+ * Deposit and withdraw. The hook's deposit takes a liquidity amount `L`, but people think in
+ * token amounts — so we quote `L` from a {currency0} amount using the fact that the position's
+ * delta is exactly linear in liquidity: `L = amount0 · poolLiquidity / currentDelta`. Both
+ * values are read live from the hook, so the quote is exact. Before the pool has any liquidity
+ * (nothing to quote against) we fall back to treating the input as a raw liquidity figure.
  */
 export function PositionPanel() {
   const { address } = useAccount();
   const poolKey = usePoolKeyArg();
   const { writeContract, isPending } = useWriteContract();
-  const [liq, setLiq] = useState("");
+  const [amt, setAmt] = useState("");
 
   const { data: shares, refetch } = useReadContract({
     ...hook,
@@ -25,8 +27,17 @@ export function PositionPanel() {
     args: [poolKey[0], address ?? "0x0000000000000000000000000000000000000000"],
     query: { enabled: !!address, refetchInterval: 8000 },
   });
+  const { data: ps } = useReadContract({ ...hook, functionName: "poolState", args: poolKey, query: { refetchInterval: 8000 } });
+  const { data: delta } = useReadContract({ ...hook, functionName: "currentDelta", args: poolKey, query: { refetchInterval: 8000 } });
 
-  const liquidity = liq ? parseUnits(liq, 18) : 0n;
+  const poolLiquidity = (ps as any)?.liquidity as bigint | undefined;
+  const liveDelta = delta as bigint | undefined;
+
+  // Quote L from the entered currency0 amount (exact: delta is linear in L). Fall back to
+  // treating the input as raw L when the pool is empty and there is nothing to quote against.
+  const amount0 = amt ? parseUnits(amt, currency0.decimals) : 0n;
+  const canQuote = !!poolLiquidity && poolLiquidity > 0n && !!liveDelta && liveDelta > 0n;
+  const liquidity = canQuote ? (amount0 * poolLiquidity!) / liveDelta! : amount0;
 
   const approve = (token: `0x${string}`) =>
     writeContract({ address: token, abi: erc20Abi, functionName: "approve", args: [addresses.hook, maxUint256] });
@@ -59,19 +70,29 @@ export function PositionPanel() {
       </div>
 
       <div className="flex gap-2">
-        <input
-          inputMode="decimal"
-          className="field-input"
-          placeholder="liquidity to add"
-          value={liq}
-          onChange={(e) => setLiq(e.target.value.replace(/[^0-9.]/g, ""))}
-        />
+        <div className="relative flex-1">
+          <input
+            inputMode="decimal"
+            className="field-input pr-16"
+            placeholder={`amount of ${currency0.symbol}`}
+            value={amt}
+            onChange={(e) => setAmt(e.target.value.replace(/[^0-9.]/g, ""))}
+          />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-sans text-[12px] font-medium text-faint">
+            {currency0.symbol}
+          </span>
+        </div>
         <button className="btn shrink-0" disabled={!address || isPending || liquidity === 0n} onClick={deposit}>
           Deposit
         </button>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-1.5 h-4 font-mono text-[11.5px] tabular-nums text-faint">
+        {amount0 > 0n &&
+          (canQuote ? `≈ ${fmt(liquidity, 18)} liquidity` : "pool not seeded yet — entering raw liquidity")}
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <button className="btn btn-ghost" disabled={!address} onClick={() => approve(addresses.token0)}>
           Approve {tokenMeta.token0.symbol}
         </button>
@@ -88,9 +109,10 @@ export function PositionPanel() {
       </div>
 
       <p className="note mt-4">
-        Approve both tokens once, enter a liquidity amount, and deposit — the hook pulls the matching
-        token amounts, mints your shares, and (if delta has moved enough) fires the first hedge.
-        Withdraw burns shares and returns your tokens plus accrued LP fees.
+        Approve both tokens once, enter how much {currency0.symbol} to add, and deposit — the hook
+        quotes the matching liquidity, pulls both token amounts, mints your shares, and (if delta
+        has moved enough) fires the first hedge. Withdraw burns shares and returns your tokens plus
+        accrued LP fees.
       </p>
     </section>
   );

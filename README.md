@@ -42,6 +42,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
+- [Path to mainnet](#path-to-mainnet)
 - [Built with](#built-with)
 - [Glossary for non-experts](#glossary-for-non-experts)
 - [References](#references)
@@ -310,6 +311,34 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | `InsuranceVault`, `AaveV3Venue` | liquidation-gap reserve that earns Aave V3 yield while idle |
 
 The rails Lambda builds on are already live and were verified directly on-chain: Hyperliquid's CoreWriter precompile (`0x3333…3333` on HyperEVM), the Uniswap v4 `PoolManager` on Unichain, and the Reactive Network system contracts.
+
+---
+
+## Path to mainnet
+
+Lambda is submitted on **testnet**, where every piece runs against live infrastructure — a real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and a real Hyperliquid perp through the CoreWriter precompile on HyperEVM testnet. The one limitation is external: Reactive's testnet does not route callbacks to HyperEVM testnet, so the cross-chain hedge is demonstrated as **two proven halves** (the automatic Unichain → Reactive callback, and the real CoreWriter perp). On mainnet they become **one automatic loop**, and promotion is deliberately a *configuration* change — not a rewrite.
+
+**The one change.** Point the Reactive leg's destination at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`) and use the real `LambdaHedger` as the destination instead of the testnet receiver. Same contracts, same code — the testnet receiver exists only because Lasna can't reach HyperEVM testnet.
+
+**Verified mainnet addresses** (probed live on-chain; see `verified_addresses_and_topics.md` in the ideation repo):
+
+| Leg | Chain (id) | RPC | Anchor address |
+|---|---|---|---|
+| ① Hook | Unichain Mainnet (130) | `https://mainnet.unichain.org` | v4 `PoolManager` `0x1f98400000000000000000000000000000000004` |
+| ② Hedger | HyperEVM Mainnet (999) | `https://rpc.hyperliquid.xyz/evm` | CoreWriter `0x3333…3333`; callback proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4` |
+| ③ Reactive | Reactive Mainnet (1597) | `https://mainnet-rpc.rnk.dev` | system contract `0x…fffFfF` |
+
+**Steps**
+
+1. **① Unichain Mainnet** — deploy `LambdaHook` + `Funding` against the real `PoolManager` on a WETH/USDC dynamic-fee pool (the `HookMiner` salt mining is chain-agnostic; it just needs the mainnet `PoolManager`).
+2. **② HyperEVM Mainnet** — deploy the real `LambdaHedger` with `CALLBACK_SENDER = 0x9299…FC4`; `configureMarket` with the real Hyperliquid asset index; fund it with **≥ ~$10 USDC margin** so it can open the perp.
+3. **③ Reactive Mainnet** — deploy `LambdaReactive` with `DESTINATION_CHAIN_ID=999` and `HEDGER` = the real hedger; fund it with **REACT** for callback gas. The whole loop is now automatic.
+4. **Wire** — `funding.setFunder(operator)`; for insurance, `vault.setCoverer(...)` + `setVenue(AaveV3Venue)` (Aave V3 lives on Base, not Unichain, so the venue runs there).
+5. **Funding return** — an authorized funder periodically calls `funding.notifyFunding(poolId, amount)` with the funding the short collected. Automating this leg (a bridge + keeper) is the headline post-mainnet roadmap item; everything else is automatic.
+
+**Funding required:** ≈ **$40–55** total — Unichain gas + ~5 HYPE + ~10 USDC margin + ~5 REACT.
+
+**Gating before mainnet:** a full security review + invariant-fuzzing pass, and resolution of the transitive frontend audit advisories (see [Security](#security)). Lambda moves real value across chains, so these are not skipped.
 
 ---
 
