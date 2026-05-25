@@ -278,8 +278,10 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Stage | State |
 |---|---|
 | Research, math, and protocol design | ✅ Done |
-| Solidity hook + delta-tracking math library | 🔨 In progress |
-| Reactive Smart Contracts + HyperEVM hedger | 🔜 Next |
+| Delta-tracking math + directional-fee libraries (fuzz-tested) | ✅ Done |
+| Solidity hook — vault, exact-delta hedge signal, Nezlobin dynamic fee | ✅ Done |
+| Reactive Smart Contract + HyperEVM hedger (CoreWriter) | ✅ Done |
+| Per-LP funding accrual + insurance reserve | 🔨 In progress |
 | Testnet → mainnet deployment + demo | 🔜 Planned |
 
 The rails Lambda builds on are already live and were verified directly on-chain: Hyperliquid's CoreWriter precompile (`0x3333…3333` on HyperEVM), the Uniswap v4 `PoolManager` on Unichain, and the Reactive Network system contracts.

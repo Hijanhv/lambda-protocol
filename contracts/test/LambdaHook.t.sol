@@ -15,6 +15,7 @@ import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
 import {PoolId} from "v4-core/src/types/PoolId.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
+import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 
 import {LambdaHook} from "../src/LambdaHook.sol";
 import {DeltaMath} from "../src/libraries/DeltaMath.sol";
@@ -384,6 +385,26 @@ contract LambdaHookTest is Test, Deployers {
         vm.prank(address(0xBEEF));
         vm.expectRevert();
         hook.setFeeParams(key, 1000, 100, 5000, 25, 3000);
+    }
+
+    /// The override isn't cosmetic: the pool must actually charge it. With surcharge disabled
+    /// (sensitivity 0) the fee is flat at `base`, so the only difference between the two runs
+    /// is the fee level — a higher fee must leave the swapper with less output on identical state.
+    function test_fee_isActuallyChargedOnSwap() public {
+        _configure(TAU);
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+
+        hook.setFeeParams(key, 100, 100, 0, 0, 2000); // flat 0.01%
+        uint256 snap = vm.snapshotState();
+        BalanceDelta dLow = swap(key, true, -1e18, "");
+        int128 outLow = dLow.amount1(); // token1 received
+        vm.revertToState(snap);
+
+        hook.setFeeParams(key, 100_000, 100_000, 0, 0, 2000); // flat 10%
+        BalanceDelta dHigh = swap(key, true, -1e18, "");
+        int128 outHigh = dHigh.amount1();
+
+        assertGt(outLow, outHigh, "higher override fee => less output => the pool charged it");
     }
 
     // ─────────────────────────────────────────────────────────────────────────

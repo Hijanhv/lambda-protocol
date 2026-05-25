@@ -21,6 +21,7 @@ import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 
 import {DeltaMath} from "./libraries/DeltaMath.sol";
 import {DirectionalFee} from "./libraries/DirectionalFee.sol";
+import {IShareCallback} from "./interfaces/IShareCallback.sol";
 
 /// @title LambdaHook
 /// @notice The Unichain leg of Lambda (README §"How Lambda works ①"). A Uniswap v4
@@ -125,6 +126,9 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     mapping(PoolId => mapping(address => uint256)) internal _shares;
     mapping(PoolId => FeeState) internal _fees;
 
+    /// @notice Optional funding ledger notified on every share change; zero disables it.
+    address public shareCallback;
+
     // ─────────────────────────────────────────────────────────────────────────
     // Events
     // ─────────────────────────────────────────────────────────────────────────
@@ -134,6 +138,9 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
     /// @notice Emitted when the owner retunes the re-hedge band or hedge ratio.
     event HedgeParamsUpdated(PoolId indexed id, uint256 tau, uint256 hedgeRatioWad);
+
+    /// @notice Emitted when the funding-ledger callback target is set.
+    event ShareCallbackSet(address indexed callback);
 
     /// @notice Emitted when the directional-fee parameters are seeded or retuned.
     event FeeParamsUpdated(
@@ -274,6 +281,13 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         emit FeeParamsUpdated(id, DEFAULT_BASE_FEE, DEFAULT_MIN_FEE, DEFAULT_MAX_SURCHARGE, DEFAULT_FEE_SENSITIVITY, DEFAULT_EMA_WEIGHT_BPS);
     }
 
+    /// @notice Set (or clear, with the zero address) the funding ledger notified on share
+    ///         changes. The target must implement {IShareCallback}.
+    function setShareCallback(address callback) external onlyOwner {
+        shareCallback = callback;
+        emit ShareCallbackSet(callback);
+    }
+
     /// @notice Retune the directional-fee parameters for a configured pool.
     /// @dev    Requires minFee ≤ baseFee, both ≤ MAX_LP_FEE, and an EMA weight in (0, 1].
     function setFeeParams(
@@ -354,7 +368,9 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
         ps.liquidity = liquidityBefore + liquidity;
         ps.totalShares = sharesBefore + shares;
-        _shares[id][to] += shares;
+        uint256 sharesOld = _shares[id][to];
+        _shares[id][to] = sharesOld + shares;
+        _notifyShares(id, to, sharesOld, sharesOld + shares);
 
         // Refund any native surplus (token0 paid from msg.value).
         if (address(this).balance > 0) SafeTransferLib.safeTransferETH(msg.sender, address(this).balance);
@@ -391,6 +407,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         _shares[id][msg.sender] = userShares - shares;
         ps.totalShares -= shares;
         ps.liquidity -= liquidity;
+        _notifyShares(id, msg.sender, userShares, userShares - shares);
 
         (amount0, amount1) = _unlock(Action.WITHDRAW, key, msg.sender, to, liquidity, amount0Min, amount1Min);
 
@@ -569,6 +586,16 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         if (ps.initialized) _syncHedge(ps, id);
         _updateFeeReference(id);
         return (IHooks.afterSwap.selector, int128(0));
+    }
+
+    /// @dev Notify the funding ledger (if configured) that an LP's shares changed, so it can
+    ///      settle the holder before the balance moves. Best-effort wiring to our own trusted
+    ///      contract; runs after share state is updated (checks-effects-interactions).
+    function _notifyShares(PoolId id, address account, uint256 oldShares, uint256 newShares) internal {
+        address cb = shareCallback;
+        if (cb != address(0)) {
+            IShareCallback(cb).onSharesChanged(PoolId.unwrap(id), account, oldShares, newShares);
+        }
     }
 
     /// @dev EMA-update the fee reference tick toward the post-swap price:
