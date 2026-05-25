@@ -34,12 +34,26 @@ destination, so `DESTINATION_CHAIN_ID=999` makes the whole loop automatic. Same 
 
 ## 0 · Common — deployer key + faucets
 
-Use a **fresh** MetaMask account dedicated to UHI9. The same key gives the same address on
-every chain. Never paste the seed/key anywhere or commit it.
+> 💰 **Fund THIS address on every chain** (UHI9 Deploy account, also the contract OWNER):
+> **`0x35d8E75295366e6A12B988084096d89233dF4e9C`**
+> Same address on Sepolia, Unichain Sepolia, Reactive Lasna, and HyperEVM testnet.
+
+**Signing — pick one.** The encrypted keystore keeps the raw key out of your shell history/env:
 
 ```bash
-export PRIVATE_KEY=0x...        # fresh UHI9 deployer (also the OWNER for wiring calls)
+export DEPLOYER=0x35d8E75295366e6A12B988084096d89233dF4e9C
+
+# Option A (recommended): keystore — import once, then use --account on every script
+cast wallet import uhi9 --interactive          # paste key once, set a password
+#   → forge script ... --account uhi9 --sender "$DEPLOYER" --broadcast
+
+# Option B: raw key in env (simpler, less safe)
+export PRIVATE_KEY=0x...                        # the UHI9 Deploy key
+#   → forge script ... --private-key "$PRIVATE_KEY" --broadcast
 ```
+
+The commands below show `--private-key "$PRIVATE_KEY"`; if you used Option A, swap that for
+`--account uhi9 --sender "$DEPLOYER"`.
 
 Faucets (all free):
 | Need | Where |
