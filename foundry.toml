@@ -19,6 +19,11 @@ remappings = [
 runs = 512
 max_test_rejects = 200000
 
+[invariant]
+runs = 256
+depth = 50
+fail_on_revert = false
+
 [lint]
 # We intentionally follow Uniswap's naming conventions so the code reads identically to
 # v4-core: the Q64.96 names (sqrtPriceAX96, sqrtPriceBX96) and the canonical lower-case

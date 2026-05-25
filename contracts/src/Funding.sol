@@ -146,8 +146,14 @@ contract Funding is IShareCallback, Ownable {
 
         _harvest(poolId, msg.sender);
         amount = _accrued[poolId][msg.sender];
+        // Floor-rounding in the per-share accumulator can, over many share changes, leave the
+        // summed accruals a few wei above the funding actually deposited. Cap the payout at the
+        // pool's outstanding liability so the last claimant can never be left short (the held
+        // balance always covers `unclaimed`); any sub-wei residual rolls into the next round.
+        uint256 cap = p.unclaimed;
+        if (amount > cap) amount = cap;
         if (amount > 0) {
-            _accrued[poolId][msg.sender] = 0;
+            _accrued[poolId][msg.sender] -= amount;
             p.unclaimed -= amount;
             p.token.safeTransfer(msg.sender, amount);
             emit Claimed(poolId, msg.sender, amount);
