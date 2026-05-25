@@ -130,7 +130,7 @@ flowchart LR
     PERP ==>|funding income routes back to LP| LP
 ```
 
-**① Unichain — the hook.** This is where you interact. The Lambda hook is a [Uniswap v4 hook](https://docs.uniswap.org/contracts/v4/overview) built on OpenZeppelin's audited `BaseCustomAccounting` and `BaseOverrideFee` building blocks. It keeps the standard Uniswap trading curve untouched, but it does one extra thing: it tracks the *exact* price exposure (delta) of every position, and emits an event the moment that exposure drifts too far from neutral.
+**① Unichain — the hook.** This is where you interact. The Lambda hook is a self-contained [Uniswap v4 hook](https://docs.uniswap.org/contracts/v4/overview) that doubles as the protocol's liquidity vault: LPs deposit and withdraw through it, and it owns the pool's single position (so its tracked liquidity is exactly the pool's, which is what makes the delta exact rather than approximate). It does two things on top of a normal pool, both leaving the swap curve itself untouched: (a) it tracks the *exact* price exposure (delta) of every position and emits an event the moment that drifts too far from neutral, and (b) it charges a **directional dynamic fee** that makes informed, pool-draining flow pay more (see [the math](#6-protecting-the-pool-directly-a-directional-fee)). Protection is layered — the fee defends the pool on-chain, the hedge neutralizes the rest off-chain.
 
 **② Reactive Network — the brain.** Watching events on one chain and acting on another usually needs a centralized server running a bot. Lambda doesn't use one. [Reactive Network](https://reactive.network) provides **Reactive Smart Contracts** — contracts that subscribe to events on other chains and trigger transactions in response, entirely on-chain. Reactive sees the hook's "hedge needed" event and decides whether to act.
 
@@ -202,6 +202,18 @@ best hedge ratio  h*  ≈  0.65
 
 Lambda ships `h = 0.65` by default. You give up a sliver of hedging to make the position dramatically safer. That trade is worth it.
 
+### 6. Protecting the pool directly: a directional fee
+
+The hedge handles price risk off-pool. Lambda also defends the pool *on*-pool, with a fee that isn't a flat number. Arbitrageurs profit by trading in whichever direction drags the pool price toward the true (already-moved) market price — that's the LVR leak. So Lambda charges an **asymmetric, direction-aware fee** (Nezlobin's MEV-defense model): it tracks how far price has drifted from a smoothed reference tick, and
+
+```
+fee  =  base  ±  sensitivity · |drift|
+   • a trade that continues the drift  (the likely-informed / arb side)  →  base + surcharge
+   • a trade that reverts the drift     (benign, balancing flow)          →  base − discount
+```
+
+The surcharge is capped and the discount floored. Uniswap v4 lets a hook return this fee from `beforeSwap` (the pool must be a dynamic-fee pool), so the whole policy lives in the hook — the swap curve is unchanged, only the *price of crossing it* moves. The toxic side of order flow ends up paying the LP, which complements the funding the hedge collects: two independent income streams aimed at the same leak.
+
 ---
 
 ## What you actually earn
@@ -223,6 +235,7 @@ These are modeled figures based on historical volatility and funding rates, not 
 ## What makes this new
 
 - **It treats funding as a Uniswap yield source.** As far as we know, this is the first v4 hook to turn perpetual-funding income into a native yield stream for LPs, by making the LVR ⇋ funding identity explicit and acting on it.
+- **It defends the pool from two sides at once.** A directional dynamic fee (Nezlobin) makes informed flow pay the LP *on-chain*, while the perp hedge neutralizes residual price risk *off-chain* — the same LVR leak attacked by two independent mechanisms.
 - **The hedge is real, and it's cross-chain, and it's automatic.** The short is a real position on Hyperliquid, opened through the live CoreWriter precompile — not a simulated stand-in. The cross-chain coordination runs on Reactive Smart Contracts with no off-chain bot.
 - **The risk math is honest.** Lambda doesn't blindly fully-hedge. It uses the research-backed `h = 0.65` to keep liquidation risk near 1% instead of near 20%.
 - **It stands on peer-reviewed work.** The design composes results from Milionis et al. (LVR), Chitra & Diamandis et al. (which proves venues like Hyperliquid are well-suited to delta-hedging), Hane et al. (optimal hedge ratio), and Maire & Wunsch (market-neutral LP construction). See [References](#references).
@@ -241,7 +254,7 @@ These are modeled figures based on historical volatility and funding rates, not 
 
 LVR is widely considered the most important unsolved problem for Uniswap liquidity providers — it's the reason sophisticated capital hesitates to provide liquidity, and it caps how deep and competitive pools can get. Lambda is a direct, native answer to it, built the way the v4 ecosystem is meant to be extended:
 
-- It's a **first-class v4 hook**, composed from OpenZeppelin's audited `BaseCustomAccounting` and `BaseOverrideFee` primitives, and it leaves the canonical swap curve untouched — so it adds protection without changing how the pool trades.
+- It's a **first-class v4 hook** that uses the framework as intended — custom accounting for the LP vault and a `beforeSwap` dynamic-fee override for the directional fee — while leaving the canonical swap curve untouched, so it adds protection without changing how the pool trades.
 - It **brings new capital and a new reason to LP.** A delta-neutral, yield-positive position is exactly the product that pulls risk-averse capital into v4 pools that would otherwise sit on the sidelines.
 - It's designed to be **discoverable and reusable** — packaged for submission to the Uniswap Foundation Hook Registry so other builders can compose on it.
 
@@ -281,8 +294,20 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Delta-tracking math + directional-fee libraries (fuzz-tested) | ✅ Done |
 | Solidity hook — vault, exact-delta hedge signal, Nezlobin dynamic fee | ✅ Done |
 | Reactive Smart Contract + HyperEVM hedger (CoreWriter) | ✅ Done |
-| Per-LP funding accrual + insurance reserve | 🔨 In progress |
-| Testnet → mainnet deployment + demo | 🔜 Planned |
+| Per-LP funding accrual (Funding) + Aave-backed insurance reserve | ✅ Done |
+| Deployment scripts (3 chains) + first live testnet hedge via CoreWriter | 🔜 Next |
+| Frontend LP dashboard + demo | 🔜 Planned |
+
+**What's implemented today** — Solidity on Foundry, **109 passing tests**, warning-free build:
+
+| Contract(s) | Role |
+|---|---|
+| `DeltaMath`, `DirectionalFee` | exact concentrated-liquidity delta + Nezlobin fee math (fuzz-tested against Uniswap's own `getAmount0Delta`) |
+| `LambdaHook` | the vault hook — deposit/withdraw, exact-delta hedge signal, directional dynamic fee |
+| `LambdaReactive` | Reactive Smart Contract — subscribes to the hook, routes the cross-chain callback, drops replays by nonce |
+| `LambdaHedger`, `CoreWriterLib` | HyperEVM hedger — sizes and fires the perp through the live CoreWriter precompile |
+| `Funding` | per-LP funding accrual + claims (rewards-per-share, settled on every share change) |
+| `InsuranceVault`, `AaveV3Venue` | liquidation-gap reserve that earns Aave V3 yield while idle |
 
 The rails Lambda builds on are already live and were verified directly on-chain: Hyperliquid's CoreWriter precompile (`0x3333…3333` on HyperEVM), the Uniswap v4 `PoolManager` on Unichain, and the Reactive Network system contracts.
 
@@ -290,10 +315,12 @@ The rails Lambda builds on are already live and were verified directly on-chain:
 
 ## Built with
 
-- **[Uniswap v4](https://docs.uniswap.org/contracts/v4/overview)** — the hook framework and `PoolManager`
-- **[OpenZeppelin Uniswap Hooks](https://github.com/OpenZeppelin/uniswap-hooks)** — `BaseCustomAccounting`, `BaseOverrideFee`
-- **[Reactive Network](https://reactive.network)** — cross-chain event-driven smart contracts
-- **[Hyperliquid](https://hyperliquid.xyz)** — on-chain perpetuals, accessed via the HyperEVM CoreWriter precompile and the official `hyper-evm-lib` SDK
+- **[Uniswap v4](https://docs.uniswap.org/contracts/v4/overview)** (`v4-core`) — the hook framework, `PoolManager`, and the delta/fee math we cross-check against
+- **[Reactive Network](https://reactive.network)** (`reactive-lib`) — cross-chain event-driven smart contracts (`AbstractReactive` / `AbstractCallback`)
+- **[Hyperliquid](https://hyperliquid.xyz)** — on-chain perpetuals, accessed directly through the HyperEVM CoreWriter precompile (`0x3333…3333`)
+- **[Aave V3](https://aave.com)** — yield venue for the idle insurance reserve
+- **[Solady](https://github.com/Vectorized/solady)** — gas-optimized `Ownable`, `ReentrancyGuard`, `SafeTransferLib`, `FixedPointMathLib`
+- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, and property tests (109 passing)
 
 ---
 
