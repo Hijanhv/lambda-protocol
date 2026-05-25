@@ -97,7 +97,7 @@ abstract contract LambdaConfig is Script {
 
     // Insurance reserve
     function reserveAsset() internal view returns (address) {
-        return vm.envAddress("RESERVE_ASSET");
+        return vm.envOr("RESERVE_ASSET", address(0)); // optional; 0 ⇒ skip the InsuranceVault
     }
 
     function coverer() internal view returns (address) {
