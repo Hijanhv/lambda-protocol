@@ -7,11 +7,12 @@ import {IUnlockCallback} from "v4-core/src/interfaces/callback/IUnlockCallback.s
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
+import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
-import {BeforeSwapDelta} from "v4-core/src/types/BeforeSwapDelta.sol";
+import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 
 import {Ownable} from "solady/auth/Ownable.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
@@ -19,6 +20,7 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 
 import {DeltaMath} from "./libraries/DeltaMath.sol";
+import {DirectionalFee} from "./libraries/DirectionalFee.sol";
 
 /// @title LambdaHook
 /// @notice The Unichain leg of Lambda (README §"How Lambda works ①"). A Uniswap v4
@@ -75,6 +77,17 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         uint64 hedgeNonce; // strictly increasing per-pool signal counter
     }
 
+    /// @notice Per-pool directional-fee state (Nezlobin LVR defense; see {DirectionalFee}).
+    struct FeeState {
+        bool set; // fee params seeded for this pool
+        uint24 baseFeePips; // neutral fee when price is at the reference
+        uint24 minFeePips; // floor for the discounted side
+        uint24 maxSurchargePips; // cap on the directional add-on
+        uint256 sensitivityPipsPerTick; // surcharge pips per tick of drift
+        uint32 emaWeightBps; // EMA weight for the reference tick, in bps
+        int24 refTick; // smoothed reference tick, updated each swap
+    }
+
     /// @dev Discriminates the work done inside {unlockCallback}.
     enum Action {
         DEPOSIT,
@@ -101,8 +114,16 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     /// @notice Default hedge ratio applied at configuration time: Hane (2026) h* ≈ 0.65.
     uint256 public constant DEFAULT_HEDGE_RATIO = 0.65e18;
 
+    // Default directional-fee parameters seeded at configuration (tunable via setFeeParams).
+    uint24 internal constant DEFAULT_BASE_FEE = 3000; // 0.30%
+    uint24 internal constant DEFAULT_MIN_FEE = 500; // 0.05%
+    uint24 internal constant DEFAULT_MAX_SURCHARGE = 20_000; // 2.00%
+    uint256 internal constant DEFAULT_FEE_SENSITIVITY = 50; // pips per tick of drift
+    uint32 internal constant DEFAULT_EMA_WEIGHT_BPS = 2000; // 0.20 smoothing
+
     mapping(PoolId => PoolState) internal _pools;
     mapping(PoolId => mapping(address => uint256)) internal _shares;
+    mapping(PoolId => FeeState) internal _fees;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Events
@@ -113,6 +134,11 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
     /// @notice Emitted when the owner retunes the re-hedge band or hedge ratio.
     event HedgeParamsUpdated(PoolId indexed id, uint256 tau, uint256 hedgeRatioWad);
+
+    /// @notice Emitted when the directional-fee parameters are seeded or retuned.
+    event FeeParamsUpdated(
+        PoolId indexed id, uint24 baseFeePips, uint24 minFeePips, uint24 maxSurchargePips, uint256 sensitivityPipsPerTick, uint32 emaWeightBps
+    );
 
     /// @notice An LP added liquidity through the vault.
     event Deposited(PoolId indexed id, address indexed to, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1);
@@ -149,6 +175,8 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     error ZeroLiquidity();
     error Slippage();
     error InsufficientShares();
+    error NotDynamicFee();
+    error InvalidFeeParams();
     error HookNotImplemented();
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -186,7 +214,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
             afterAddLiquidity: false,
             beforeRemoveLiquidity: true,
             afterRemoveLiquidity: false,
-            beforeSwap: false,
+            beforeSwap: true,
             afterSwap: true,
             beforeDonate: false,
             afterDonate: false,
@@ -201,9 +229,12 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     // Admin
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// @notice Register a pool: set the managed range and hedge parameters. Must run before
-    ///         the first deposit. Range bounds must be multiples of the pool's tick spacing.
-    /// @param key            The pool to manage.
+    /// @notice Register a pool: set the managed range and hedge parameters, and seed the
+    ///         directional fee. Must run before the first deposit, and after the pool is
+    ///         initialized (its current tick seeds the fee reference). The pool must use a
+    ///         dynamic fee — otherwise v4 ignores the hook's fee override and the on-pool LVR
+    ///         defense would be silently inert.
+    /// @param key            The pool to manage (must be a dynamic-fee pool).
     /// @param tickLower      Lower bound of the vault's single position.
     /// @param tickUpper      Upper bound of the vault's single position.
     /// @param tau            Initial re-hedge band in token0 units (see {DeltaMath.tauOptimal}).
@@ -215,6 +246,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         PoolId id = key.toId();
         PoolState storage ps = _pools[id];
         if (ps.initialized) revert PoolAlreadyConfigured();
+        if (!LPFeeLibrary.isDynamicFee(key.fee)) revert NotDynamicFee();
         if (tickLower >= tickUpper) revert InvalidRange();
         if (tickLower % key.tickSpacing != 0 || tickUpper % key.tickSpacing != 0) revert InvalidRange();
 
@@ -227,7 +259,46 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         ps.tau = tau;
         ps.hedgeRatioWad = hedgeRatioWad;
 
+        // Seed the directional fee with defaults, anchoring its reference at the live tick.
+        (, int24 tick,,) = poolManager.getSlot0(id);
+        FeeState storage f = _fees[id];
+        f.set = true;
+        f.baseFeePips = DEFAULT_BASE_FEE;
+        f.minFeePips = DEFAULT_MIN_FEE;
+        f.maxSurchargePips = DEFAULT_MAX_SURCHARGE;
+        f.sensitivityPipsPerTick = DEFAULT_FEE_SENSITIVITY;
+        f.emaWeightBps = DEFAULT_EMA_WEIGHT_BPS;
+        f.refTick = tick;
+
         emit PoolConfigured(id, tickLower, tickUpper, tau, hedgeRatioWad);
+        emit FeeParamsUpdated(id, DEFAULT_BASE_FEE, DEFAULT_MIN_FEE, DEFAULT_MAX_SURCHARGE, DEFAULT_FEE_SENSITIVITY, DEFAULT_EMA_WEIGHT_BPS);
+    }
+
+    /// @notice Retune the directional-fee parameters for a configured pool.
+    /// @dev    Requires minFee ≤ baseFee, both ≤ MAX_LP_FEE, and an EMA weight in (0, 1].
+    function setFeeParams(
+        PoolKey calldata key,
+        uint24 baseFeePips,
+        uint24 minFeePips,
+        uint24 maxSurchargePips,
+        uint256 sensitivityPipsPerTick,
+        uint32 emaWeightBps
+    ) external onlyOwner {
+        PoolId id = key.toId();
+        FeeState storage f = _fees[id];
+        if (!f.set) revert PoolNotConfigured();
+        if (
+            minFeePips > baseFeePips || baseFeePips > DirectionalFee.MAX_LP_FEE
+                || maxSurchargePips > DirectionalFee.MAX_LP_FEE || emaWeightBps == 0 || emaWeightBps > 10_000
+        ) revert InvalidFeeParams();
+
+        f.baseFeePips = baseFeePips;
+        f.minFeePips = minFeePips;
+        f.maxSurchargePips = maxSurchargePips;
+        f.sensitivityPipsPerTick = sensitivityPipsPerTick;
+        f.emaWeightBps = emaWeightBps;
+
+        emit FeeParamsUpdated(id, baseFeePips, minFeePips, maxSurchargePips, sensitivityPipsPerTick, emaWeightBps);
     }
 
     /// @notice Retune the re-hedge band and hedge ratio without touching the range.
@@ -462,8 +533,32 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         return IHooks.beforeRemoveLiquidity.selector;
     }
 
-    /// @notice The watch point: every swap re-evaluates delta and may raise a hedge signal.
-    ///         Returns a zero hook delta — the trading curve is left exactly as Uniswap's.
+    /// @notice Price the incoming swap with the Nezlobin directional fee (see {DirectionalFee}):
+    ///         surcharge the trend-continuing (likely-informed) side, discount the reverting
+    ///         side, by how far the live tick has drifted from the smoothed reference. Adds no
+    ///         swap delta — only the fee is overridden, so the trading curve is untouched.
+    function beforeSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata params, bytes calldata)
+        external
+        view
+        onlyPoolManager
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
+        PoolId id = key.toId();
+        FeeState storage f = _fees[id];
+        if (!f.set) {
+            // Unconfigured: no override (value without the flag leaves the pool's fee in place).
+            return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
+        }
+        (, int24 tick,,) = poolManager.getSlot0(id);
+        uint24 fee = DirectionalFee.asymmetricFee(
+            f.baseFeePips, f.minFeePips, f.maxSurchargePips, f.sensitivityPipsPerTick, tick - f.refTick, params.zeroForOne
+        );
+        return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
+    }
+
+    /// @notice The watch point: every swap re-evaluates delta (may raise a hedge signal) and
+    ///         nudges the directional-fee reference toward the new price. Returns a zero hook
+    ///         delta — the trading curve is left exactly as Uniswap's.
     function afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)
         external
         onlyPoolManager
@@ -472,7 +567,21 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         PoolId id = key.toId();
         PoolState storage ps = _pools[id];
         if (ps.initialized) _syncHedge(ps, id);
+        _updateFeeReference(id);
         return (IHooks.afterSwap.selector, int128(0));
+    }
+
+    /// @dev EMA-update the fee reference tick toward the post-swap price:
+    ///      refTick += (tick − refTick) · emaWeightBps / 10000.
+    function _updateFeeReference(PoolId id) internal {
+        FeeState storage f = _fees[id];
+        if (!f.set) return;
+        (, int24 tick,,) = poolManager.getSlot0(id);
+        int256 step = (int256(tick) - int256(f.refTick)) * int256(uint256(f.emaWeightBps)) / 10_000;
+        // The EMA moves refTick toward `tick` by a fraction, so it stays between the two
+        // (both valid int24 ticks) — the narrowing cannot overflow int24.
+        // forge-lint: disable-next-line(unsafe-typecast)
+        f.refTick = int24(int256(f.refTick) + step);
     }
 
     // ── Disabled callbacks ────────────────────────────────────────────────────
@@ -507,14 +616,6 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         revert HookNotImplemented();
     }
 
-    function beforeSwap(address, PoolKey calldata, IPoolManager.SwapParams calldata, bytes calldata)
-        external
-        pure
-        returns (bytes4, BeforeSwapDelta, uint24)
-    {
-        revert HookNotImplemented();
-    }
-
     function beforeDonate(address, PoolKey calldata, uint256, uint256, bytes calldata) external pure returns (bytes4) {
         revert HookNotImplemented();
     }
@@ -545,6 +646,22 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(id);
         return DeltaMath.lpDelta(
             ps.liquidity, sqrtPriceX96, TickMath.getSqrtPriceAtTick(ps.tickLower), TickMath.getSqrtPriceAtTick(ps.tickUpper)
+        );
+    }
+
+    /// @notice Directional-fee state (params + live reference tick) for a pool.
+    function feeState(PoolKey calldata key) external view returns (FeeState memory) {
+        return _fees[key.toId()];
+    }
+
+    /// @notice The fee a swap in `zeroForOne` would pay right now, in pips (no override flag).
+    function previewFee(PoolKey calldata key, bool zeroForOne) external view returns (uint24) {
+        PoolId id = key.toId();
+        FeeState storage f = _fees[id];
+        if (!f.set) return 0;
+        (, int24 tick,,) = poolManager.getSlot0(id);
+        return DirectionalFee.asymmetricFee(
+            f.baseFeePips, f.minFeePips, f.maxSurchargePips, f.sensitivityPipsPerTick, tick - f.refTick, zeroForOne
         );
     }
 

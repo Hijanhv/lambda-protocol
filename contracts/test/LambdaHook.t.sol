@@ -11,7 +11,9 @@ import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
+import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
 import {PoolId} from "v4-core/src/types/PoolId.sol";
+import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
 
 import {LambdaHook} from "../src/LambdaHook.sol";
@@ -32,7 +34,7 @@ contract LambdaHookTest is Test, Deployers {
     int24 internal constant TICK_LOWER = -600;
     int24 internal constant TICK_UPPER = 600;
     int24 internal constant TICK_SPACING = 60;
-    uint24 internal constant FEE = 3000;
+    uint24 internal constant FEE = LPFeeLibrary.DYNAMIC_FEE_FLAG; // directional fee requires dynamic
 
     uint128 internal constant DEPOSIT_LIQ = 1e21;
     // τ small relative to the position delta, so the first deposit and a moderate swap both
@@ -49,7 +51,8 @@ contract LambdaHookTest is Test, Deployers {
         // Mine an address whose low bits encode exactly our three permissions, then etch
         // the hook there — this is what `validateHookPermissions` checks in the constructor.
         uint160 flags = uint160(
-            Hooks.BEFORE_ADD_LIQUIDITY_FLAG | Hooks.BEFORE_REMOVE_LIQUIDITY_FLAG | Hooks.AFTER_SWAP_FLAG
+            Hooks.BEFORE_ADD_LIQUIDITY_FLAG | Hooks.BEFORE_REMOVE_LIQUIDITY_FLAG | Hooks.BEFORE_SWAP_FLAG
+                | Hooks.AFTER_SWAP_FLAG
         );
         address hookAddr = address(flags | (uint160(0x4444) << 144));
         deployCodeTo("LambdaHook.sol:LambdaHook", abi.encode(manager, address(this)), hookAddr);
@@ -298,6 +301,89 @@ contract LambdaHookTest is Test, Deployers {
     function test_unlockCallback_onlyPoolManager() public {
         vm.expectRevert(LambdaHook.NotPoolManager.selector);
         hook.unlockCallback("");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // directional fee (Nezlobin LVR defense)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function test_fee_seededAtBaseWhenPriceFlat() public {
+        _configure(TAU);
+        // Reference is seeded at the current tick ⇒ zero drift ⇒ base fee both ways.
+        assertEq(hook.feeState(key).refTick, 0, "reference anchored at the 1:1 tick");
+        assertEq(hook.previewFee(key, true), 3000, "flat price charges base");
+        assertEq(hook.previewFee(key, false), 3000, "flat price charges base both directions");
+    }
+
+    function test_fee_requiresDynamicFeePool() public {
+        // A static-fee pool on the same hook cannot be configured — the override would be inert.
+        PoolKey memory sk = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            fee: 3000, // static
+            tickSpacing: TICK_SPACING,
+            hooks: IHooks(address(hook))
+        });
+        manager.initialize(sk, SQRT_PRICE_1_1);
+        vm.expectRevert(LambdaHook.NotDynamicFee.selector);
+        hook.configurePool(sk, TICK_LOWER, TICK_UPPER, TAU, 0);
+    }
+
+    function test_fee_isDirectionalAfterDrift() public {
+        _configure(TAU);
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+
+        // Push price down with a sizable sell; the EMA reference lags, leaving residual drift.
+        swap(key, true, -5e18, "");
+
+        (, int24 tick,,) = manager.getSlot0(id);
+        int24 refTick = hook.feeState(key).refTick;
+        assertLt(tick, refTick, "price drifted below the lagging reference");
+
+        uint24 feeContinue = hook.previewFee(key, true); // sell = continues the downward drift
+        uint24 feeRevert = hook.previewFee(key, false); // buy = mean-reverting
+        assertGt(feeContinue, 3000, "trend-continuing side is surcharged above base");
+        assertLt(feeRevert, 3000, "mean-reverting side is discounted below base");
+        assertGt(feeContinue, feeRevert, "informed flow pays strictly more");
+    }
+
+    function test_fee_referenceEmaTracksPrice() public {
+        _configure(TAU);
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+
+        int24 refBefore = hook.feeState(key).refTick; // 0
+        swap(key, true, -5e18, "");
+        int24 refAfter = hook.feeState(key).refTick;
+        (, int24 tick,,) = manager.getSlot0(id);
+
+        // EMA nudges the reference toward the new (lower) tick, but not all the way.
+        assertLt(refAfter, refBefore, "reference moved toward the new price");
+        assertGt(refAfter, tick, "reference lags the live tick (partial EMA step)");
+    }
+
+    function test_setFeeParams_updatesAndValidates() public {
+        _configure(TAU);
+        hook.setFeeParams(key, 1000, 100, 5000, 25, 3000);
+        LambdaHook.FeeState memory f = hook.feeState(key);
+        assertEq(f.baseFeePips, 1000, "base updated");
+        assertEq(f.minFeePips, 100, "min updated");
+        assertEq(f.maxSurchargePips, 5000, "cap updated");
+        assertEq(f.sensitivityPipsPerTick, 25, "sensitivity updated");
+        assertEq(f.emaWeightBps, 3000, "ema weight updated");
+
+        vm.expectRevert(LambdaHook.InvalidFeeParams.selector);
+        hook.setFeeParams(key, 1000, 2000, 5000, 25, 3000); // min > base
+        vm.expectRevert(LambdaHook.InvalidFeeParams.selector);
+        hook.setFeeParams(key, 1000, 100, 5000, 25, 0); // ema weight 0
+        vm.expectRevert(LambdaHook.InvalidFeeParams.selector);
+        hook.setFeeParams(key, 1000, 100, 5000, 25, 10_001); // ema weight > 1
+    }
+
+    function test_setFeeParams_onlyOwner() public {
+        _configure(TAU);
+        vm.prank(address(0xBEEF));
+        vm.expectRevert();
+        hook.setFeeParams(key, 1000, 100, 5000, 25, 3000);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
