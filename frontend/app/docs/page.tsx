@@ -128,6 +128,11 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
   • a trade that continues the drift  (likely-informed)  →  base + surcharge
   • a trade that reverts the drift     (benign flow)       →  base − discount`}</Formula>
             <p>The toxic side of order flow ends up paying the LP — a second income stream aimed at the same leak the hedge attacks.</p>
+            <Callout>
+              Directional pricing in <code>beforeSwap</code> is becoming a standard v4 pattern — Lambda implements it
+              and fuzz-tests it. Lambda&apos;s distinct contribution is the other half: a <strong>real, cross-chain,
+              automatic perp hedge</strong> on Hyperliquid, which no off-chain bot drives.
+            </Callout>
           </section>
 
           <section id="security">

@@ -54,8 +54,10 @@ function Hero() {
 
       <p className="mt-6 max-w-xl animate-rise font-sans text-[16.5px] leading-relaxed text-ink-soft [animation-delay:120ms]">
         A normal Uniswap position quietly bleeds about <strong className="font-semibold text-ink">11% a year</strong> to
-        arbitrageurs. Lambda hedges every position on a real perpetual market — automatically, across chains — so that
-        loss comes back to you as funding income instead.
+        arbitrageurs. Lambda cancels it with a{" "}
+        <strong className="font-semibold text-brand">real short on Hyperliquid</strong> — opened and resized{" "}
+        <strong className="font-semibold text-ink">automatically, across chains, with no off-chain bot</strong> — so the
+        loss returns to you as funding income.
       </p>
 
       <div className="mt-8 flex animate-rise flex-wrap items-center gap-3 [animation-delay:180ms]">
@@ -208,21 +210,22 @@ function Earnings() {
     <section className="mx-auto max-w-content px-5 py-16">
       <div className="grid items-center gap-10 md:grid-cols-2">
         <div>
-          <Eyebrow>What&apos;s new</Eyebrow>
+          <Eyebrow>The differentiator</Eyebrow>
           <h2 className="mt-3 font-display text-[30px] font-semibold tracking-tight text-ink md:text-[38px]">
-            Funding, treated as a Uniswap yield source.
+            A real hedge, opened across chains.
           </h2>
           <p className="mt-4 prose-doc">
-            As far as we know, this is the first v4 hook to turn perpetual-funding income into a native yield stream for
-            LPs — defending the pool from two sides at once: a directional fee on-chain, and a real, cross-chain,
-            automatic perp hedge off-chain.
+            A directional fee in <code>beforeSwap</code> (Nezlobin) is becoming a standard v4 pattern — Lambda has
+            it, fuzz-tested. But the part nobody else ships is the hedge itself: a{" "}
+            <strong>real short on Hyperliquid</strong>, opened automatically across chains through Reactive, with{" "}
+            <strong>no off-chain bot</strong>. That live cross-chain loop is the hard part — and the whole point.
           </p>
         </div>
         <ul className="space-y-4">
           {[
-            ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile."],
+            ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile — not a mock."],
+            ["Automatic & cross-chain", "A Reactive Smart Contract routes the hedge across chains itself — no off-chain bot in the loop."],
             ["Honest risk math", "Ships h = 0.65 — ~1.4% liquidation risk over 90 days, vs ~19% for a full hedge."],
-            ["Curve untouched", "Protection comes from fees and an off-pool hedge; the swap behavior LPs rely on is standard."],
             ["Peer-reviewed", "Composes Milionis (LVR), Chitra & Diamandis, Hane, and Maire & Wunsch."],
           ].map(([t, b]) => (
             <li key={t} className="flex gap-3">
