@@ -115,9 +115,20 @@ hedger.applyHedge(...)   # owner/relayer call → real CoreWriter perp on Hyperl
 
 On testnet the destination is **Unichain Sepolia (1301)**, not HyperEVM — Lasna can't reach 998
 (see "Testnet topology"). This proves the automatic cross-chain trigger; the destination-side
-receiver on Unichain Sepolia is a lightweight hedge-receiver (the real CoreWriter call is shown
-separately on 998 in leg ②). On mainnet, set `DESTINATION_CHAIN_ID=999` for the fully wired loop.
+receiver on Unichain Sepolia is `LambdaHedgeReceiver` (records the hedge + emits an event with the
+same auth/nonce rules as the real hedger, minus the CoreWriter order). The real CoreWriter call is
+shown separately on 998 in leg ②. On mainnet, set `DESTINATION_CHAIN_ID=999` and use the real
+`LambdaHedger` as `HEDGER` — no code change.
 
+First deploy the receiver on Unichain Sepolia (its `CALLBACK_SENDER` is the Lasna→Unichain-Sepolia proxy):
+```bash
+export CALLBACK_SENDER=0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4   # Unichain Sepolia callback proxy
+forge script contracts/script/DeployReceiver.s.sol \
+  --rpc-url "$UNICHAIN_RPC" --private-key "$PRIVATE_KEY" --broadcast
+# → prints: LambdaHedgeReceiver   (use as HEDGER below)
+```
+
+Then deploy the Reactive contract on Lasna:
 ```bash
 export REACTIVE_RPC=https://lasna-rpc.rnk.dev          # Reactive Lasna (verified, chainId 5318007)
 export ORIGIN_CHAIN_ID=1301                            # Unichain Sepolia (Lasna origin ✅)
