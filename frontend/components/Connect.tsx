@@ -11,9 +11,9 @@ export function Connect() {
   if (isConnected) {
     return (
       <button className="btn btn-ghost group" onClick={() => disconnect()}>
-        <span className="h-1.5 w-1.5 rounded-full bg-jade" />
+        <span className="h-1.5 w-1.5 rounded-full bg-brand" />
         <span className="font-mono text-[12.5px]">{shortAddr(address)}</span>
-        <span className="text-faint transition-colors group-hover:text-paper">· Disconnect</span>
+        <span className="text-faint transition-colors group-hover:text-ink">· Disconnect</span>
       </button>
     );
   }

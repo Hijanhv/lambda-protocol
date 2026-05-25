@@ -30,10 +30,10 @@ export function FundingPanel() {
 
   return (
     <section className="panel overflow-hidden">
-      {/* Jade wash to mark this as the income card. */}
+      {/* Green wash to mark this as the income card. */}
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-60 blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(92,208,160,0.22), transparent 70%)" }}
+        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-70 blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(17,97,73,0.14), transparent 70%)" }}
       />
 
       <h2 className="eyebrow mb-4">Funding income</h2>
@@ -42,24 +42,24 @@ export function FundingPanel() {
         <div>
           <div className="font-sans text-[12px] text-muted">Claimable now · {tokenMeta.token1.symbol}</div>
           <div
-            className={`mt-1 font-display text-[44px] font-500 leading-none tabular-nums tracking-tight ${
-              hasClaim ? "text-jade" : "text-paper"
+            className={`mt-1 font-display text-[44px] font-semibold leading-none tabular-nums tracking-tight ${
+              hasClaim ? "text-brand" : "text-ink"
             }`}
           >
             {fmt(claimable, dec1)}
           </div>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[12.5px] tabular-nums text-muted">
             <span>
-              your share <span className="text-paper">{fmt(mirrored as bigint, 18)}</span>
+              your share <span className="text-ink">{fmt(mirrored as bigint, 18)}</span>
             </span>
             <span>
-              pool outstanding <span className="text-paper">{fmt((pool as any)?.unclaimed, dec1)}</span>
+              pool outstanding <span className="text-ink">{fmt((pool as any)?.unclaimed, dec1)}</span>
             </span>
           </div>
         </div>
 
         <button
-          className="btn btn-jade shrink-0 px-6 py-3 text-[14px]"
+          className="btn shrink-0 px-6 py-3 text-[14px]"
           disabled={!address || isPending || !hasClaim}
           onClick={() =>
             writeContract(

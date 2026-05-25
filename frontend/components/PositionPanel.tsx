@@ -51,9 +51,9 @@ export function PositionPanel() {
     <section className="panel">
       <h2 className="eyebrow mb-4">Your position</h2>
 
-      <div className="mb-5 rounded-xl border border-white/[0.06] bg-ink-950/40 px-4 py-3.5">
+      <div className="mb-5 rounded-xl border border-line bg-surface2 px-4 py-3.5">
         <div className="font-sans text-[12px] text-muted">Vault shares</div>
-        <div className="mt-0.5 font-display text-[30px] font-500 tabular-nums tracking-tight text-paper">
+        <div className="mt-0.5 font-display text-[30px] font-semibold tabular-nums tracking-tight text-ink">
           {fmt(shares as bigint, 18)}
         </div>
       </div>

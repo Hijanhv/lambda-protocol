@@ -1,33 +1,25 @@
 import type { Config } from "tailwindcss";
 
 /**
- * "Ledger of Fortune" — Ebisu (god of prosperity / fishermen) reimagined for a
- * Uniswap-v4 LP desk. Ink-black canvas, koi-gold actions, jade income, a
- * vermilion seal. Type set by next/font in app/layout.tsx via CSS variables.
+ * Lambda — warm-paper light theme. Cream canvas, ink text, a deep pine-green
+ * brand (yield / money) with a gold "fortune" accent. Type set by next/font in
+ * app/layout.tsx via CSS variables.
  */
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        ink: {
-          950: "#08090c",
-          900: "#0c0d12",
-          850: "#111219",
-          800: "#161821",
-          700: "#1d202b",
-          600: "#262a37",
-        },
-        gold: {
-          DEFAULT: "#e3ad48",
-          bright: "#f4cc6e",
-          dim: "#a9802f",
-        },
-        jade: { DEFAULT: "#5cd0a0", dim: "#2f8c66" },
-        vermilion: { DEFAULT: "#e2533b", dim: "#a83822" },
-        paper: "#ece8dd",
-        muted: "#8b8d99",
-        faint: "#5a5d6b",
+        canvas: "#faf8f2",
+        surface: "#ffffff",
+        surface2: "#f4f0e7",
+        ink: { DEFAULT: "#191710", soft: "#403d33" },
+        muted: "#6c6a5f",
+        faint: "#9b988c",
+        line: "#e9e4d6",
+        brand: { DEFAULT: "#116149", dim: "#0c4838", bright: "#198063" },
+        gold: { DEFAULT: "#b07f25", bright: "#d6a23f", soft: "#f1e6cb" },
+        rose: "#b4452f",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
@@ -36,35 +28,35 @@ const config: Config = {
       },
       letterSpacing: { tightest: "-0.04em" },
       borderRadius: { xl2: "1.25rem" },
+      maxWidth: { content: "68rem" },
       boxShadow: {
-        lift: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 24px 60px -28px rgba(0,0,0,0.9)",
-        seal: "0 0 0 1px rgba(226,83,59,0.4), 0 8px 24px -8px rgba(226,83,59,0.5)",
+        card: "0 1px 2px rgba(25,23,16,0.04), 0 12px 32px -16px rgba(25,23,16,0.16)",
+        lift: "0 2px 4px rgba(25,23,16,0.05), 0 24px 60px -24px rgba(17,97,73,0.22)",
+        seal: "0 6px 18px -6px rgba(17,97,73,0.5)",
       },
       keyframes: {
         rise: {
-          "0%": { opacity: "0", transform: "translateY(14px)" },
+          "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        flow: {
-          "0%": { offsetDistance: "0%", opacity: "0" },
-          "12%": { opacity: "1" },
-          "88%": { opacity: "1" },
-          "100%": { offsetDistance: "100%", opacity: "0" },
-        },
         pulseSoft: {
-          "0%,100%": { opacity: "0.55" },
+          "0%,100%": { opacity: "0.5" },
           "50%": { opacity: "1" },
         },
         sheen: {
-          "0%": { transform: "translateX(-120%)" },
-          "100%": { transform: "translateX(220%)" },
+          "0%": { transform: "translateX(-130%)" },
+          "100%": { transform: "translateX(240%)" },
+        },
+        floaty: {
+          "0%,100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
         },
       },
       animation: {
         rise: "rise 0.7s cubic-bezier(0.16,1,0.3,1) both",
-        flow: "flow 3.2s linear infinite",
         pulseSoft: "pulseSoft 2.6s ease-in-out infinite",
-        sheen: "sheen 2.8s ease-in-out infinite",
+        sheen: "sheen 3s ease-in-out infinite",
+        floaty: "floaty 6s ease-in-out infinite",
       },
     },
   },
