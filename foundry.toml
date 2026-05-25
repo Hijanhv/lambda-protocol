@@ -12,6 +12,7 @@ remappings = [
     "forge-std/=lib/forge-std/src/",
     "solady/=lib/solady/src/",
     "v4-core/=lib/v4-core/",
+    "reactive-lib/=lib/reactive-lib/src/",
 ]
 
 [fuzz]
