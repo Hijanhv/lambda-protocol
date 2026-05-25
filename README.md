@@ -228,7 +228,7 @@ For an ETH/USDC position at the default `h = 0.65`, the pieces add up roughly li
 | Impermanent loss at a 2× price move | −5.7% | ≈ 0% *(93–97% neutralized)* |
 | **Net target, with price risk near zero** | often negative | **≈ 18–30% / yr** |
 
-These are modeled figures based on historical volatility and funding rates, not a guarantee — funding rates vary, and markets do what they want. The point is the *structure*: a position designed to earn whether the market goes up, down, or sideways.
+These are modeled figures based on historical volatility and funding rates, not a guarantee — funding rates vary, and markets do what they want. The point is the *structure*: a position designed to earn whether the market goes up, down, or sideways. The full model — every assumption, the downside when funding turns negative, and code-backed numbers reproduced from the same `DeltaMath` the contracts use — is in **[CALIBRATION.md](CALIBRATION.md)** (`forge test --match-contract Calibration -vv`).
 
 ---
 
