@@ -4,10 +4,31 @@ Copy-paste, in order. This is the **testnet** path (free) for build week; the ma
 addresses for Demo Day are noted at the bottom. Three legs, deployed in order — each later
 leg needs an address the earlier one prints.
 
-> ⚠️ **Three values still need confirmation before broadcasting** (marked `‹CONFIRM›` below):
-> the HyperEVM **testnet** callback-proxy address and RPC, and whether **Reactive Lasna**
-> supports Unichain Sepolia (1301) as an origin and HyperEVM testnet (998) as a destination.
-> Everything else is verified live (see `lambda` ideation repo → `verified_addresses_and_topics.md`).
+> ⚠️ **Testnet topology constraint (confirmed 2026-05-25 via dev.reactive.network/origins-and-destinations):**
+> Reactive **Lasna** can deliver callbacks to Ethereum Sepolia, Base Sepolia, **Unichain Sepolia**,
+> and Lasna itself — but **NOT to HyperEVM testnet (998)**. HyperEVM is a Reactive destination only
+> on **mainnet (999)**. So the *fully auto-wired* loop (Unichain → Reactive → real CoreWriter perp)
+> is **mainnet-only**. On testnet you prove the two halves separately — see "Testnet topology" below.
+>
+> Confirmed: HyperEVM testnet RPC `https://rpc.hyperliquid-testnet.xyz/evm`; Unichain Sepolia (1301)
+> is a Lasna origin **and** destination, callback proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4`.
+
+---
+
+## Testnet topology — how to demo the cross-chain hedge without mainnet
+
+Because Lasna can't reach HyperEVM 998, prove the differentiator in **two halves** on testnet:
+
+1. **Reactive automation (the "no bot, cross-chain" claim):** hook on Unichain Sepolia emits
+   `HedgeRequested` → Reactive Lasna catches it → callback delivered to a supported destination
+   (use **Unichain Sepolia** as both origin and destination, `DESTINATION_CHAIN_ID=1301`). Proves the
+   automatic cross-chain trigger end-to-end.
+2. **Real Hyperliquid hedge (the "real, not simulated" claim):** deploy `LambdaHedger` on **HyperEVM
+   testnet (998)** and trigger `applyHedge` directly (owner/relayer) → it calls the real CoreWriter
+   precompile `0x3333…3333` → a real testnet perp opens. Proves the real venue.
+
+On **mainnet** (if we win) the two halves wire directly: Reactive Mainnet → HyperEVM 999 is a supported
+destination, so `DESTINATION_CHAIN_ID=999` makes the whole loop automatic. Same contracts, no code change.
 
 ---
 
@@ -68,36 +89,47 @@ Save **LambdaHook**, **Funding**, **poolId**, and the **HedgeRequested topic0**.
 
 ## 3 · Leg ② — HyperEVM testnet (the hedger)
 
+On testnet this leg runs **standalone** (Reactive Lasna can't reach 998, so it's triggered
+directly — see "Testnet topology" above). `CALLBACK_SENDER` is the address allowed to call
+`applyHedge` — for the testnet demo, your owner/relayer EOA (on mainnet it's the `0x9299…FC4`
+Reactive proxy).
+
 ```bash
-export HYPEREVM_RPC=https://rpc.hyperliquid-testnet.xyz/evm        # ‹CONFIRM› testnet EVM RPC
-export CALLBACK_SENDER=0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4 # ‹CONFIRM› — this is the VERIFIED mainnet (999) proxy; confirm it's the same on testnet 998
+export HYPEREVM_RPC=https://rpc.hyperliquid-testnet.xyz/evm   # confirmed testnet EVM RPC (chain 998)
+export CALLBACK_SENDER=0x...                                  # testnet: your owner/relayer EOA that triggers applyHedge
 
 forge script contracts/script/DeployHyperEVM.s.sol \
   --rpc-url "$HYPEREVM_RPC" --private-key "$PRIVATE_KEY" --broadcast
 # → prints: LambdaHedger
 ```
 
-Then calibrate the perp market (owner tx):
+Then calibrate the perp market (owner tx) and trigger one hedge directly to prove the real perp:
 ```
 hedger.configureMarket(poolId, assetIndex, szScaleWad, pxScaleWad, slippageBps, tif)
+hedger.applyHedge(...)   # owner/relayer call → real CoreWriter perp on Hyperliquid testnet
 ```
 
 ---
 
 ## 4 · Leg ③ — Reactive Lasna (the brain) — wires ① → ②
 
+On testnet the destination is **Unichain Sepolia (1301)**, not HyperEVM — Lasna can't reach 998
+(see "Testnet topology"). This proves the automatic cross-chain trigger; the destination-side
+receiver on Unichain Sepolia is a lightweight hedge-receiver (the real CoreWriter call is shown
+separately on 998 in leg ②). On mainnet, set `DESTINATION_CHAIN_ID=999` for the fully wired loop.
+
 ```bash
 export REACTIVE_RPC=https://lasna-rpc.rnk.dev          # Reactive Lasna (verified, chainId 5318007)
-export ORIGIN_CHAIN_ID=1301                            # Unichain Sepolia    ‹CONFIRM Lasna supports it as origin›
-export DESTINATION_CHAIN_ID=998                        # HyperEVM testnet    ‹CONFIRM Lasna supports it as destination›
+export ORIGIN_CHAIN_ID=1301                            # Unichain Sepolia (Lasna origin ✅)
+export DESTINATION_CHAIN_ID=1301                       # testnet: Unichain Sepolia (Lasna dest ✅). Mainnet: 999 (HyperEVM)
 export HOOK=0x...                                      # from leg ①
-export HEDGER=0x...                                    # from leg ②
+export HEDGER=0x...                                    # destination receiver on the dest chain
 # export CRON_TOPIC=0x...        # optional funding-checkpoint cron; 0 disables
 # export CALLBACK_GAS_LIMIT=1000000
 
 forge script contracts/script/DeployReactive.s.sol \
   --rpc-url "$REACTIVE_RPC" --private-key "$PRIVATE_KEY" --broadcast
-# → subscribes to HedgeRequested (topic0 from ①) and routes callbacks to ②
+# → subscribes to HedgeRequested (topic0 from ①) and routes the callback to the destination
 ```
 
 ---
