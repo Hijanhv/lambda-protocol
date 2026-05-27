@@ -341,7 +341,17 @@ cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C \
 
 Explore on [uniscan (Unichain Sepolia)](https://sepolia.uniscan.xyz/) and [reactscan (Lasna)](https://lasna.reactscan.net/).
 
-> **On the hedge leg:** Reactive's testnet (Lasna) delivers callbacks to Unichain Sepolia but not to HyperEVM testnet, so on testnet the callback lands on a `LambdaHedgeReceiver` that records the hedge (same auth + nonce rules as the real hedger, minus the CoreWriter order). On mainnet the same loop targets the real `LambdaHedger` on HyperEVM via a one-line config change — see [Path to mainnet](#path-to-mainnet).
+### The hedge leg (`LambdaHedger`) — implemented and tested, not deployed on testnet
+
+Reactive's testnet (Lasna) delivers callbacks to Unichain Sepolia, Base Sepolia, and Ethereum Sepolia — **but not to HyperEVM testnet (998)**; HyperEVM is a Reactive destination only on **mainnet (999)** (confirmed against Reactive's [origins & destinations](https://dev.reactive.network/origins-and-destinations)). So on testnet the cross-chain callback lands on a `LambdaHedgeReceiver`, which records the hedge with the **same authorization and monotonic-nonce rules as the real hedger** — only the CoreWriter order itself is omitted.
+
+The real perp leg is **fully built, not stubbed**:
+
+- **`LambdaHedger`** sizes the perp from the callback and fires it through the CoreWriter precompile; unit-tested against a `MockCoreWriter` that mirrors the precompile's `RawAction` behavior.
+- **`CoreWriterLib`** frames the Hyperliquid order bytes; its encoding is tested exactly.
+- Hyperliquid's **CoreWriter precompile** (`0x3333…3333`, selector `sendRawAction(bytes)`) was **verified live on-chain** on HyperEVM — it's real, not assumed.
+
+It is simply not *deployed* on testnet because of the routing gap above. On mainnet the same verified loop targets the real `LambdaHedger` on HyperEVM with a one-line config change (`DESTINATION_CHAIN_ID=999`) — see [Path to mainnet](#path-to-mainnet).
 
 ---
 
