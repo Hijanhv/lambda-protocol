@@ -142,19 +142,31 @@ forge script contracts/script/DeployReceiver.s.sol \
 # → prints: LambdaHedgeReceiver   (use as HEDGER below)
 ```
 
-Then deploy the Reactive contract on Lasna:
+Then deploy the Reactive contract on Lasna.
+
+> ⚠️ **`forge script` can NOT deploy `LambdaReactive`.** Its constructor calls Reactive's
+> `subscribe` precompile (at `0x64`), which reverts in forge's local execution/simulation
+> (the precompile only exists on real Reactive nodes). `--skip-simulation` doesn't help —
+> forge still runs the constructor locally to collect the tx. **Deploy with `cast send --create`
+> instead**, so the constructor runs only on-chain:
+
 ```bash
 export REACTIVE_RPC=https://lasna-rpc.rnk.dev          # Reactive Lasna (verified, chainId 5318007)
-export ORIGIN_CHAIN_ID=1301                            # Unichain Sepolia (Lasna origin ✅)
-export DESTINATION_CHAIN_ID=1301                       # testnet: Unichain Sepolia (Lasna dest ✅). Mainnet: 999 (HyperEVM)
-export HOOK=0x...                                      # from leg ①
-export HEDGER=0x...                                    # destination receiver on the dest chain
-# export CRON_TOPIC=0x...        # optional funding-checkpoint cron; 0 disables
-# export CALLBACK_GAS_LIMIT=1000000
+HOOK=0x...        # from leg ①
+HEDGER=0x...      # the LambdaHedgeReceiver from above (testnet) / real LambdaHedger (mainnet)
+ORIGIN=1301       # Unichain Sepolia (Lasna origin ✅)
+DEST=1301         # testnet: Unichain Sepolia (Lasna dest ✅). Mainnet: 999 (HyperEVM)
 
-forge script contracts/script/DeployReactive.s.sol \
-  --rpc-url "$REACTIVE_RPC" --private-key "$PRIVATE_KEY" --broadcast
-# → subscribes to HedgeRequested (topic0 from ①) and routes the callback to the destination
+BYTECODE=$(jq -r '.bytecode.object' out/LambdaReactive.sol/LambdaReactive.json)
+ARGS=$(cast abi-encode "f(uint256,address,uint256,address,uint256,uint64)" $ORIGIN $HOOK $DEST $HEDGER 0 1000000)
+cast send --rpc-url "$REACTIVE_RPC" --account uhi9 --sender "$DEPLOYER" --create "${BYTECODE}${ARGS#0x}"
+# → constructor (uint256 originChainId, address hook, uint256 destChainId, address hedger, uint256 cronTopic, uint64 callbackGasLimit)
+# → the receipt's `contractAddress` is your LambdaReactive; it subscribes to HedgeRequested on the origin
+```
+
+Then **fund it for callbacks** (Reactive pays callback gas from the contract's REACT balance):
+```bash
+cast send <LambdaReactive> --value 2ether --rpc-url "$REACTIVE_RPC" --account uhi9 --sender "$DEPLOYER"
 ```
 
 ---

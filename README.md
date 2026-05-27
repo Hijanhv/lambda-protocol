@@ -42,6 +42,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
+- [Live on testnet](#live-on-testnet)
 - [Path to mainnet](#path-to-mainnet)
 - [Built with](#built-with)
 - [Glossary for non-experts](#glossary-for-non-experts)
@@ -296,10 +297,12 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Solidity hook — vault, exact-delta hedge signal, Nezlobin dynamic fee | ✅ Done |
 | Reactive Smart Contract + HyperEVM hedger (CoreWriter) | ✅ Done |
 | Per-LP funding accrual (Funding) + Aave-backed insurance reserve | ✅ Done |
-| Deployment scripts (3 chains) + first live testnet hedge via CoreWriter | 🔜 Next |
-| Frontend LP dashboard + demo | 🔜 Planned |
+| Deployment scripts + **live testnet deploy** (Unichain Sepolia) | ✅ Done |
+| **Cross-chain hedge automation** (Unichain → Reactive → callback), verified live | ✅ Done |
+| Frontend LP dashboard, reading live on-chain state | ✅ Done |
+| First real CoreWriter perp on HyperEVM (Reactive→HyperEVM is mainnet-only on Reactive) | 🔜 Next |
 
-**What's implemented today** — Solidity on Foundry, **109 passing tests**, warning-free build:
+**What's implemented today** — Solidity on Foundry, **127 passing tests**, warning-free build, and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
 
 | Contract(s) | Role |
 |---|---|
@@ -311,6 +314,34 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | `InsuranceVault`, `AaveV3Venue` | liquidation-gap reserve that earns Aave V3 yield while idle |
 
 The rails Lambda builds on are already live and were verified directly on-chain: Hyperliquid's CoreWriter precompile (`0x3333…3333` on HyperEVM), the Uniswap v4 `PoolManager` on Unichain, and the Reactive Network system contracts.
+
+---
+
+## Live on testnet
+
+Lambda is **deployed and running** on **Unichain Sepolia** (1301) + **Reactive Lasna** (5318007), and the cross-chain hedge loop is verified end-to-end on-chain.
+
+| Contract | Chain | Address |
+|---|---|---|
+| `LambdaHook` | Unichain Sepolia | `0x23C3da7CF53862Fd38640100D4FB764bE2d2cac0` |
+| `Funding` | Unichain Sepolia | `0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1` |
+| `LambdaReactive` | Reactive Lasna | `0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79` |
+| `LambdaHedgeReceiver` | Unichain Sepolia | `0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C` |
+| tWETH / tUSDC (test pair) | Unichain Sepolia | `0x8f9D…9f79` / `0xca3c…767b` |
+| poolId | — | `0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b` |
+
+**Verified end-to-end:** a deposit + swap fire `HedgeRequested` on Unichain Sepolia; `LambdaReactive` (subscribed on Reactive Lasna) catches the event and routes a callback **back across chains, with no off-chain bot**, and the destination contract records the exact hedge the protocol computed (`targetSize = 0.65 × delta`). Anyone can verify the delivered state:
+
+```bash
+cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C \
+  "hedge(bytes32)((uint64,uint64,uint256,uint160))" \
+  0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b \
+  --rpc-url https://sepolia.unichain.org
+```
+
+Explore on [uniscan (Unichain Sepolia)](https://sepolia.uniscan.xyz/) and [reactscan (Lasna)](https://lasna.reactscan.net/).
+
+> **On the hedge leg:** Reactive's testnet (Lasna) delivers callbacks to Unichain Sepolia but not to HyperEVM testnet, so on testnet the callback lands on a `LambdaHedgeReceiver` that records the hedge (same auth + nonce rules as the real hedger, minus the CoreWriter order). On mainnet the same loop targets the real `LambdaHedger` on HyperEVM via a one-line config change — see [Path to mainnet](#path-to-mainnet).
 
 ---
 
