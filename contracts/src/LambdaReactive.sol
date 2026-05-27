@@ -98,7 +98,7 @@ contract LambdaReactive is AbstractReactive {
     function react(LogRecord calldata log) external vmOnly {
         if (log.topic_0 == HEDGE_TOPIC0 && log._contract == hook && log.chain_id == originChainId) {
             _routeHedge(log);
-        } else if (cronTopic != 0 && log.topic_0 == cronTopic) {
+        } else if (cronTopic != 0 && log.topic_0 == cronTopic && log.chain_id == block.chainid) {
             _routeFunding();
         }
     }

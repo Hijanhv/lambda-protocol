@@ -35,8 +35,9 @@ contract SeedDemo is LambdaConfig {
         uint256 swapAmt = vm.envOr("SWAP_AMOUNT", uint256(1e18));
 
         (Currency c0, Currency c1) = _sorted(token0(), token1());
-        PoolKey memory key =
-            PoolKey({currency0: c0, currency1: c1, fee: DYNAMIC_FEE, tickSpacing: tickSpacing(), hooks: IHooks(hookAddr)});
+        PoolKey memory key = PoolKey({
+            currency0: c0, currency1: c1, fee: DYNAMIC_FEE, tickSpacing: tickSpacing(), hooks: IHooks(hookAddr)
+        });
         address a0 = Currency.unwrap(c0);
         address a1 = Currency.unwrap(c1);
 

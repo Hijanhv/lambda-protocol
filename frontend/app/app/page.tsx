@@ -86,6 +86,15 @@ export default function AppPage() {
           through Hyperliquid&apos;s CoreWriter precompile → the funding it earns accrues back to
           you, claimable above. <Link href="/docs" className="text-brand underline-offset-2 hover:underline">Read how it works →</Link>
         </p>
+
+        {isConfigured && (
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[11.5px] text-faint">
+            <span className="font-sans font-bold uppercase tracking-[0.16em] text-muted">Verify on-chain</span>
+            <a className="transition-colors hover:text-brand" target="_blank" rel="noreferrer" href={`https://sepolia.uniscan.xyz/address/${addresses.hook}`}>Hook ↗</a>
+            <a className="transition-colors hover:text-brand" target="_blank" rel="noreferrer" href={`https://sepolia.uniscan.xyz/address/${addresses.funding}`}>Funding ↗</a>
+            <a className="transition-colors hover:text-brand" target="_blank" rel="noreferrer" href="https://lasna.reactscan.net/">Reactive (Lasna) ↗</a>
+          </div>
+        )}
       </main>
     </div>
   );

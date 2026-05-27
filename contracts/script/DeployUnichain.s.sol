@@ -29,8 +29,7 @@ contract DeployUnichain is LambdaConfig {
                 | Hooks.AFTER_SWAP_FLAG
         );
         bytes memory args = abi.encode(IPoolManager(poolManager()), owner());
-        (address mined, bytes32 salt) =
-            HookMiner.find(CREATE2_DEPLOYER, flags, type(LambdaHook).creationCode, args);
+        (address mined, bytes32 salt) = HookMiner.find(CREATE2_DEPLOYER, flags, type(LambdaHook).creationCode, args);
 
         vm.startBroadcast();
 
@@ -44,11 +43,7 @@ contract DeployUnichain is LambdaConfig {
         // Sort currencies and initialize the dynamic-fee pool.
         (Currency c0, Currency c1) = _sorted(token0(), token1());
         PoolKey memory key = PoolKey({
-            currency0: c0,
-            currency1: c1,
-            fee: DYNAMIC_FEE,
-            tickSpacing: tickSpacing(),
-            hooks: IHooks(address(hook))
+            currency0: c0, currency1: c1, fee: DYNAMIC_FEE, tickSpacing: tickSpacing(), hooks: IHooks(address(hook))
         });
         uint160 sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(79228162514264337593543950336))); // 1:1
         IPoolManager(poolManager()).initialize(key, sqrtPriceX96);
@@ -74,9 +69,7 @@ contract DeployUnichain is LambdaConfig {
     }
 
     function _sorted(address a, address b) internal pure returns (Currency, Currency) {
-        return a < b
-            ? (Currency.wrap(a), Currency.wrap(b))
-            : (Currency.wrap(b), Currency.wrap(a));
+        return a < b ? (Currency.wrap(a), Currency.wrap(b)) : (Currency.wrap(b), Currency.wrap(a));
     }
 
     function _hedgeTopic() internal pure returns (bytes32) {

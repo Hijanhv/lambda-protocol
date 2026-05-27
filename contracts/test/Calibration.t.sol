@@ -38,7 +38,7 @@ contract CalibrationTest is Test {
             console2.log("  LVR rate/yr (1e18):", lvr);
             // Sanity: across this vol band, annual LVR sits in a single-digit-to-teens % range.
             assertGt(lvr, 0.01e18, "LVR > 1%/yr");
-            assertLt(lvr, 0.30e18, "LVR < 30%/yr");
+            assertLt(lvr, 0.3e18, "LVR < 30%/yr");
         }
     }
 

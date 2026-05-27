@@ -25,6 +25,7 @@ contract MockSystemContract {
     }
 
     function unsubscribe(uint256, address, uint256, uint256, uint256, uint256) external {}
+
     function debt(address) external pure returns (uint256) {
         return 0;
     }
@@ -77,7 +78,13 @@ contract LambdaReactiveTest is Test {
         l.topic_0 = HEDGE_TOPIC0;
         l.topic_1 = uint256(poolId);
         l.topic_2 = nonce;
-        l.data = abi.encode(targetSize, uint256(123e18) /*liveDelta*/, sqrtPriceX96, block.timestamp);
+        l.data = abi.encode(
+            targetSize,
+            uint256(123e18),
+            /*liveDelta*/
+            sqrtPriceX96,
+            block.timestamp
+        );
     }
 
     /// @dev Find the most recent Reactive `Callback` and return its payload.
@@ -121,7 +128,9 @@ contract LambdaReactiveTest is Test {
         assertTrue(found, "Callback emitted");
 
         // Targets applyHedge with a zero-address placeholder for the relayer to fill.
-        assertEq(_selector(payload), bytes4(keccak256("applyHedge(address,bytes32,uint64,uint256,uint160)")), "selector");
+        assertEq(
+            _selector(payload), bytes4(keccak256("applyHedge(address,bytes32,uint64,uint256,uint160)")), "selector"
+        );
         (address rvm, bytes32 poolId, uint64 nonce, uint256 targetSize,) = _payloadArgs(payload);
         assertEq(rvm, address(0), "rvm placeholder");
         assertEq(poolId, POOL, "pool routed");
@@ -197,7 +206,15 @@ contract LambdaReactiveTest is Test {
 
     function test_constructor_skipsCronSubWhenDisabled() public {
         vm.etch(SERVICE, address(new MockSystemContract()).code);
-        new LambdaReactive(ORIGIN_CHAIN, HOOK, DEST_CHAIN, HEDGER, 0 /* cron disabled */, GAS_LIMIT);
+        new LambdaReactive(
+            ORIGIN_CHAIN,
+            HOOK,
+            DEST_CHAIN,
+            HEDGER,
+            0,
+            /* cron disabled */
+            GAS_LIMIT
+        );
 
         MockSystemContract sys = MockSystemContract(payable(SERVICE));
         assertEq(sys.subCount(), 1, "only the hedge subscription when cron is off");

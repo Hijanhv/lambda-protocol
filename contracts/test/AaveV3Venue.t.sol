@@ -95,8 +95,7 @@ contract AaveV3VenueTest is Test {
 
     function test_integration_insuranceVaultEarnsAaveYield() public {
         InsuranceVault vault = new InsuranceVault(address(usdc), address(this), address(this));
-        AaveV3Venue adapter =
-            new AaveV3Venue(address(usdc), address(aUsdc), IAaveV3Pool(address(pool)), address(vault));
+        AaveV3Venue adapter = new AaveV3Venue(address(usdc), address(aUsdc), IAaveV3Pool(address(pool)), address(vault));
         vault.setVenue(adapter);
 
         usdc.mint(address(this), 1000e6);

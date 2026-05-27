@@ -100,7 +100,11 @@ contract FundingInvariantTest is Test {
 
     /// Unclaimed liability is exactly notified minus claimed.
     function invariant_unclaimedMatchesFlow() public view {
-        assertEq(funding.poolInfo(POOL).unclaimed, handler.totalNotified() - handler.totalClaimed(), "unclaimed == notified - claimed");
+        assertEq(
+            funding.poolInfo(POOL).unclaimed,
+            handler.totalNotified() - handler.totalClaimed(),
+            "unclaimed == notified - claimed"
+        );
     }
 
     /// The mirrored total equals the sum of per-actor share balances.
@@ -112,6 +116,10 @@ contract FundingInvariantTest is Test {
     /// number of share changes (≤1 wei each). `claim` caps at `unclaimed`, so this dust can
     /// never make a payout revert; it only means a few wei roll into the next funding round.
     function invariant_pendingWithinReservePlusDust() public view {
-        assertLe(handler.sumPending(), funding.poolInfo(POOL).unclaimed + handler.shareChanges(), "sum(pending) <= unclaimed + dust");
+        assertLe(
+            handler.sumPending(),
+            funding.poolInfo(POOL).unclaimed + handler.shareChanges(),
+            "sum(pending) <= unclaimed + dust"
+        );
     }
 }

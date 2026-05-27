@@ -199,10 +199,10 @@ A full hedge (`h = 1`) cancels the most price risk — but a short can be **liqu
 ```
 best hedge ratio  h*  ≈  0.65
    • h = 1.00  →  ~19% chance of liquidation over 90 days
-   • h = 0.65  →  ~1.4% chance, and still removes 93–97% of impermanent loss
+   • h = 0.65  →  ~1.4% chance of liquidation over 90 days
 ```
 
-Lambda ships `h = 0.65` by default. You give up a sliver of hedging to make the position dramatically safer. That trade is worth it.
+Lambda ships `h = 0.65` by default — and the key insight is that hedging *most* of the risk costs far less safety than hedging *all* of it, while giving up surprisingly little protection. Price-risk **variance scales with the square of the residual delta**, so a 0.65 hedge removes roughly `1 − (1 − 0.65)² ≈ 88%` of the linear price variance — not 65%. Hane et al. (2026) show that with optimal `τ`-banded rebalancing this reaches **~93–97%** impermanent-loss reduction while holding liquidation risk near 1.4%. (That ~93–97% figure is their modeled result, cited — not one we reproduce in our test suite; the code-backed numbers are in [CALIBRATION.md](CALIBRATION.md).)
 
 ### 6. Protecting the pool directly: a directional fee
 
@@ -225,12 +225,13 @@ For an ETH/USDC position at the default `h = 0.65`, the pieces add up roughly li
 | Where it comes from | Normal LP | Lambda LP |
 |---|---:|---:|
 | Trading fees | +5–12% / yr | +5–12% / yr *(curve unchanged)* |
-| LVR drag | **−11% / yr** *(silent loss)* | **~+7% / yr** *(captured back)* |
-| Funding income from the short | — | +10–15% / yr |
-| Impermanent loss at a 2× price move | −5.7% | ≈ 0% *(93–97% neutralized)* |
-| **Net target, with price risk near zero** | often negative | **≈ 18–30% / yr** |
+| LVR drag | **−11% / yr** *(silent loss)* | **−11% / yr** *(offset by funding ↓)* |
+| Funding income from the short | — | **+10–15% / yr** *(collects the LVR back)* |
+| Gamma + rebalancing cost | — | −0.5% *(`τ`-banded)* |
+| Impermanent loss at a 2× price move | −5.7% | largely hedged *(see §5)* |
+| **Net target, price risk near zero** | often negative | **≈ +8% (conservative) → +30% (optimistic)** |
 
-These are modeled figures based on historical volatility and funding rates, not a guarantee — funding rates vary, and markets do what they want. The point is the *structure*: a position designed to earn whether the market goes up, down, or sideways. The full model — every assumption, the downside when funding turns negative, and code-backed numbers reproduced from the same `DeltaMath` the contracts use — is in **[CALIBRATION.md](CALIBRATION.md)** (`forge test --match-contract Calibration -vv`).
+The LVR and the funding income are *the same dollars with the sign flipped* — the funding row is **how** the LVR drag is recaptured, not a second source on top of it (that's the whole LVR ⇋ funding identity). These are modeled figures based on historical volatility and funding rates, not a guarantee — funding rates vary, and markets do what they want. The point is the *structure*: a position designed to earn whether the market goes up, down, or sideways. The full model — every assumption, the downside when funding turns negative, and code-backed numbers reproduced from the same `DeltaMath` the contracts use — is in **[CALIBRATION.md](CALIBRATION.md)** (`forge test --match-contract Calibration -vv`).
 
 ---
 
@@ -390,7 +391,7 @@ Lambda is submitted on **testnet**, where every piece runs against live infrastr
 - **[Hyperliquid](https://hyperliquid.xyz)** — on-chain perpetuals, accessed directly through the HyperEVM CoreWriter precompile (`0x3333…3333`)
 - **[Aave V3](https://aave.com)** — yield venue for the idle insurance reserve
 - **[Solady](https://github.com/Vectorized/solady)** — gas-optimized `Ownable`, `ReentrancyGuard`, `SafeTransferLib`, `FixedPointMathLib`
-- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, and property tests (109 passing)
+- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, and property tests (127 passing)
 
 ---
 

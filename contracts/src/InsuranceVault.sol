@@ -72,6 +72,7 @@ contract InsuranceVault is Ownable, ReentrancyGuard {
     error NotCoverer();
     error ZeroAmount();
     error ZeroAddress();
+    error ZeroShares();
     error InsufficientShares();
     error VenueAssetMismatch();
 
@@ -141,6 +142,9 @@ contract InsuranceVault is Ownable, ReentrancyGuard {
 
         // First deposit anchors 1:1; later deposits price against the live reserve value.
         shares = totalShares == 0 ? assets : FixedPointMathLib.fullMulDiv(assets, totalShares, ta);
+        // Never mint 0 shares for real assets — defeats the ERC-4626 first-depositor/donation
+        // share-inflation grief (a victim reverts instead of depositing for nothing).
+        if (shares == 0) revert ZeroShares();
 
         _deployToVenue(assets);
         totalShares += shares;

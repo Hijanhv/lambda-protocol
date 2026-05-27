@@ -61,7 +61,9 @@ contract LambdaHedger is AbstractCallback, Ownable {
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice A pool's perp market was (re)calibrated.
-    event MarketConfigured(bytes32 indexed poolId, uint32 asset, uint256 szScaleWad, uint256 pxScaleWad, uint16 slippageBps, uint8 tif);
+    event MarketConfigured(
+        bytes32 indexed poolId, uint32 asset, uint256 szScaleWad, uint256 pxScaleWad, uint16 slippageBps, uint8 tif
+    );
 
     /// @notice A hedge callback was applied and an order was sent to CoreWriter.
     /// @param poolId    Pool whose hedge changed.
@@ -70,7 +72,9 @@ contract LambdaHedger is AbstractCallback, Ownable {
     /// @param sizeWad   Size traded, token0 WAD units.
     /// @param newShort  Resulting short size, token0 WAD units.
     /// @param limitPx   L1 limit price used.
-    event HedgeExecuted(bytes32 indexed poolId, uint64 indexed nonce, bool isBuy, uint256 sizeWad, uint256 newShort, uint64 limitPx);
+    event HedgeExecuted(
+        bytes32 indexed poolId, uint64 indexed nonce, bool isBuy, uint256 sizeWad, uint256 newShort, uint64 limitPx
+    );
 
     /// @notice A hedge callback that required no trade (target already met within rounding).
     event HedgeNoop(bytes32 indexed poolId, uint64 indexed nonce, uint256 shortSize);

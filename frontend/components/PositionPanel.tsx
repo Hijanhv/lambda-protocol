@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
-import { maxUint256, parseUnits } from "viem";
+import { maxUint128, maxUint256, parseUnits } from "viem";
 import { hook, erc20Abi } from "@/lib/contracts";
 import { addresses, tokenMeta, currency0 } from "@/lib/config";
 import { fmt } from "@/lib/format";
@@ -37,7 +37,9 @@ export function PositionPanel() {
   // treating the input as raw L when the pool is empty and there is nothing to quote against.
   const amount0 = amt ? parseUnits(amt, currency0.decimals) : 0n;
   const canQuote = !!poolLiquidity && poolLiquidity > 0n && !!liveDelta && liveDelta > 0n;
+  const aboveRange = !!poolLiquidity && poolLiquidity > 0n && (!liveDelta || liveDelta === 0n);
   const liquidity = canQuote ? (amount0 * poolLiquidity!) / liveDelta! : amount0;
+  const tooBig = liquidity > maxUint128; // deposit() takes uint128 — guard the encode
 
   const approve = (token: `0x${string}`) =>
     writeContract({ address: token, abi: erc20Abi, functionName: "approve", args: [addresses.hook, maxUint256] });
@@ -76,20 +78,30 @@ export function PositionPanel() {
             className="field-input pr-16"
             placeholder={`amount of ${currency0.symbol}`}
             value={amt}
-            onChange={(e) => setAmt(e.target.value.replace(/[^0-9.]/g, ""))}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.]/g, "");
+              const i = v.indexOf(".");
+              setAmt(i === -1 ? v : v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ""));
+            }}
           />
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-sans text-[12px] font-medium text-faint">
             {currency0.symbol}
           </span>
         </div>
-        <button className="btn shrink-0" disabled={!address || isPending || liquidity === 0n} onClick={deposit}>
+        <button className="btn shrink-0" disabled={!address || isPending || liquidity === 0n || tooBig} onClick={deposit}>
           Deposit
         </button>
       </div>
 
       <div className="mt-1.5 h-4 font-mono text-[11.5px] tabular-nums text-faint">
         {amount0 > 0n &&
-          (canQuote ? `≈ ${fmt(liquidity, 18)} liquidity` : "pool not seeded yet — entering raw liquidity")}
+          (tooBig
+            ? "amount too large"
+            : canQuote
+            ? `≈ ${fmt(liquidity, 18)} liquidity`
+            : aboveRange
+            ? `price is above the range — entering raw liquidity`
+            : "pool not seeded yet — entering raw liquidity")}
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">

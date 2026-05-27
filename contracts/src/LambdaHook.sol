@@ -144,14 +144,23 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
     /// @notice Emitted when the directional-fee parameters are seeded or retuned.
     event FeeParamsUpdated(
-        PoolId indexed id, uint24 baseFeePips, uint24 minFeePips, uint24 maxSurchargePips, uint256 sensitivityPipsPerTick, uint32 emaWeightBps
+        PoolId indexed id,
+        uint24 baseFeePips,
+        uint24 minFeePips,
+        uint24 maxSurchargePips,
+        uint256 sensitivityPipsPerTick,
+        uint32 emaWeightBps
     );
 
     /// @notice An LP added liquidity through the vault.
-    event Deposited(PoolId indexed id, address indexed to, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1);
+    event Deposited(
+        PoolId indexed id, address indexed to, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1
+    );
 
     /// @notice An LP removed liquidity through the vault.
-    event Withdrawn(PoolId indexed id, address indexed from, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1);
+    event Withdrawn(
+        PoolId indexed id, address indexed from, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1
+    );
 
     /// @notice The cross-chain hedge trigger. Consumed in `nonce` order by the Reactive SC.
     /// @param id          Pool whose hedge must change.
@@ -278,7 +287,14 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         f.refTick = tick;
 
         emit PoolConfigured(id, tickLower, tickUpper, tau, hedgeRatioWad);
-        emit FeeParamsUpdated(id, DEFAULT_BASE_FEE, DEFAULT_MIN_FEE, DEFAULT_MAX_SURCHARGE, DEFAULT_FEE_SENSITIVITY, DEFAULT_EMA_WEIGHT_BPS);
+        emit FeeParamsUpdated(
+            id,
+            DEFAULT_BASE_FEE,
+            DEFAULT_MIN_FEE,
+            DEFAULT_MAX_SURCHARGE,
+            DEFAULT_FEE_SENSITIVITY,
+            DEFAULT_EMA_WEIGHT_BPS
+        );
     }
 
     /// @notice Set (or clear, with the zero address) the funding ledger notified on share
@@ -362,9 +378,8 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
         // First deposit anchors shares 1:1 to liquidity; later deposits are pro-rata so a
         // share's claim on the position never changes underneath existing LPs.
-        shares = liquidityBefore == 0
-            ? liquidity
-            : FixedPointMathLib.fullMulDiv(liquidity, sharesBefore, liquidityBefore);
+        shares =
+            liquidityBefore == 0 ? liquidity : FixedPointMathLib.fullMulDiv(liquidity, sharesBefore, liquidityBefore);
 
         ps.liquidity = liquidityBefore + liquidity;
         ps.totalShares = sharesBefore + shares;
@@ -457,10 +472,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         (BalanceDelta delta,) = poolManager.modifyLiquidity(
             cb.key,
             IPoolManager.ModifyLiquidityParams({
-                tickLower: ps.tickLower,
-                tickUpper: ps.tickUpper,
-                liquidityDelta: signed,
-                salt: bytes32(0)
+                tickLower: ps.tickLower, tickUpper: ps.tickUpper, liquidityDelta: signed, salt: bytes32(0)
             }),
             ""
         );
@@ -520,7 +532,9 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         if (DeltaMath.shouldRehedge(ps.hedgedDelta, live, ps.tau)) {
             ps.hedgedDelta = live;
             uint64 nonce = ++ps.hedgeNonce;
-            emit HedgeRequested(id, nonce, DeltaMath.hedgeSize(live, ps.hedgeRatioWad), live, sqrtPriceX96, block.timestamp);
+            emit HedgeRequested(
+                id, nonce, DeltaMath.hedgeSize(live, ps.hedgeRatioWad), live, sqrtPriceX96, block.timestamp
+            );
         }
     }
 
@@ -529,23 +543,23 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice Reject every LP that isn't the vault itself, keeping pool liquidity == vault liquidity.
-    function beforeAddLiquidity(address sender, PoolKey calldata, IPoolManager.ModifyLiquidityParams calldata, bytes calldata)
-        external
-        view
-        onlyPoolManager
-        returns (bytes4)
-    {
+    function beforeAddLiquidity(
+        address sender,
+        PoolKey calldata,
+        IPoolManager.ModifyLiquidityParams calldata,
+        bytes calldata
+    ) external view onlyPoolManager returns (bytes4) {
         if (sender != address(this)) revert DirectLiquidityDisabled();
         return IHooks.beforeAddLiquidity.selector;
     }
 
     /// @notice Same gate on removal.
-    function beforeRemoveLiquidity(address sender, PoolKey calldata, IPoolManager.ModifyLiquidityParams calldata, bytes calldata)
-        external
-        view
-        onlyPoolManager
-        returns (bytes4)
-    {
+    function beforeRemoveLiquidity(
+        address sender,
+        PoolKey calldata,
+        IPoolManager.ModifyLiquidityParams calldata,
+        bytes calldata
+    ) external view onlyPoolManager returns (bytes4) {
         if (sender != address(this)) revert DirectLiquidityDisabled();
         return IHooks.beforeRemoveLiquidity.selector;
     }
@@ -568,7 +582,12 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         }
         (, int24 tick,,) = poolManager.getSlot0(id);
         uint24 fee = DirectionalFee.asymmetricFee(
-            f.baseFeePips, f.minFeePips, f.maxSurchargePips, f.sensitivityPipsPerTick, tick - f.refTick, params.zeroForOne
+            f.baseFeePips,
+            f.minFeePips,
+            f.maxSurchargePips,
+            f.sensitivityPipsPerTick,
+            tick - f.refTick,
+            params.zeroForOne
         );
         return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, fee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
     }
@@ -672,7 +691,10 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         PoolState storage ps = _pools[id];
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(id);
         return DeltaMath.lpDelta(
-            ps.liquidity, sqrtPriceX96, TickMath.getSqrtPriceAtTick(ps.tickLower), TickMath.getSqrtPriceAtTick(ps.tickUpper)
+            ps.liquidity,
+            sqrtPriceX96,
+            TickMath.getSqrtPriceAtTick(ps.tickLower),
+            TickMath.getSqrtPriceAtTick(ps.tickUpper)
         );
     }
 

@@ -43,7 +43,9 @@ contract FundingIntegrationTest is Test, Deployers {
         deployCodeTo("LambdaHook.sol:LambdaHook", abi.encode(manager, address(this)), hookAddr);
         hook = LambdaHook(payable(hookAddr));
 
-        (key, id) = initPool(currency0, currency1, IHooks(hookAddr), LPFeeLibrary.DYNAMIC_FEE_FLAG, TICK_SPACING, SQRT_PRICE_1_1);
+        (key, id) = initPool(
+            currency0, currency1, IHooks(hookAddr), LPFeeLibrary.DYNAMIC_FEE_FLAG, TICK_SPACING, SQRT_PRICE_1_1
+        );
         pid = PoolId.unwrap(id);
         hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0);
 
@@ -76,7 +78,11 @@ contract FundingIntegrationTest is Test, Deployers {
         uint256 balBefore = MockERC20(Currency.unwrap(currency1)).balanceOf(address(this));
         uint256 claimed = funding.claim(pid);
         assertEq(claimed, amount, "claims the full amount");
-        assertEq(MockERC20(Currency.unwrap(currency1)).balanceOf(address(this)) - balBefore, amount, "funding paid out in token1");
+        assertEq(
+            MockERC20(Currency.unwrap(currency1)).balanceOf(address(this)) - balBefore,
+            amount,
+            "funding paid out in token1"
+        );
     }
 
     function test_twoLpsSplitFundingProRata() public {

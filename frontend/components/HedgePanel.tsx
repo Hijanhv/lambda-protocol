@@ -13,13 +13,17 @@ import { fmt, feePctFromPips } from "@/lib/format";
 export function HedgePanel() {
   const poolKey = usePoolKeyArg();
 
-  const { data: ps } = useReadContract({ ...hook, functionName: "poolState", args: poolKey });
-  const { data: delta } = useReadContract({ ...hook, functionName: "currentDelta", args: poolKey });
-  const { data: feeBuy } = useReadContract({ ...hook, functionName: "previewFee", args: [poolKey?.[0], false] });
-  const { data: feeSell } = useReadContract({ ...hook, functionName: "previewFee", args: [poolKey?.[0], true] });
+  const poll = { refetchInterval: 8000 } as const;
+  const { data: ps } = useReadContract({ ...hook, functionName: "poolState", args: poolKey, query: poll });
+  const { data: delta } = useReadContract({ ...hook, functionName: "currentDelta", args: poolKey, query: poll });
+  const { data: feeBuy } = useReadContract({ ...hook, functionName: "previewFee", args: [poolKey?.[0], false], query: poll });
+  const { data: feeSell } = useReadContract({ ...hook, functionName: "previewFee", args: [poolKey?.[0], true], query: poll });
 
   const state = ps as any;
   const dec = currency0.decimals;
+  // Short the protocol targets on Hyperliquid = h · (delta at last signal).
+  const shortTarget =
+    state?.hedgedDelta != null ? (BigInt(state.hedgedDelta) * BigInt(state.hedgeRatioWad)) / 10n ** 18n : 0n;
 
   return (
     <section className="panel">
@@ -32,6 +36,10 @@ export function HedgePanel() {
       <div className="stat-row">
         <span className="stat-key">Hedged delta (last signal)</span>
         <span className="stat-val">{fmt(state?.hedgedDelta, dec)}</span>
+      </div>
+      <div className="stat-row">
+        <span className="stat-key">Short target on Hyperliquid (h · Δ)</span>
+        <span className="stat-val text-brand">{fmt(shortTarget, dec)}</span>
       </div>
       <div className="stat-row">
         <span className="stat-key">Hedge signals sent (nonce)</span>

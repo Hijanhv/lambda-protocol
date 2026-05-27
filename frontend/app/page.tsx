@@ -69,7 +69,7 @@ function Hero() {
         {[
           ["σ² / 8", "the LVR loss rate, now reclaimed"],
           ["h = 0.65", "research-backed hedge ratio"],
-          ["109", "passing Foundry tests"],
+          ["127", "passing Foundry tests"],
         ].map(([v, k]) => (
           <div key={k}>
             <dt className="font-display text-[30px] font-semibold tabular-nums tracking-tight text-ink">{v}</dt>
@@ -276,7 +276,7 @@ function Sponsors() {
               ["Hyperliquid", "live CoreWriter precompile — the real perp venue"],
               ["Aave V3", "yield for the idle insurance reserve"],
               ["Solady", "gas-optimized primitives"],
-              ["Foundry", "build + fuzzing (109 tests)"],
+              ["Foundry", "build + fuzzing (127 tests)"],
             ].map(([n, d]) => (
               <span key={n} className="inline-flex items-baseline gap-2">
                 <span className="font-semibold text-ink">{n}</span>
@@ -367,7 +367,7 @@ function Footer() {
         <div className="flex gap-5 font-sans text-[13px]">
           <Link href="/app" className="link-quiet">App</Link>
           <Link href="/docs" className="link-quiet">Docs</Link>
-          <a href="https://github.com" className="link-quiet">GitHub</a>
+          <a href="https://github.com/Hijanhv/lambda-protocol" className="link-quiet">GitHub</a>
         </div>
       </div>
     </footer>

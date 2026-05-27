@@ -39,6 +39,8 @@ contract HookMinerTest is Test {
         address a = HookMiner.computeAddress(address(0xBEEF), bytes32(uint256(1)), initHash);
         address b = HookMiner.computeAddress(address(0xBEEF), bytes32(uint256(1)), initHash);
         assertEq(a, b, "same inputs => same address");
-        assertTrue(a != HookMiner.computeAddress(address(0xBEEF), bytes32(uint256(2)), initHash), "salt changes address");
+        assertTrue(
+            a != HookMiner.computeAddress(address(0xBEEF), bytes32(uint256(2)), initHash), "salt changes address"
+        );
     }
 }
