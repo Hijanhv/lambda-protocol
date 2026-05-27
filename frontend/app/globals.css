@@ -5,6 +5,50 @@
 @layer base {
   :root {
     color-scheme: light;
+
+    /* shadcn semantic tokens, mapped to Lambda's cream/ink/pine palette */
+    --background: 45 44% 96%; /* canvas  #faf8f2 */
+    --foreground: 47 22% 8%; /* ink     #191710 */
+    --card: 0 0% 100%; /* surface #ffffff */
+    --card-foreground: 47 22% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 47 22% 8%;
+    --primary: 330 65% 43%; /* brand   #B5276F */
+    --primary-foreground: 45 44% 96%;
+    --secondary: 42 37% 93%; /* surface2 #f4f0e7 */
+    --secondary-foreground: 47 22% 8%;
+    --muted: 42 37% 93%;
+    --muted-foreground: 51 6% 40%; /* muted   #6c6a5f */
+    --accent: 42 37% 93%;
+    --accent-foreground: 47 22% 8%;
+    --destructive: 10 59% 45%; /* rose    #b4452f */
+    --destructive-foreground: 45 44% 96%;
+    --border: 42 25% 10%; /* edge    #211d14 */
+    --input: 42 25% 10%;
+    --ring: 330 65% 43%;
+    --radius: 0.3rem;
+  }
+
+  .dark {
+    --background: 47 22% 8%;
+    --foreground: 45 44% 96%;
+    --card: 47 18% 11%;
+    --card-foreground: 45 44% 96%;
+    --popover: 47 22% 8%;
+    --popover-foreground: 45 44% 96%;
+    --primary: 330 68% 60%;
+    --primary-foreground: 47 22% 8%;
+    --secondary: 47 14% 17%;
+    --secondary-foreground: 45 44% 96%;
+    --muted: 47 14% 17%;
+    --muted-foreground: 45 12% 64%;
+    --accent: 47 14% 17%;
+    --accent-foreground: 45 44% 96%;
+    --destructive: 10 60% 50%;
+    --destructive-foreground: 45 44% 96%;
+    --border: 45 14% 24%;
+    --input: 45 14% 24%;
+    --ring: 330 68% 60%;
   }
 
   html {
@@ -17,13 +61,13 @@
     @apply bg-canvas text-ink font-sans antialiased;
     background-image:
       radial-gradient(680px 420px at 88% -6%, rgba(176, 127, 37, 0.1), transparent 62%),
-      radial-gradient(620px 460px at 4% 2%, rgba(17, 97, 73, 0.07), transparent 60%);
+      radial-gradient(620px 460px at 4% 2%, rgba(181, 39, 111, 0.07), transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
   }
 
   ::selection {
-    background: rgba(17, 97, 73, 0.18);
+    background: rgba(181, 39, 111, 0.18);
   }
 
   ::-webkit-scrollbar {
@@ -63,7 +107,7 @@
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full
       bg-brand px-5 py-2.5 font-sans text-[13.5px] font-semibold text-canvas
-      shadow-[0_6px_16px_-8px_rgba(17,97,73,0.6)] transition-[filter,transform,box-shadow] duration-150
+      shadow-[0_6px_16px_-8px_rgba(181,39,111,0.6)] transition-[filter,transform,box-shadow] duration-150
       hover:brightness-[1.08] active:translate-y-px
       disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:brightness-100;
   }
@@ -83,6 +127,26 @@
 
   .note {
     @apply font-sans text-[12.5px] leading-relaxed text-muted;
+  }
+
+  /* black header tape that sits above a bordered grid (editorial layout) */
+  .tape {
+    @apply bg-ink text-center font-sans text-[12px] font-bold uppercase tracking-[0.2em] text-canvas;
+  }
+
+  /* subtle diagonal hatch for the thin top strip */
+  .hatch {
+    background-color: #faf8f2;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(181, 39, 111, 0.11) 0 1.5px,
+      transparent 1.5px 9px
+    );
+  }
+
+  /* truncated on-chain address pill */
+  .addr {
+    @apply font-mono text-[12.5px] tabular-nums text-ink-soft transition-colors hover:text-brand;
   }
 
   .link-quiet {

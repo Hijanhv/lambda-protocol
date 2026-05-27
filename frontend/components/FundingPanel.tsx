@@ -30,10 +30,10 @@ export function FundingPanel() {
 
   return (
     <section className="panel overflow-hidden">
-      {/* Green wash to mark this as the income card. */}
+      {/* Pink wash to mark this as the income card. */}
       <div
         className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-70 blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(17,97,73,0.14), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(181,39,111,0.14), transparent 70%)" }}
       />
 
       <h2 className="eyebrow mb-4">Funding income</h2>

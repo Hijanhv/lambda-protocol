@@ -1,18 +1,68 @@
 import Link from "next/link";
 import { Seal, Wordmark } from "@/components/Brand";
+import { BackgroundFX } from "@/components/BackgroundFX";
+import { HeroVisual } from "@/components/HeroVisual";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
+/**
+ * Lambda landing — built on shadcn/ui (Button, Card, Badge, Separator) themed to
+ * Lambda's cream/ink/pine palette. Editorial feel kept via serif display type,
+ * full-width section rules, a status ticker and a partners marquee. Structure is
+ * carried by standalone Cards (no nested frame), so borders never double up.
+ */
 export default function Landing() {
   return (
-    <div className="relative z-10">
+    <>
+      <BackgroundFX />
+      <div className="relative z-10">
+        <Ticker />
       <Nav />
       <Hero />
-      <Comparison />
+      <StackStrip />
+      <Idea />
       <HowItWorks />
-      <Earnings />
-      <Sponsors />
+      <HedgeBlack />
+      <Partners />
+      <LiveOnTestnet />
       <FinalCta />
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
+  );
+}
+
+/* ───────────────────────── top ticker ───────────────────────── */
+
+const TICKER = [
+  "Hedge loop live on Unichain Sepolia",
+  "Cross-chain callback verified end-to-end — no off-chain bot",
+  "127 passing Foundry tests · warning-free build",
+  "A real short on Hyperliquid via the CoreWriter precompile",
+  "Built on Uniswap v4 + Reactive Network",
+];
+
+function Ticker() {
+  return (
+    <>
+      <div className="hatch h-6 border-b border-edge" />
+      <div className="overflow-hidden border-b border-edge bg-background">
+        <div className="flex w-max animate-marquee">
+          {[0, 1].map((copy) => (
+            <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
+              {TICKER.map((t) => (
+                <span key={t} className="flex items-center gap-2 px-5 py-1.5 font-sans text-[12px] text-ink-soft">
+                  <span className="text-[13px] leading-none text-gold animate-spinSlow">λ</span>
+                  {t}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -20,15 +70,17 @@ export default function Landing() {
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-content items-center justify-between px-5 py-3.5">
+    <header className="sticky top-0 z-30 border-b border-edge bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-content items-center justify-between px-5 md:px-8">
         <Wordmark sub="Yield-protected liquidity" />
-        <nav className="flex items-center gap-1 sm:gap-4">
-          <a href="#how" className="link-quiet hidden px-2 sm:inline">How it works</a>
-          <a href="#sponsors" className="link-quiet hidden px-2 sm:inline">Sponsors</a>
-          <Link href="/docs" className="link-quiet px-2">Docs</Link>
-          <Link href="/app" className="btn ml-1">Launch App</Link>
-        </nav>
+        <div className="flex items-center gap-2 sm:gap-5">
+          <a href="#how" className="link-quiet hidden sm:inline">How it works</a>
+          <a href="#stack" className="link-quiet hidden sm:inline">Stack</a>
+          <Link href="/docs" className="link-quiet hidden sm:inline">Docs</Link>
+          <Button asChild size="sm">
+            <Link href="/app">Launch App →</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
@@ -38,94 +90,148 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="mx-auto max-w-content px-5 pb-10 pt-16 md:pt-24">
-      <div className="animate-rise">
-        <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 font-sans text-[12px] text-muted shadow-card">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
-          Uniswap Hookathon · UHI9
-        </span>
-      </div>
+    <section className="relative overflow-hidden border-b border-edge">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-80 opacity-70"
+        style={{ background: "radial-gradient(680px 280px at 68% 0%, rgba(181,39,111,0.12), transparent 70%)" }}
+      />
+      <div className="relative mx-auto grid max-w-content items-center gap-10 px-5 pb-14 pt-14 md:px-8 md:pt-20 lg:grid-cols-[1.05fr_1fr]">
+        {/* text column */}
+        <div className="text-center lg:text-left">
+          <Badge variant="brand" className="animate-rise">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
+            Uniswap Hookathon · UHI9
+          </Badge>
 
-      <h1 className="mt-6 max-w-3xl animate-rise font-display text-[44px] font-semibold leading-[1.03] tracking-tightest text-ink [animation-delay:60ms] md:text-[68px]">
-        The loss every LP pays,
-        <br />
-        <span className="text-brand">caught and turned into yield.</span>
-      </h1>
+          <h1 className="mt-6 animate-rise font-display text-[40px] font-semibold leading-[1.04] tracking-tightest text-ink [animation-delay:60ms] md:text-[60px] lg:text-[64px]">
+            The loss every LP pays,{" "}
+            <span className="text-brand">caught and turned into yield.</span>
+          </h1>
 
-      <p className="mt-6 max-w-xl animate-rise font-sans text-[16.5px] leading-relaxed text-ink-soft [animation-delay:120ms]">
-        A normal Uniswap position quietly bleeds about <strong className="font-semibold text-ink">11% a year</strong> to
-        arbitrageurs. Lambda cancels it with a{" "}
-        <strong className="font-semibold text-brand">real short on Hyperliquid</strong> — opened and resized{" "}
-        <strong className="font-semibold text-ink">automatically, across chains, with no off-chain bot</strong> — so the
-        loss returns to you as funding income.
-      </p>
+          <p className="mx-auto mt-6 max-w-xl animate-rise font-sans text-[16px] leading-relaxed text-ink-soft [animation-delay:120ms] lg:mx-0">
+            A normal Uniswap position quietly bleeds about <strong className="font-semibold text-ink">11% a year</strong> to
+            arbitrageurs. Lambda cancels it with a <strong className="font-semibold text-brand">real short on Hyperliquid</strong>{" "}
+            — opened and resized automatically, across chains, with no off-chain bot — so the loss returns to you as funding income.
+          </p>
 
-      <div className="mt-8 flex animate-rise flex-wrap items-center gap-3 [animation-delay:180ms]">
-        <Link href="/app" className="btn px-6 py-3 text-[15px]">Launch App →</Link>
-        <Link href="/docs" className="btn btn-ghost px-6 py-3 text-[15px]">Read the docs</Link>
-      </div>
-
-      <dl className="mt-14 grid max-w-2xl animate-rise grid-cols-3 gap-6 border-t border-line pt-8 [animation-delay:240ms]">
-        {[
-          ["σ² / 8", "the LVR loss rate, now reclaimed"],
-          ["h = 0.65", "research-backed hedge ratio"],
-          ["127", "passing Foundry tests"],
-        ].map(([v, k]) => (
-          <div key={k}>
-            <dt className="font-display text-[30px] font-semibold tabular-nums tracking-tight text-ink">{v}</dt>
-            <dd className="mt-1 font-sans text-[12.5px] leading-snug text-muted">{k}</dd>
+          <div className="mt-8 flex animate-rise flex-wrap items-center justify-center gap-3 [animation-delay:180ms] lg:justify-start">
+            <Button asChild size="lg">
+              <Link href="/app">Launch App →</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/docs">Read the docs</Link>
+            </Button>
           </div>
-        ))}
-      </dl>
+
+          {/* slim stat row */}
+          <dl className="mx-auto mt-9 grid max-w-md animate-rise grid-cols-3 divide-x divide-edge overflow-hidden rounded-lg border border-edge [animation-delay:240ms] lg:mx-0">
+            {[
+              ["3", "chains, one loop"],
+              ["h = 0.65", "hedge ratio"],
+              ["127", "tests passing"],
+            ].map(([v, k]) => (
+              <div key={k} className="bg-card px-2 py-4 text-center">
+                <dt className="font-display text-[20px] font-semibold tabular-nums tracking-tight text-ink">{v}</dt>
+                <dd className="mt-1 font-sans text-[11px] leading-snug text-muted">{k}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        {/* product-preview visual (desktop) */}
+        <div className="hidden animate-rise [animation-delay:300ms] lg:block">
+          <HeroVisual />
+        </div>
+      </div>
     </section>
   );
 }
 
-/* ─────────────────────── comparison ─────────────────────── */
+/* ───────────────────────── stack strip ───────────────────────── */
 
-function Comparison() {
+function StackStrip() {
+  const blocks: [string, string][] = [
+    ["Uniswap v4", "the hook"],
+    ["Reactive", "the brain"],
+    ["Hyperliquid", "the hedge"],
+    ["Aave V3", "reserve yield"],
+    ["Solady", "primitives"],
+    ["Foundry", "build + fuzz"],
+  ];
   return (
-    <section className="mx-auto max-w-content px-5 py-16">
-      <Eyebrow>The idea</Eyebrow>
-      <h2 className="mt-3 max-w-2xl font-display text-[30px] font-semibold tracking-tight text-ink md:text-[38px]">
-        The loss has a mirror image — and it pays.
-      </h2>
-      <p className="mt-4 max-w-2xl prose-doc">
-        A short position on a perpetual exchange <em>collects</em> a funding fee that, over time, is the same size as the
-        loss a Uniswap pool suffers. Same number, opposite sign. Lambda holds both at once.
-      </p>
-
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
-        <div className="panel">
-          <div className="mb-4 inline-flex items-center gap-2 font-sans text-[13px] font-semibold text-muted">
-            <span className="h-2 w-2 rounded-full bg-rose" /> Normal LP
+    <section id="stack" className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 py-12 md:px-8">
+        <Card className="overflow-hidden">
+          <div className="tape border-b border-edge px-6 py-3">Three chains. One automatic loop.</div>
+          <div className="grid grid-cols-2 divide-x divide-y divide-edge sm:grid-cols-3 md:grid-cols-6 md:divide-y-0">
+            {blocks.map(([name, role]) => (
+              <div key={name} className="flex flex-col items-center justify-center gap-1 px-3 py-6 text-center">
+                <span className="font-display text-[16px] font-semibold text-ink">{name}</span>
+                <span className="font-sans text-[11px] uppercase tracking-[0.16em] text-faint">{role}</span>
+              </div>
+            ))}
           </div>
-          <Ledger
-            rows={[
-              ["Trading fees", "+5–12% / yr", "text-ink"],
-              ["LVR drag", "−11% / yr", "text-rose"],
-              ["Funding income", "—", "text-faint"],
-            ]}
-            foot={["Net", "often negative", "text-rose"]}
-          />
-        </div>
-        <div className="panel ring-1 ring-brand/15">
-          <div className="mb-4 inline-flex items-center gap-2 font-sans text-[13px] font-semibold text-brand">
-            <Seal size={20} /> Lambda LP
-          </div>
-          <Ledger
-            rows={[
-              ["Trading fees", "+5–12% / yr", "text-ink"],
-              ["LVR, captured back", "+7% / yr", "text-brand"],
-              ["Funding income", "+10–15% / yr", "text-brand"],
-            ]}
-            foot={["Net target, near-zero price risk", "≈ 18–30% / yr", "text-brand"]}
-          />
-        </div>
+        </Card>
       </div>
-      <p className="mt-4 font-sans text-[12px] text-faint">
-        Modeled from historical volatility and funding rates — not a guarantee. Full model in the docs.
-      </p>
+    </section>
+  );
+}
+
+/* ───────────────────────── the idea ───────────────────────── */
+
+function Idea() {
+  return (
+    <section className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 py-14 md:px-8">
+        <Eyebrow>The idea</Eyebrow>
+        <h2 className="mt-3 max-w-2xl font-display text-[28px] font-semibold tracking-tight text-ink md:text-[38px]">
+          The loss has a mirror image — and it pays.
+        </h2>
+        <p className="mt-4 max-w-2xl prose-doc">
+          A short position on a perpetual exchange <em>collects</em> a funding fee that, over time, is the same size as the
+          loss a Uniswap pool suffers. Same number, opposite sign. Lambda holds both at once.
+        </p>
+
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+                <span className="h-2 w-2 rounded-full bg-rose" /> Normal LP
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Ledger
+                rows={[
+                  ["Trading fees", "+5–12% / yr", "text-ink"],
+                  ["LVR drag", "−11% / yr", "text-rose"],
+                  ["Funding income", "—", "text-faint"],
+                ]}
+                foot={["Net", "often negative", "text-rose"]}
+              />
+            </CardContent>
+          </Card>
+          <Card className="bg-secondary/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-[13px] font-semibold text-brand">
+                <Seal size={20} /> Lambda LP
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Ledger
+                rows={[
+                  ["Trading fees", "+5–12% / yr", "text-ink"],
+                  ["LVR, captured back", "+7% / yr", "text-brand"],
+                  ["Funding income", "+10–15% / yr", "text-brand"],
+                ]}
+                foot={["Net target, near-zero price risk", "≈ 18–30% / yr", "text-brand"]}
+              />
+            </CardContent>
+          </Card>
+        </div>
+        <p className="mt-4 font-sans text-[12px] text-faint">
+          Modeled from historical volatility and funding rates — not a guarantee. Full model in the docs.
+        </p>
+      </div>
     </section>
   );
 }
@@ -145,7 +251,8 @@ function Ledger({
           <span className={`font-mono text-[14px] tabular-nums ${c}`}>{v}</span>
         </div>
       ))}
-      <div className="mt-3 flex items-baseline justify-between">
+      <Separator className="my-3 bg-line" />
+      <div className="flex items-baseline justify-between">
         <span className="font-sans text-[13.5px] font-semibold text-ink">{foot[0]}</span>
         <span className={`font-mono text-[16px] font-semibold tabular-nums ${foot[2]}`}>{foot[1]}</span>
       </div>
@@ -153,7 +260,7 @@ function Ledger({
   );
 }
 
-/* ─────────────────────── how it works ─────────────────────── */
+/* ───────────────────────── how it works ───────────────────────── */
 
 function HowItWorks() {
   const steps = [
@@ -161,205 +268,264 @@ function HowItWorks() {
       n: "①",
       place: "Unichain",
       title: "The hook",
-      body: "A Uniswap v4 hook owns the pool's position, tracks your exact delta, and emits a signal the moment it drifts past the band τ. It also charges a directional fee that makes informed flow pay the LP.",
+      body: "A Uniswap v4 hook owns the pool's position, tracks your exact delta, and emits a signal the moment it drifts past the band. It also charges a directional fee that makes informed flow pay the LP.",
+      badge: "Live · Unichain Sepolia",
+      kind: "brand" as const,
     },
     {
       n: "②",
       place: "Reactive Network",
       title: "The brain",
       body: "A Reactive Smart Contract watches that event from another chain and fires the hedge instruction in response — entirely on-chain, with no centralized bot in the loop.",
+      badge: "Verified end-to-end · Lasna",
+      kind: "brand" as const,
     },
     {
       n: "③",
       place: "Hyperliquid",
       title: "The hedge",
       body: "A hedger calls the live CoreWriter precompile (0x3333…3333) to open or resize a real short on Hyperliquid. The funding it earns routes back to you as claimable income.",
+      badge: "Built + tested · mainnet config",
+      kind: "gold" as const,
     },
   ];
   return (
-    <section id="how" className="border-y border-line bg-surface2/50">
-      <div className="mx-auto max-w-content px-5 py-16">
+    <section id="how" className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 py-14 md:px-8">
         <Eyebrow>How it works</Eyebrow>
-        <h2 className="mt-3 max-w-2xl font-display text-[30px] font-semibold tracking-tight text-ink md:text-[38px]">
+        <h2 className="mt-3 max-w-2xl font-display text-[28px] font-semibold tracking-tight text-ink md:text-[38px]">
           One automatic loop, across three chains.
         </h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
           {steps.map((s) => (
-            <div key={s.place} className="panel flex flex-col">
-              <div className="flex items-center gap-3">
-                <span className="font-display text-[26px] text-gold">{s.n}</span>
-                <span className="font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-muted">{s.place}</span>
-              </div>
-              <h3 className="mt-3 font-display text-[20px] font-semibold text-ink">{s.title}</h3>
-              <p className="mt-2 note">{s.body}</p>
+            <Card key={s.place} className="flex flex-col">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-display text-[26px] text-gold">{s.n}</span>
+                  <span className="font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-muted">{s.place}</span>
+                </div>
+                <CardTitle className="pt-1 text-[20px]">{s.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col">
+                <p className="note flex-1">{s.body}</p>
+                <Badge variant={s.kind} className="mt-5 w-fit">
+                  <span className={`h-1.5 w-1.5 rounded-full ${s.kind === "brand" ? "bg-brand animate-pulseSoft" : "bg-gold"}`} />
+                  {s.badge}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="mt-6 bg-secondary/40">
+          <CardContent className="p-5">
+            <p className="font-sans text-[12.5px] leading-relaxed text-muted">
+              On testnet, Reactive&apos;s Lasna can&apos;t route callbacks to HyperEVM, so legs ①–② run live and the
+              Hyperliquid leg is proven separately against the real CoreWriter precompile. On mainnet they become one loop —
+              a one-line config change.{" "}
+              <Link href="/docs" className="font-semibold text-brand link-quiet">See the full mechanism →</Link>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────── full-bleed black: the differentiator ─────────────── */
+
+function HedgeBlack() {
+  const points: [string, string][] = [
+    ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile — not a mock."],
+    ["Automatic & cross-chain", "A Reactive Smart Contract routes the hedge across chains itself — no off-chain bot in the loop."],
+    ["Honest risk math", "Ships h = 0.65 — about 1.4% liquidation risk over 90 days, versus ~19% for a full hedge."],
+    ["Peer-reviewed", "Composes Milionis (LVR), Chitra & Diamandis, Hane, and Maire & Wunsch."],
+  ];
+  return (
+    <section className="border-b border-edge bg-foreground text-background">
+      <div className="mx-auto max-w-content px-5 py-16 md:px-8">
+        <span className="font-sans text-[11px] font-bold uppercase tracking-[0.22em] text-gold-bright">The differentiator</span>
+        <h2 className="mt-3 max-w-2xl font-display text-[28px] font-semibold tracking-tight text-background md:text-[40px]">
+          A real hedge, opened across chains.
+        </h2>
+        <p className="mt-4 max-w-2xl font-sans text-[15.5px] leading-relaxed text-background/75">
+          A directional fee in{" "}
+          <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[13.5px] text-gold-bright">beforeSwap</code>{" "}
+          is becoming a standard v4 pattern — Lambda has it, fuzz-tested. The part nobody else ships is the hedge itself: a
+          real short on Hyperliquid, opened automatically across chains through Reactive, with no off-chain bot. That live
+          cross-chain loop is the hard part — and the whole point.
+        </p>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {points.map(([t, b]) => (
+            <Card key={t} className="border-white/15 bg-white/[0.04]">
+              <CardContent className="p-6">
+                <div className="font-sans text-[15px] font-semibold text-background">{t}</div>
+                <p className="mt-1.5 font-sans text-[13px] leading-relaxed text-background/65">{b}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────── partners marquee ───────────────────────── */
+
+const PARTNERS: [string, string][] = [
+  ["Uniswap v4", "the hook"],
+  ["Reactive Network", "cross-chain automation"],
+  ["Hyperliquid", "the perp venue"],
+  ["Aave V3", "reserve yield"],
+  ["Solady", "gas-optimized primitives"],
+  ["Foundry", "build + 127 tests"],
+];
+
+function Partners() {
+  return (
+    <section className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 pt-12 text-center md:px-8">
+        <Eyebrow>Built on the rails that make it possible</Eyebrow>
+      </div>
+      <div className="mt-8 overflow-hidden border-t border-edge py-6 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+        <div className="flex w-max animate-marquee">
+          {[0, 1].map((copy) => (
+            <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
+              {PARTNERS.map(([name, role]) => (
+                <Card key={name} className="mx-3 flex shrink-0 flex-row items-center gap-3 px-4 py-3">
+                  <Seal size={22} />
+                  <span className="leading-tight">
+                    <span className="block font-display text-[15px] font-semibold text-ink">{name}</span>
+                    <span className="block font-sans text-[11px] text-faint">{role}</span>
+                  </span>
+                </Card>
+              ))}
             </div>
           ))}
         </div>
-        <p className="mt-8">
-          <Link href="/docs" className="link-quiet font-semibold text-brand">See the full mechanism, with the math →</Link>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────── live on testnet ───────────────────────── */
+
+const DEPLOYS: { name: string; chain: string; addr: string; href: string }[] = [
+  {
+    name: "LambdaHook",
+    chain: "Unichain Sepolia",
+    addr: "0x23C3da7CF53862Fd38640100D4FB764bE2d2cac0",
+    href: "https://sepolia.uniscan.xyz/address/0x23C3da7CF53862Fd38640100D4FB764bE2d2cac0",
+  },
+  {
+    name: "Funding",
+    chain: "Unichain Sepolia",
+    addr: "0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1",
+    href: "https://sepolia.uniscan.xyz/address/0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1",
+  },
+  {
+    name: "LambdaReactive",
+    chain: "Reactive Lasna",
+    addr: "0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79",
+    href: "https://lasna.reactscan.net/address/0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79",
+  },
+  {
+    name: "LambdaHedgeReceiver",
+    chain: "Unichain Sepolia",
+    addr: "0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C",
+    href: "https://sepolia.uniscan.xyz/address/0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C",
+  },
+];
+
+function short(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function LiveOnTestnet() {
+  return (
+    <section className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 py-14 md:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <Eyebrow>Live on testnet</Eyebrow>
+            <h2 className="mt-3 font-display text-[28px] font-semibold tracking-tight text-ink md:text-[36px]">
+              Deployed, and verifiable on-chain.
+            </h2>
+          </div>
+          <Badge variant="brand">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
+            Unichain Sepolia · Reactive Lasna
+          </Badge>
+        </div>
+
+        <Card className="mt-8 overflow-hidden">
+          <div className="grid divide-y divide-edge sm:grid-cols-2 sm:divide-x">
+            {DEPLOYS.map((d) => (
+              <a
+                key={d.name}
+                href={d.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-between gap-4 p-5 transition-colors hover:bg-secondary/50"
+              >
+                <span>
+                  <span className="block font-sans text-[14px] font-semibold text-ink">{d.name}</span>
+                  <span className="block font-sans text-[11.5px] text-faint">{d.chain}</span>
+                </span>
+                <span className="addr group-hover:text-brand">{short(d.addr)} ↗</span>
+              </a>
+            ))}
+          </div>
+        </Card>
+
+        <p className="mt-4 font-sans text-[12.5px] leading-relaxed text-muted">
+          A deposit + swap fire <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[12px] text-brand">HedgeRequested</code>{" "}
+          on Unichain; <span className="font-semibold text-ink">LambdaReactive</span> catches it on Lasna and routes a
+          callback back across chains — with no off-chain bot — recording the exact hedge the protocol computed
+          (<span className="font-mono text-[12px]">targetSize = 0.65 × delta</span>).
         </p>
       </div>
     </section>
   );
 }
 
-/* ─────────────────────── earnings note ─────────────────────── */
-
-function Earnings() {
-  return (
-    <section className="mx-auto max-w-content px-5 py-16">
-      <div className="grid items-center gap-10 md:grid-cols-2">
-        <div>
-          <Eyebrow>The differentiator</Eyebrow>
-          <h2 className="mt-3 font-display text-[30px] font-semibold tracking-tight text-ink md:text-[38px]">
-            A real hedge, opened across chains.
-          </h2>
-          <p className="mt-4 prose-doc">
-            A directional fee in <code>beforeSwap</code> (Nezlobin) is becoming a standard v4 pattern — Lambda has
-            it, fuzz-tested. But the part nobody else ships is the hedge itself: a{" "}
-            <strong>real short on Hyperliquid</strong>, opened automatically across chains through Reactive, with{" "}
-            <strong>no off-chain bot</strong>. That live cross-chain loop is the hard part — and the whole point.
-          </p>
-        </div>
-        <ul className="space-y-4">
-          {[
-            ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile — not a mock."],
-            ["Automatic & cross-chain", "A Reactive Smart Contract routes the hedge across chains itself — no off-chain bot in the loop."],
-            ["Honest risk math", "Ships h = 0.65 — ~1.4% liquidation risk over 90 days, vs ~19% for a full hedge."],
-            ["Peer-reviewed", "Composes Milionis (LVR), Chitra & Diamandis, Hane, and Maire & Wunsch."],
-          ].map(([t, b]) => (
-            <li key={t} className="flex gap-3">
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand" />
-              <span>
-                <span className="font-sans text-[15px] font-semibold text-ink">{t}. </span>
-                <span className="prose-doc">{b}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────────────── sponsors ─────────────────────── */
-
-function Sponsors() {
-  return (
-    <section id="sponsors" className="border-y border-line bg-surface2/50">
-      <div className="mx-auto max-w-content px-5 py-16">
-        <Eyebrow>Sponsors</Eyebrow>
-        <h2 className="mt-3 max-w-2xl font-display text-[30px] font-semibold tracking-tight text-ink md:text-[38px]">
-          Built on the rails that make it possible.
-        </h2>
-
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          <SponsorCard
-            logo="/uniswap-logo.svg"
-            name="Uniswap v4"
-            role="The hook"
-            body="Lambda is a first-class v4 hook: it owns the pool's single position to track exact delta, and returns a directional dynamic fee from beforeSwap — leaving the canonical swap curve untouched. A native answer to LVR, the ecosystem's most-cited open problem."
-          />
-          <SponsorCard
-            logo="/reactive-wordmark.svg"
-            name="Reactive Network"
-            role="Cross-chain automation"
-            body="A Reactive Smart Contract subscribes to the hook's HedgeRequested event and triggers the hedge on another chain — no off-chain bot. The cross-chain coordination isn't a convenience here; it's the thing that makes the product possible."
-            darkChip
-          />
-        </div>
-
-        <div className="mt-8 rounded-xl2 border border-line bg-surface p-6 shadow-card">
-          <div className="mb-4 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Also built with</div>
-          <div className="flex flex-wrap gap-x-8 gap-y-3 font-sans text-[14px] text-ink-soft">
-            {[
-              ["Hyperliquid", "live CoreWriter precompile — the real perp venue"],
-              ["Aave V3", "yield for the idle insurance reserve"],
-              ["Solady", "gas-optimized primitives"],
-              ["Foundry", "build + fuzzing (127 tests)"],
-            ].map(([n, d]) => (
-              <span key={n} className="inline-flex items-baseline gap-2">
-                <span className="font-semibold text-ink">{n}</span>
-                <span className="text-[12.5px] text-faint">{d}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SponsorCard({
-  logo,
-  name,
-  role,
-  body,
-  wide,
-  darkChip,
-}: {
-  logo: string;
-  name: string;
-  role: string;
-  body: string;
-  wide?: boolean;
-  darkChip?: boolean;
-}) {
-  return (
-    <div className="panel flex flex-col">
-      <div className="flex h-12 items-center">
-        {darkChip ? (
-          <span className="inline-flex items-center rounded-lg bg-ink px-3.5 py-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logo} alt={name} className="h-5" />
-          </span>
-        ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={logo} alt={name} className={wide ? "h-6" : "h-9"} />
-        )}
-      </div>
-      <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-display text-[19px] font-semibold text-ink">{name}</span>
-        <span className="font-sans text-[12px] text-gold">· {role}</span>
-      </div>
-      <p className="mt-2 note">{body}</p>
-    </div>
-  );
-}
-
-/* ─────────────────────── final cta ─────────────────────── */
+/* ───────────────────────── final cta ───────────────────────── */
 
 function FinalCta() {
   return (
-    <section className="mx-auto max-w-content px-5 py-20">
-      <div className="relative overflow-hidden rounded-xl2 border border-brand/20 bg-brand p-10 text-center shadow-lift md:p-16">
-        <div
-          className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-30 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(214,162,63,0.7), transparent 70%)" }}
-        />
-        <h2 className="font-display text-[32px] font-semibold tracking-tight text-canvas md:text-[44px]">
-          Liquidity that hedges itself.
-        </h2>
-        <p className="mx-auto mt-3 max-w-md font-sans text-[15px] leading-relaxed text-canvas/80">
-          Deposit, watch the hedge open on Hyperliquid, and collect the funding it earns.
-        </p>
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <Link href="/app" className="btn btn-gold px-7 py-3 text-[15px]">Launch App →</Link>
-          <Link href="/docs" className="btn btn-ghost border border-canvas/30 px-7 py-3 text-[15px] text-canvas ring-0 hover:bg-canvas/10">
-            Read the docs
-          </Link>
-        </div>
+    <section className="border-b border-edge">
+      <div className="mx-auto max-w-content px-5 py-16 md:px-8">
+        <Card className="bg-secondary/50">
+          <CardContent className="p-10 text-center md:p-14">
+            <h2 className="font-display text-[30px] font-semibold tracking-tight text-ink md:text-[44px]">
+              Liquidity that hedges itself.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md font-sans text-[15px] leading-relaxed text-muted">
+              Deposit, watch the hedge open on Hyperliquid, and collect the funding it earns.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button asChild size="lg">
+                <Link href="/app">Launch App →</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/docs">Read the docs</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );
 }
 
-/* ─────────────────────── footer ─────────────────────── */
+/* ───────────────────────── footer ───────────────────────── */
 
 function Footer() {
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-content flex-col items-center justify-between gap-4 px-5 py-10 sm:flex-row">
+    <footer>
+      <div className="mx-auto flex max-w-content flex-col items-center justify-between gap-4 px-5 py-10 sm:flex-row md:px-8">
         <div className="flex items-center gap-2 font-sans text-[13px] text-muted">
           <Seal size={22} />
           <span>Lambda — the loss every LP pays, caught and turned into yield.</span>
@@ -374,7 +540,7 @@ function Footer() {
   );
 }
 
-/* ─────────────────────── shared ─────────────────────── */
+/* ───────────────────────── shared ───────────────────────── */
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <span className="eyebrow">{children}</span>;
