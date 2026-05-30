@@ -7,6 +7,9 @@ import { hook, erc20Abi } from "@/lib/contracts";
 import { addresses, tokenMeta, currency0 } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { usePoolKeyArg } from "./HedgePanel";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 /**
  * Deposit and withdraw. The hook's deposit takes a liquidity amount `L`, but people think in
@@ -61,71 +64,83 @@ export function PositionPanel() {
     );
 
   return (
-    <section className="panel">
-      <h2 className="eyebrow mb-4">Your position</h2>
-
-      <div className="mb-5 rounded-xl border border-line bg-surface2 px-4 py-3.5">
-        <div className="font-sans text-[12px] text-muted">Vault shares</div>
-        <div className="mt-0.5 font-display text-[30px] font-semibold tabular-nums tracking-tight text-ink">
-          {fmt(shares as bigint, 18)}
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="eyebrow">Your position</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Big-number "vault shares" stat */}
+        <div className="mb-5 rounded-md border border-edge bg-secondary px-4 py-3.5">
+          <div className="font-sans text-[12px] text-muted">Vault shares</div>
+          <div className="mt-0.5 font-display text-[30px] font-semibold tabular-nums tracking-tight text-ink">
+            {fmt(shares as bigint, 18)}
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <input
-            inputMode="decimal"
-            className="field-input pr-16"
-            placeholder={`amount of ${currency0.symbol}`}
-            value={amt}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9.]/g, "");
-              const i = v.indexOf(".");
-              setAmt(i === -1 ? v : v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ""));
-            }}
-          />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-sans text-[12px] font-medium text-faint">
-            {currency0.symbol}
-          </span>
+        {/* Deposit input + action */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              inputMode="decimal"
+              className="pr-16"
+              placeholder={`amount of ${currency0.symbol}`}
+              value={amt}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.]/g, "");
+                const i = v.indexOf(".");
+                setAmt(i === -1 ? v : v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ""));
+              }}
+            />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-sans text-[12px] font-medium text-faint">
+              {currency0.symbol}
+            </span>
+          </div>
+          <Button
+            className="shrink-0"
+            disabled={!address || isPending || liquidity === 0n || tooBig}
+            onClick={deposit}
+          >
+            Deposit
+          </Button>
         </div>
-        <button className="btn shrink-0" disabled={!address || isPending || liquidity === 0n || tooBig} onClick={deposit}>
-          Deposit
-        </button>
-      </div>
 
-      <div className="mt-1.5 h-4 font-mono text-[11.5px] tabular-nums text-faint">
-        {amount0 > 0n &&
-          (tooBig
-            ? "amount too large"
-            : canQuote
-            ? `≈ ${fmt(liquidity, 18)} liquidity`
-            : aboveRange
-            ? `price is above the range — entering raw liquidity`
-            : "pool not seeded yet — entering raw liquidity")}
-      </div>
+        <div className="mt-1.5 h-4 font-mono text-[11.5px] tabular-nums text-faint">
+          {amount0 > 0n &&
+            (tooBig
+              ? "amount too large"
+              : canQuote
+              ? `≈ ${fmt(liquidity, 18)} liquidity`
+              : aboveRange
+              ? `price is above the range — entering raw liquidity`
+              : "pool not seeded yet — entering raw liquidity")}
+        </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button className="btn btn-ghost" disabled={!address} onClick={() => approve(addresses.token0)}>
-          Approve {tokenMeta.token0.symbol}
-        </button>
-        <button className="btn btn-ghost" disabled={!address} onClick={() => approve(addresses.token1)}>
-          Approve {tokenMeta.token1.symbol}
-        </button>
-        <button
-          className="btn btn-ghost ml-auto"
-          disabled={!address || !shares || (shares as bigint) === 0n}
-          onClick={withdrawAll}
-        >
-          Withdraw all
-        </button>
-      </div>
+        {/* Approve / withdraw secondary actions */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" disabled={!address} onClick={() => approve(addresses.token0)}>
+            Approve {tokenMeta.token0.symbol}
+          </Button>
+          <Button variant="outline" size="sm" disabled={!address} onClick={() => approve(addresses.token1)}>
+            Approve {tokenMeta.token1.symbol}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            disabled={!address || !shares || (shares as bigint) === 0n}
+            onClick={withdrawAll}
+          >
+            Withdraw all
+          </Button>
+        </div>
 
-      <p className="note mt-4">
-        Approve both tokens once, enter how much {currency0.symbol} to add, and deposit — the hook
-        quotes the matching liquidity, pulls both token amounts, mints your shares, and (if delta
-        has moved enough) fires the first hedge. Withdraw burns shares and returns your tokens plus
-        accrued LP fees.
-      </p>
-    </section>
+        <p className="note mt-4">
+          Approve both tokens once, enter how much {currency0.symbol} to add, and deposit — the hook
+          quotes the matching liquidity, pulls both token amounts, mints your shares, and (if delta
+          has moved enough) fires the first hedge. Withdraw burns shares and returns your tokens plus
+          accrued LP fees.
+        </p>
+      </CardContent>
+    </Card>
   );
 }

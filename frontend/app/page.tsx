@@ -1,17 +1,20 @@
 import Link from "next/link";
-import { Seal, Wordmark } from "@/components/Brand";
+import { Seal } from "@/components/Brand";
 import { BackgroundFX } from "@/components/BackgroundFX";
 import { HeroVisual } from "@/components/HeroVisual";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 /**
- * Lambda landing — built on shadcn/ui (Button, Card, Badge, Separator) themed to
- * Lambda's cream/ink/pine palette. Editorial feel kept via serif display type,
- * full-width section rules, a status ticker and a partners marquee. Structure is
- * carried by standalone Cards (no nested frame), so borders never double up.
+ * Lambda landing — built on shadcn/ui (Button, Card, Badge, Separator, Sheet)
+ * themed to Lambda's cream/ink/pink palette. Editorial feel kept via serif
+ * display type, full-width section rules, a status ticker and a partners
+ * marquee. Structure is carried by standalone Cards (no nested frame), so
+ * borders never double up.
  */
 export default function Landing() {
   return (
@@ -19,16 +22,28 @@ export default function Landing() {
       <BackgroundFX />
       <div className="relative z-10">
         <Ticker />
-      <Nav />
-      <Hero />
-      <StackStrip />
-      <Idea />
-      <HowItWorks />
-      <HedgeBlack />
-      <Partners />
-      <LiveOnTestnet />
-      <FinalCta />
-        <Footer />
+        <SiteNav
+          sub="Yield-protected liquidity"
+          links={[
+            { href: "#how", label: "How it works" },
+            { href: "#stack", label: "Stack" },
+            { href: "/docs", label: "Docs" },
+          ]}
+          rightSlot={
+            <Button asChild size="sm">
+              <Link href="/app">Launch App →</Link>
+            </Button>
+          }
+        />
+        <Hero />
+        <StackStrip />
+        <Idea />
+        <HowItWorks />
+        <HedgeBlack />
+        <Partners />
+        <LiveOnTestnet />
+        <FinalCta />
+        <SiteFooter />
       </div>
     </>
   );
@@ -66,26 +81,6 @@ function Ticker() {
   );
 }
 
-/* ───────────────────────── nav ───────────────────────── */
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-30 border-b border-edge bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-content items-center justify-between px-5 md:px-8">
-        <Wordmark sub="Yield-protected liquidity" />
-        <div className="flex items-center gap-2 sm:gap-5">
-          <a href="#how" className="link-quiet hidden sm:inline">How it works</a>
-          <a href="#stack" className="link-quiet hidden sm:inline">Stack</a>
-          <Link href="/docs" className="link-quiet hidden sm:inline">Docs</Link>
-          <Button asChild size="sm">
-            <Link href="/app">Launch App →</Link>
-          </Button>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 /* ───────────────────────── hero ───────────────────────── */
 
 function Hero() {
@@ -96,7 +91,6 @@ function Hero() {
         style={{ background: "radial-gradient(680px 280px at 68% 0%, rgba(181,39,111,0.12), transparent 70%)" }}
       />
       <div className="relative mx-auto grid max-w-content items-center gap-10 px-5 pb-14 pt-14 md:px-8 md:pt-20 lg:grid-cols-[1.05fr_1fr]">
-        {/* text column */}
         <div className="text-center lg:text-left">
           <Badge variant="brand" className="animate-rise">
             <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
@@ -123,7 +117,6 @@ function Hero() {
             </Button>
           </div>
 
-          {/* slim stat row */}
           <dl className="mx-auto mt-9 grid max-w-md animate-rise grid-cols-3 divide-x divide-edge overflow-hidden rounded-lg border border-edge [animation-delay:240ms] lg:mx-0">
             {[
               ["3", "chains, one loop"],
@@ -138,7 +131,6 @@ function Hero() {
           </dl>
         </div>
 
-        {/* product-preview visual (desktop) */}
         <div className="hidden animate-rise [animation-delay:300ms] lg:block">
           <HeroVisual />
         </div>
@@ -271,6 +263,7 @@ function HowItWorks() {
       body: "A Uniswap v4 hook owns the pool's position, tracks your exact delta, and emits a signal the moment it drifts past the band. It also charges a directional fee that makes informed flow pay the LP.",
       badge: "Live · Unichain Sepolia",
       kind: "brand" as const,
+      mini: <HookMini />,
     },
     {
       n: "②",
@@ -279,6 +272,7 @@ function HowItWorks() {
       body: "A Reactive Smart Contract watches that event from another chain and fires the hedge instruction in response — entirely on-chain, with no centralized bot in the loop.",
       badge: "Verified end-to-end · Lasna",
       kind: "brand" as const,
+      mini: <ReactiveMini />,
     },
     {
       n: "③",
@@ -287,6 +281,7 @@ function HowItWorks() {
       body: "A hedger calls the live CoreWriter precompile (0x3333…3333) to open or resize a real short on Hyperliquid. The funding it earns routes back to you as claimable income.",
       badge: "Built + tested · mainnet config",
       kind: "gold" as const,
+      mini: <HedgeMini />,
     },
   ];
   return (
@@ -309,7 +304,8 @@ function HowItWorks() {
               </CardHeader>
               <CardContent className="flex flex-1 flex-col">
                 <p className="note flex-1">{s.body}</p>
-                <Badge variant={s.kind} className="mt-5 w-fit">
+                <div className="mt-4">{s.mini}</div>
+                <Badge variant={s.kind} className="mt-4 w-fit">
                   <span className={`h-1.5 w-1.5 rounded-full ${s.kind === "brand" ? "bg-brand animate-pulseSoft" : "bg-gold"}`} />
                   {s.badge}
                 </Badge>
@@ -330,6 +326,74 @@ function HowItWorks() {
         </Card>
       </div>
     </section>
+  );
+}
+
+/* ── mini-UI per leg: compact visualizations of what each leg actually does ── */
+
+function HookMini() {
+  return (
+    <div className="overflow-hidden rounded-md border border-edge bg-secondary/40 font-mono text-[11px] leading-snug text-ink-soft">
+      <div className="flex items-center gap-2 border-b border-edge/40 bg-background/60 px-3 py-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
+        <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Event log · v4 hook</span>
+      </div>
+      <pre className="overflow-hidden px-3 py-2.5 text-[11px]">
+        <span className="text-brand">event</span>{" "}
+        <span className="text-ink">HedgeRequested</span>
+        <span className="text-faint">(</span>
+        {"\n  poolId: 0x92fc…373b,\n  delta:  +1.92 ETH,\n  nonce:  17"}
+        <span className="text-faint">)</span>
+      </pre>
+    </div>
+  );
+}
+
+function ReactiveMini() {
+  return (
+    <div className="overflow-hidden rounded-md border border-edge bg-secondary/40">
+      <div className="flex items-center gap-2 border-b border-edge/40 bg-background/60 px-3 py-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
+        <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Cross-chain callback</span>
+      </div>
+      <div className="px-3 py-3">
+        <div className="relative h-5">
+          <div className="absolute left-[10%] right-[10%] top-1/2 h-px -translate-y-1/2 bg-edge/30" />
+          <span className="absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand shadow-[0_0_0_3px_rgba(181,39,111,0.18)] animate-flowX" />
+          <div className="relative flex h-full items-center justify-between">
+            {["Unichain", "Reactive", "Hyperliquid"].map((n) => (
+              <span key={n} className="rounded-full border border-edge bg-card px-1.5 py-0.5 font-mono text-[9.5px] text-ink">
+                {n}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="mt-2 font-mono text-[11px] text-ink-soft">
+          callback <span className="text-brand">delivered</span>
+          <span className="text-faint"> · </span>
+          <span className="tabular-nums">latency 4.2s</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HedgeMini() {
+  return (
+    <div className="overflow-hidden rounded-md border border-edge bg-secondary/40 font-mono text-[11px] leading-snug">
+      <div className="flex items-center gap-2 border-b border-edge/40 bg-background/60 px-3 py-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+        <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-muted">CoreWriter · 0x3333…3333</span>
+      </div>
+      <pre className="overflow-hidden px-3 py-2.5 text-[11px] text-ink-soft">
+        <span className="text-gold">coreWriter</span>
+        <span className="text-faint">.</span>
+        <span className="text-ink">sendRawAction</span>
+        <span className="text-faint">(</span>
+        {"\n  action:  OPEN_SHORT,\n  market:  ETH-PERP,\n  size:    1.25 ETH"}
+        <span className="text-faint">)</span>
+      </pre>
+    </div>
   );
 }
 
@@ -374,13 +438,15 @@ function HedgeBlack() {
 
 /* ───────────────────────── partners marquee ───────────────────────── */
 
-const PARTNERS: [string, string][] = [
-  ["Uniswap v4", "the hook"],
-  ["Reactive Network", "cross-chain automation"],
-  ["Hyperliquid", "the perp venue"],
-  ["Aave V3", "reserve yield"],
-  ["Solady", "gas-optimized primitives"],
-  ["Foundry", "build + 127 tests"],
+type PartnerSpec = { name: string; role: string; logo?: string; darkChip?: boolean };
+
+const PARTNERS: PartnerSpec[] = [
+  { name: "Uniswap v4", role: "the hook", logo: "/uniswap-logo.svg" },
+  { name: "Reactive Network", role: "cross-chain automation", logo: "/reactive-wordmark.svg", darkChip: true },
+  { name: "Hyperliquid", role: "the perp venue" },
+  { name: "Aave V3", role: "reserve yield" },
+  { name: "Solady", role: "gas-optimized primitives" },
+  { name: "Foundry", role: "build + 127 tests" },
 ];
 
 function Partners() {
@@ -393,20 +459,38 @@ function Partners() {
         <div className="flex w-max animate-marquee">
           {[0, 1].map((copy) => (
             <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
-              {PARTNERS.map(([name, role]) => (
-                <Card key={name} className="mx-3 flex shrink-0 flex-row items-center gap-3 px-4 py-3">
-                  <Seal size={22} />
-                  <span className="leading-tight">
-                    <span className="block font-display text-[15px] font-semibold text-ink">{name}</span>
-                    <span className="block font-sans text-[11px] text-faint">{role}</span>
-                  </span>
-                </Card>
+              {PARTNERS.map((p) => (
+                <PartnerChip key={p.name} {...p} />
               ))}
             </div>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function PartnerChip({ name, role, logo, darkChip }: PartnerSpec) {
+  return (
+    <Card className="mx-3 flex shrink-0 flex-row items-center gap-3 px-4 py-3">
+      {logo ? (
+        darkChip ? (
+          <span className="grid h-7 place-items-center rounded-sm bg-ink px-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logo} alt="" className="h-3.5" />
+          </span>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt="" className="h-5 w-5 object-contain" />
+        )
+      ) : (
+        <Seal size={22} />
+      )}
+      <span className="leading-tight">
+        <span className="block font-display text-[15px] font-semibold text-ink">{name}</span>
+        <span className="block font-sans text-[11px] text-faint">{role}</span>
+      </span>
+    </Card>
   );
 }
 
@@ -517,26 +601,6 @@ function FinalCta() {
         </Card>
       </div>
     </section>
-  );
-}
-
-/* ───────────────────────── footer ───────────────────────── */
-
-function Footer() {
-  return (
-    <footer>
-      <div className="mx-auto flex max-w-content flex-col items-center justify-between gap-4 px-5 py-10 sm:flex-row md:px-8">
-        <div className="flex items-center gap-2 font-sans text-[13px] text-muted">
-          <Seal size={22} />
-          <span>Lambda — the loss every LP pays, caught and turned into yield.</span>
-        </div>
-        <div className="flex gap-5 font-sans text-[13px]">
-          <Link href="/app" className="link-quiet">App</Link>
-          <Link href="/docs" className="link-quiet">Docs</Link>
-          <a href="https://github.com/Hijanhv/lambda-protocol" className="link-quiet">GitHub</a>
-        </div>
-      </div>
-    </footer>
   );
 }
 

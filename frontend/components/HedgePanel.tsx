@@ -4,6 +4,8 @@ import { useReadContract } from "wagmi";
 import { hook } from "@/lib/contracts";
 import { addresses, currency0 } from "@/lib/config";
 import { fmt, feePctFromPips } from "@/lib/format";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 /**
  * The hedge side of the position: the live LP delta the protocol tracks, the last hedge
@@ -25,45 +27,40 @@ export function HedgePanel() {
   const shortTarget =
     state?.hedgedDelta != null ? (BigInt(state.hedgedDelta) * BigInt(state.hedgeRatioWad)) / 10n ** 18n : 0n;
 
+  const rows: [string, string, string?][] = [
+    [`Live LP delta (${currency0.symbol})`, fmt(delta as bigint, dec)],
+    ["Hedged delta (last signal)", fmt(state?.hedgedDelta, dec)],
+    ["Short target on Hyperliquid (h · Δ)", fmt(shortTarget, dec), "text-brand"],
+    ["Hedge signals sent (nonce)", state ? String(state.hedgeNonce) : "—"],
+    ["Hedge ratio h", state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—", "text-gold"],
+    ["Directional fee — buy / sell", `${feePctFromPips(feeBuy as bigint)} / ${feePctFromPips(feeSell as bigint)}`],
+  ];
+
   return (
-    <section className="panel">
-      <h2 className="eyebrow mb-4">The hedge</h2>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="eyebrow">The hedge</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <dl>
+          {rows.map(([k, v, tone], i) => (
+            <div key={k}>
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="font-sans text-[13px] text-muted">{k}</dt>
+                <dd className={`font-mono text-[15px] tabular-nums ${tone ?? "text-ink"}`}>{v}</dd>
+              </div>
+              {i < rows.length - 1 && <Separator className="bg-edge/15" />}
+            </div>
+          ))}
+        </dl>
 
-      <div className="stat-row">
-        <span className="stat-key">Live LP delta ({currency0.symbol})</span>
-        <span className="stat-val">{fmt(delta as bigint, dec)}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-key">Hedged delta (last signal)</span>
-        <span className="stat-val">{fmt(state?.hedgedDelta, dec)}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-key">Short target on Hyperliquid (h · Δ)</span>
-        <span className="stat-val text-brand">{fmt(shortTarget, dec)}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-key">Hedge signals sent (nonce)</span>
-        <span className="stat-val">{state ? String(state.hedgeNonce) : "—"}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-key">Hedge ratio h</span>
-        <span className="stat-val text-gold">
-          {state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—"}
-        </span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-key">Directional fee — buy / sell</span>
-        <span className="stat-val">
-          {feePctFromPips(feeBuy as bigint)} / {feePctFromPips(feeSell as bigint)}
-        </span>
-      </div>
-
-      <p className="note mt-4">
-        The short is opened on Hyperliquid through the Reactive → CoreWriter loop whenever the live
-        delta drifts past the band τ; each drift bumps the nonce. The directional fee makes
-        trend-continuing (informed) flow pay more — the on-chain half of the LVR defense.
-      </p>
-    </section>
+        <p className="note mt-5">
+          The short is opened on Hyperliquid through the Reactive → CoreWriter loop whenever the live
+          delta drifts past the band τ; each drift bumps the nonce. The directional fee makes
+          trend-continuing (informed) flow pay more — the on-chain half of the LVR defense.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 

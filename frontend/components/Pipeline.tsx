@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+
 const STAGES = [
   { label: "Connect", sub: "wallet" },
   { label: "Deposit", sub: "mint shares" },
@@ -8,7 +10,7 @@ const STAGES = [
 /** The four-stage capital-flow rail. `step` is the current active index (0-3). */
 export function Pipeline({ step }: { step: number }) {
   return (
-    <div className="rounded-xl2 border border-line bg-surface p-5 shadow-card">
+    <Card className="p-5">
       <div className="flex items-stretch">
         {STAGES.map((s, i) => {
           const done = i < step;
@@ -23,7 +25,7 @@ export function Pipeline({ step }: { step: number }) {
                       ? "bg-brand text-canvas"
                       : active
                       ? "bg-gold text-canvas shadow-[0_0_0_5px_rgba(214,162,63,0.18)] animate-pulseSoft"
-                      : "border border-line bg-surface2 text-faint",
+                      : "border border-edge bg-secondary text-faint",
                   ].join(" ")}
                 >
                   {done ? "✓" : i + 1}
@@ -36,7 +38,7 @@ export function Pipeline({ step }: { step: number }) {
                 </div>
               </div>
               {i < STAGES.length - 1 && (
-                <div className="relative mx-1 mb-6 h-px flex-1 overflow-hidden bg-line">
+                <div className="relative mx-1 mb-6 h-px flex-1 overflow-hidden bg-edge/20">
                   {done && <div className="absolute inset-0 bg-brand/50" />}
                   {active && (
                     <div className="absolute inset-y-0 left-0 w-1/3 animate-sheen bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -47,6 +49,6 @@ export function Pipeline({ step }: { step: number }) {
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }

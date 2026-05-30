@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Wordmark } from "@/components/Brand";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "How Lambda works — docs",
@@ -11,17 +14,21 @@ export const metadata: Metadata = {
 export default function Docs() {
   return (
     <div className="relative z-10">
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-content items-center justify-between px-5 py-3.5">
-          <Wordmark sub="Docs" />
-          <div className="flex items-center gap-4">
-            <Link href="/" className="link-quiet">Home</Link>
-            <Link href="/app" className="btn">Launch App</Link>
-          </div>
-        </div>
-      </header>
+      <SiteNav
+        sub="Docs"
+        links={[
+          { href: "/", label: "Home" },
+          { href: "/docs", label: "Docs" },
+          { href: "/app", label: "App" },
+        ]}
+        rightSlot={
+          <Button asChild size="sm">
+            <Link href="/app">Launch App →</Link>
+          </Button>
+        }
+      />
 
-      <main className="mx-auto max-w-3xl px-5 py-14 pb-28">
+      <main className="mx-auto max-w-3xl px-5 py-14 pb-28 md:px-8">
         <span className="eyebrow">Documentation</span>
         <h1 className="mt-3 font-display text-[40px] font-semibold leading-tight tracking-tightest text-ink md:text-[52px]">
           How Lambda works
@@ -155,12 +162,18 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
             </ol>
           </section>
 
-          <div className="mt-14 flex flex-wrap gap-3 border-t border-line pt-8">
-            <Link href="/app" className="btn px-6 py-3 text-[15px]">Launch App →</Link>
-            <Link href="/" className="btn btn-ghost px-6 py-3 text-[15px]">Back home</Link>
+          <div className="mt-14 flex flex-wrap gap-3 border-t border-edge/30 pt-8">
+            <Button asChild size="lg">
+              <Link href="/app">Launch App →</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/">Back home</Link>
+            </Button>
           </div>
         </article>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
@@ -177,25 +190,27 @@ function Toc() {
     ["references", "References"],
   ];
   return (
-    <nav className="mt-10 rounded-xl2 border border-line bg-surface p-5 shadow-card">
-      <div className="mb-3 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-muted">On this page</div>
-      <ol className="grid gap-x-6 gap-y-2 font-sans text-[14px] sm:grid-cols-2">
-        {items.map(([id, label], i) => (
-          <li key={id}>
-            <a href={`#${id}`} className="link-quiet">
-              <span className="mr-2 font-mono text-[12px] text-gold">{String(i + 1).padStart(2, "0")}</span>
-              {label}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <Card className="mt-10">
+      <CardContent className="p-5">
+        <div className="mb-3 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-muted">On this page</div>
+        <ol className="grid gap-x-6 gap-y-2 font-sans text-[14px] sm:grid-cols-2">
+          {items.map(([id, label], i) => (
+            <li key={id}>
+              <a href={`#${id}`} className="link-quiet">
+                <span className="mr-2 font-mono text-[12px] text-gold">{String(i + 1).padStart(2, "0")}</span>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
   );
 }
 
 function Formula({ children }: { children: React.ReactNode }) {
   return (
-    <pre className="my-5 overflow-x-auto rounded-xl border border-line bg-surface2 px-5 py-4 font-mono text-[13.5px] leading-relaxed text-ink">
+    <pre className="my-5 overflow-x-auto rounded-md border border-edge bg-secondary px-5 py-4 font-mono text-[13.5px] leading-relaxed text-ink">
       {children}
     </pre>
   );
@@ -203,20 +218,24 @@ function Formula({ children }: { children: React.ReactNode }) {
 
 function Callout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="my-5 rounded-xl border-l-4 border-brand bg-brand/[0.05] py-4 pl-5 pr-4">
-      <p className="prose-doc !mb-0 font-medium text-ink">{children}</p>
-    </div>
+    <Card className="my-5 border-l-4 border-l-brand bg-brand/[0.05]">
+      <CardContent className="py-4 pl-5 pr-4">
+        <p className="prose-doc !mb-0 font-medium text-ink">{children}</p>
+      </CardContent>
+    </Card>
   );
 }
 
 function Step({ n, place, children }: { n: string; place: string; children: React.ReactNode }) {
   return (
-    <div className="my-4 flex gap-4 rounded-xl border border-line bg-surface p-5 shadow-card">
-      <span className="font-display text-[28px] leading-none text-gold">{n}</span>
-      <div>
-        <div className="font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-brand">{place}</div>
-        <p className="prose-doc !mb-0 mt-1.5">{children}</p>
-      </div>
-    </div>
+    <Card className="my-4">
+      <CardContent className="flex gap-4 p-5">
+        <span className="font-display text-[28px] leading-none text-gold">{n}</span>
+        <div>
+          <div className="font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-brand">{place}</div>
+          <p className="prose-doc !mb-0 mt-1.5">{children}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
