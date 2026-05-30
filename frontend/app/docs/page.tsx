@@ -88,18 +88,69 @@ export default function Docs() {
             <Step n="①" place="Unichain — the hook">
               A self-contained Uniswap v4 hook doubles as the protocol&apos;s vault. It owns the pool&apos;s single
               position (so its tracked liquidity is <em>exactly</em> the pool&apos;s), tracks the precise delta of every
-              position, and emits a <code>HedgeNeeded</code> event the instant delta drifts too far. It also charges a
-              directional dynamic fee from <code>beforeSwap</code> — all without touching the swap curve.
+              position, and emits a <code>HedgeRequested</code> event the instant delta drifts too far. It also charges
+              a directional dynamic fee from <code>beforeSwap</code> — all without touching the swap curve.
             </Step>
             <Step n="②" place="Reactive Network — the brain">
               A Reactive Smart Contract subscribes to that event from another chain and triggers a transaction in
               response, entirely on-chain. It decides whether to act and drops replays by nonce.
             </Step>
             <Step n="③" place="Hyperliquid — the hedge">
-              When Reactive fires, a hedger on HyperEVM calls the <code>CoreWriter</code> precompile at{" "}
-              <code>0x3333…3333</code> — a live system contract that places real orders on Hyperliquid. The short opens
-              or resizes; the funding it earns flows back to you.
+              When the cross-chain callback reaches the hedger, it calls the live <code>CoreWriter</code> precompile at{" "}
+              <code>0x3333…3333</code> — a real system contract that places real orders on Hyperliquid — and the funding
+              the resulting short earns flows back to LPs. <strong>On testnet</strong>, Reactive&apos;s Lasna can&apos;t
+              route callbacks to HyperEVM, so the callback lands on a <code>LambdaHedgeReceiver</code> stand-in instead
+              — with the <em>same</em> authorization and monotonic-nonce rules as the real hedger; only the CoreWriter
+              order itself is omitted. Promotion to mainnet is a one-line config change (see{" "}
+              <a href="#mainnet" className="text-brand underline-offset-2 hover:underline">Mainnet readiness</a>).
             </Step>
+          </section>
+
+          <section id="mainnet">
+            <h2>Mainnet readiness: a configuration, not a rewrite</h2>
+            <p>
+              Lambda is submitted on <strong>testnet</strong>, where every piece runs against live infrastructure — a
+              real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and the real Hyperliquid CoreWriter
+              precompile probed on HyperEVM. The one limitation is external: Reactive&apos;s Lasna routes callbacks to
+              Unichain / Base / Ethereum Sepolia <em>but not</em> to HyperEVM testnet — HyperEVM is a Reactive
+              destination only on <strong>mainnet</strong> (chain id 999). So on testnet the cross-chain callback lands
+              on the receiver stand-in described in Step ③.
+            </p>
+
+            <Callout>
+              Promotion to mainnet is a <strong>one-line configuration change</strong>:{" "}
+              <code>DESTINATION_CHAIN_ID=999</code>. The Reactive leg then targets the real <code>LambdaHedger</code> on
+              HyperEVM instead of the testnet receiver — same contracts, same code.
+            </Callout>
+
+            <p>The mainnet rails Lambda will use are already live and were probed directly on-chain:</p>
+            <ul className="prose-doc list-disc space-y-2 pl-5">
+              <li>
+                <strong>Unichain Mainnet (130)</strong> — Uniswap v4 <code>PoolManager</code> at{" "}
+                <code>0x1f98…0004</code>.
+              </li>
+              <li>
+                <strong>HyperEVM Mainnet (999)</strong> — CoreWriter precompile at <code>0x3333…3333</code>; Reactive
+                callback proxy at <code>0x9299…FC4</code>.
+              </li>
+            </ul>
+
+            <p>
+              Full deploy runbook in{" "}
+              <a
+                href="https://github.com/Hijanhv/lambda-protocol#path-to-mainnet"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline-offset-2 hover:underline"
+              >
+                README → Path to mainnet ↗
+              </a>
+              . The live <em>testnet</em> deployment (Hook, Funding, Reactive, Receiver addresses) is on the{" "}
+              <Link href="/#how" className="text-brand underline-offset-2 hover:underline">
+                landing page&apos;s &quot;Live on testnet&quot; section
+              </Link>
+              .
+            </p>
           </section>
 
           <section id="math">
@@ -135,6 +186,18 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
   • a trade that continues the drift  (likely-informed)  →  base + surcharge
   • a trade that reverts the drift     (benign flow)       →  base − discount`}</Formula>
             <p>The toxic side of order flow ends up paying the LP — a second income stream aimed at the same leak the hedge attacks.</p>
+            <p className="font-sans text-[13px] text-muted">
+              The exact base, sensitivity, and cap parameters are tuned in{" "}
+              <a
+                href="https://github.com/Hijanhv/lambda-protocol/blob/main/CALIBRATION.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline-offset-2 hover:underline"
+              >
+                CALIBRATION.md ↗
+              </a>{" "}
+              and exercised by <code>forge test --match-contract Calibration -vv</code>.
+            </p>
             <Callout>
               Directional pricing in <code>beforeSwap</code> is becoming a standard v4 pattern — Lambda implements it
               and fuzz-tests it. Lambda&apos;s distinct contribution is the other half: a <strong>real, cross-chain,
@@ -148,7 +211,7 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
               <li><strong>The trading curve is never modified</strong> — protection is fees + an off-pool hedge, so swap behavior stays standard.</li>
               <li><strong>Liquidation risk is bounded by design</strong> via the <code>h = 0.65</code> hedge ratio.</li>
               <li><strong>Cross-chain messages are authenticated</strong> on both legs and replay-protected by nonce.</li>
-              <li><strong>An insurance reserve</strong> (earning Aave V3 yield while idle) backstops rare tail cases.</li>
+              <li><strong>An insurance reserve</strong> (earning Aave V3 yield on Base while idle) backstops rare tail cases.</li>
             </ul>
           </section>
 
@@ -185,6 +248,7 @@ function Toc() {
     ["problem", "The problem"],
     ["solution", "The solution"],
     ["architecture", "Architecture"],
+    ["mainnet", "Mainnet readiness"],
     ["math", "The math"],
     ["security", "Security"],
     ["references", "References"],

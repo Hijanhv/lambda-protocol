@@ -115,7 +115,7 @@ Lambda isn't a single contract — it's a small system spread across three place
 flowchart LR
     subgraph U["① Unichain — the Hook"]
         LP[["LP deposits<br/>ETH + USDC"]] --> H[Lambda Hook<br/>tracks exact delta]
-        H -->|delta drifts past threshold| EV([emits HedgeNeeded event])
+        H -->|delta drifts past threshold| EV([emits HedgeRequested event])
     end
 
     subgraph R["② Reactive Network — the Brain"]
