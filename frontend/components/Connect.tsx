@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect, type Connector } from "wagmi";
 import { shortAddr } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,18 @@ import {
  * (EIP-6963), so we list one option per wallet — MetaMask, Uniswap Wallet, etc.
  * — instead of blindly grabbing connectors[0]. Built on shadcn DropdownMenu so we
  * inherit keyboard nav, focus management, and click-away handling from Radix.
+ *
+ * SSR note: wagmi reports `isConnected: false` during render-on-server (no
+ * wallet there). If a wallet auto-reconnects on the client, the markup flips
+ * from plain "Connect Wallet" to the address-pill variant — which has spans
+ * inside the button and triggers a React hydration mismatch. We gate on a
+ * `mounted` flag so SSR + first client render always agree, then flip on
+ * mount.
  */
 export function Connect() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { address, isConnected, connector } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -37,6 +48,16 @@ export function Connect() {
   });
   const named = unique.filter((c) => c.id !== "injected");
   const wallets = named.length ? named : unique;
+
+  // Before hydration: render the plain disconnected button so SSR and the first
+  // client render produce identical DOM. After mount, switch to the real state.
+  if (!mounted) {
+    return (
+      <Button size="sm" disabled>
+        Connect Wallet
+      </Button>
+    );
+  }
 
   // Connected: address pill that opens an action menu.
   if (isConnected) {
