@@ -7,3 +7,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
+[submodule "lib/reactive-lib"]
+	path = lib/reactive-lib
+	url = https://github.com/Reactive-Network/reactive-lib
