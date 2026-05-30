@@ -172,7 +172,7 @@ export default function Docs() {
             <p>Over a period <code>Δt</code> on a position worth <code>V</code>, the funding you collect is about the loss you&apos;d otherwise eat. Hold both, scaled by <code>h</code>, and the loss routes back to you.</p>
 
             <h3>4. Why the hedge ratio is 0.65, not 1.0</h3>
-            <p>A full hedge cancels the most risk — but a short can be <strong>liquidated</strong> if price spikes against it. Hane et al. (2026) find the sweet spot:</p>
+            <p>A full hedge cancels the most risk — but a short can be <strong>liquidated</strong> if price spikes against it. Hane (2026) finds the sweet spot:</p>
             <Formula>{`h = 1.00  →  ~19% liquidation risk over 90 days
 h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula>
             <p>Lambda ships <code>h = 0.65</code>: give up a sliver of hedging to make the position dramatically safer.</p>
@@ -220,7 +220,7 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
             <ol className="prose-doc list-decimal space-y-2 pl-5 text-[14px]">
               <li>Milionis, Moallemi, Roughgarden, Zhang (2022). <em>Automated Market Making and Loss-Versus-Rebalancing.</em> The σ²/8 LVR rate.</li>
               <li>Chitra, Diamandis, et al. (2025). <em>Perpetual Demand Lending Pools.</em> arXiv:2502.06028.</li>
-              <li>Hane et al. (2026). <em>Optimal hedging under perpetual liquidation risk.</em> Basis for h ≈ 0.65.</li>
+              <li>Hane, A. (2026). <em>Optimal Hedge Ratio for Delta-Neutral Liquidity Provision under Liquidation Constraints.</em> arXiv:2603.19716. Basis for h ≈ 0.65.</li>
               <li>Maire &amp; Wunsch (2024). <em>Market Neutral Liquidity Provision.</em> LEDGER Journal.</li>
             </ol>
           </section>

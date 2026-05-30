@@ -194,7 +194,7 @@ In words: over a period `Δt`, on a position worth `V`, the funding income you c
 
 ### 5. Why the hedge ratio is 0.65, not 1.0
 
-A full hedge (`h = 1`) cancels the most price risk — but a short can be **liquidated** if the price spikes against it, which would be a disaster. The 2026 work by Hane et al. on optimal hedging under liquidation risk shows the sweet spot:
+A full hedge (`h = 1`) cancels the most price risk — but a short can be **liquidated** if the price spikes against it, which would be a disaster. The 2026 work by Hane on the optimal hedge ratio under liquidation constraints shows the sweet spot:
 
 ```
 best hedge ratio  h*  ≈  0.65
@@ -202,7 +202,7 @@ best hedge ratio  h*  ≈  0.65
    • h = 0.65  →  ~1.4% chance of liquidation over 90 days
 ```
 
-Lambda ships `h = 0.65` by default — and the key insight is that hedging *most* of the risk costs far less safety than hedging *all* of it, while giving up surprisingly little protection. Price-risk **variance scales with the square of the residual delta**, so a 0.65 hedge removes roughly `1 − (1 − 0.65)² ≈ 88%` of the linear price variance — not 65%. Hane et al. (2026) show that with optimal `τ`-banded rebalancing this reaches **~93–97%** impermanent-loss reduction while holding liquidation risk near 1.4%. (That ~93–97% figure is their modeled result, cited — not one we reproduce in our test suite; the code-backed numbers are in [CALIBRATION.md](CALIBRATION.md).)
+Lambda ships `h = 0.65` by default — and the key insight is that hedging *most* of the risk costs far less safety than hedging *all* of it, while giving up surprisingly little protection. Price-risk **variance scales with the square of the residual delta**, so a 0.65 hedge removes roughly `1 − (1 − 0.65)² ≈ 88%` of the linear price variance — not 65%. Hane (2026) shows that with optimal `τ`-banded rebalancing this reaches **~93–97%** impermanent-loss reduction while holding liquidation risk near 1.4%. (That ~93–97% figure is their modeled result, cited — not one we reproduce in our test suite; the code-backed numbers are in [CALIBRATION.md](CALIBRATION.md).)
 
 ### 6. Protecting the pool directly: a directional fee
 
@@ -241,7 +241,7 @@ The LVR and the funding income are *the same dollars with the sign flipped* — 
 - **It defends the pool from two sides at once.** A directional dynamic fee (Nezlobin) makes informed flow pay the LP *on-chain*, while the perp hedge neutralizes residual price risk *off-chain* — the same LVR leak attacked by two independent mechanisms.
 - **The hedge is real, and it's cross-chain, and it's automatic.** The short is a real position on Hyperliquid, opened through the live CoreWriter precompile — not a simulated stand-in. The cross-chain coordination runs on Reactive Smart Contracts with no off-chain bot.
 - **The risk math is honest.** Lambda doesn't blindly fully-hedge. It uses the research-backed `h = 0.65` to keep liquidation risk near 1% instead of near 20%.
-- **It stands on peer-reviewed work.** The design composes results from Milionis et al. (LVR), Chitra & Diamandis et al. (which proves venues like Hyperliquid are well-suited to delta-hedging), Hane et al. (optimal hedge ratio), and Maire & Wunsch (market-neutral LP construction). See [References](#references).
+- **It stands on peer-reviewed work.** The design composes results from Milionis et al. (LVR), Chitra & Diamandis et al. (which proves venues like Hyperliquid are well-suited to delta-hedging), Hane (optimal hedge ratio), and Maire & Wunsch (market-neutral LP construction). See [References](#references).
 
 ---
 
@@ -417,7 +417,7 @@ The protocol's design composes the following peer-reviewed and published work:
 
 1. Milionis, Moallemi, Roughgarden, Zhang (2022). *Automated Market Making and Loss-Versus-Rebalancing.* Columbia University & Microsoft Research (ACM EC). The `σ²/8` LVR rate.
 2. Chitra, Diamandis, et al. (2025). *Perpetual Demand Lending Pools.* Formalizes venues like Hyperliquid and shows they are well-suited to delta-hedging. (arXiv:2502.06028)
-3. Hane et al. (2026). *Optimal hedging under perpetual liquidation risk.* The basis for the `h ≈ 0.65` hedge ratio.
+3. Hane, A. (2026). *Optimal Hedge Ratio for Delta-Neutral Liquidity Provision under Liquidation Constraints.* arXiv:2603.19716. The basis for the `h ≈ 0.65` hedge ratio.
 4. Maire & Wunsch (2024). *Market Neutral Liquidity Provision.* LEDGER Journal (DOI 10.5195/LEDGER.2024.389). The market-neutral LP construction.
 5. Cartea, Drissi, Monga. *Predictable Loss and Optimal Liquidity Provision in DeFi AMMs.* Empirical evidence that vanilla LPs trade at a loss on average.
 
