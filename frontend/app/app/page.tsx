@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { Connect } from "@/components/Connect";
 import { SiteNav } from "@/components/SiteNav";
@@ -34,8 +35,15 @@ export default function AppPage() {
   const hasPosition = !!shares && (shares as bigint) > 0n;
   const hasFunding = !!pending && (pending as bigint) > 0n;
 
-  // Step index: 0 connect, 1 deposit, 2 hedge live, 3 funding accruing.
-  const step = !isConnected ? 0 : !hasPosition ? 1 : !hasFunding ? 2 : 3;
+  // Pin the pipeline to step 0 until we've mounted on the client. wagmi reports
+  // isConnected=false during SSR (no wallet there), so on the server `step` is
+  // always 0. If a wallet auto-reconnects on the client, `step` would jump to
+  // 1+ on first render and the stage markers would flip from "1" → "✓",
+  // tripping React's hydration check. Gating on `mounted` keeps SSR + first
+  // client render identical; the real step then takes over after the effect.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const step = mounted ? (!isConnected ? 0 : !hasPosition ? 1 : !hasFunding ? 2 : 3) : 0;
 
   return (
     <div className="relative z-10">
