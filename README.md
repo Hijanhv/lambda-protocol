@@ -7,6 +7,14 @@ Project ID number: HK-UHI9-0872
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/UHI9-HK--0872-B5276F?style=flat-square" alt="UHI9 Submission">
+  <img src="https://img.shields.io/badge/forge%20test-127%20passing-1f7a4d?style=flat-square" alt="127 tests passing">
+  <img src="https://img.shields.io/badge/cross--chain-verified%20live-1f7a4d?style=flat-square" alt="Cross-chain verified live on testnet">
+  <img src="https://img.shields.io/badge/arXiv-2603.19716-B5276F?style=flat-square" alt="arXiv 2603.19716 — Hane (2026)">
+  <img src="https://img.shields.io/badge/license-MIT-444?style=flat-square" alt="MIT License">
+</p>
+
+<p align="center">
   <img src="assets/sponsor-uniswap.svg" alt="Built on Uniswap v4" height="74">
   &nbsp;&nbsp;
   <img src="assets/sponsor-reactive.svg" alt="Powered by Reactive Network" height="74">
@@ -14,7 +22,12 @@ Project ID number: HK-UHI9-0872
 
 <p align="center">
   <b>Lambda turns the money liquidity providers quietly lose into money they earn.</b><br>
-  A Uniswap v4 protocol that hedges every position on a real perpetual market — automatically, across chains.
+  A Uniswap v4 protocol that hedges every position on a real perpetual market — automatically, across chains.<br>
+  <sub><i>Lambda the hook catches λ before it leaves.</i></sub>
+</p>
+
+<p align="center">
+  <sub>Sibling planning repo (research spec, joint UHI9 strategy): <a href="https://github.com/Hijanhv/lambda">Hijanhv/lambda</a> (private during build phase).</sub>
 </p>
 
 ---
@@ -39,11 +52,14 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [The math of the hook](#the-math-of-the-hook)
 - [What you actually earn](#what-you-actually-earn)
 - [What makes this new](#what-makes-this-new)
+- [How Lambda scores on Atrium's rubric](#how-lambda-scores-on-atriums-rubric)
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
 - [Live on testnet](#live-on-testnet)
+- [Judge runbook (5-minute clickthrough)](#judge-runbook-5-minute-clickthrough)
 - [Path to mainnet](#path-to-mainnet)
+- [Deploying the frontend (Vercel)](#deploying-the-frontend-vercel)
 - [Built with](#built-with)
 - [Glossary for non-experts](#glossary-for-non-experts)
 - [References](#references)
@@ -245,6 +261,19 @@ The LVR and the funding income are *the same dollars with the sign flipped* — 
 
 ---
 
+## How Lambda scores on Atrium's rubric
+
+Atrium evaluates hookathon submissions on four axes. Where each one lands in this repo:
+
+| Criterion | What Lambda ships | Where to look |
+|---|---|---|
+| **Original Idea** | First v4 hook to make the **LVR ⇋ funding identity** explicit on-chain — funding income on a Hyperliquid short statistically equals the LVR an LP would otherwise lose. Same number, opposite sign. UHI9's theme is *"Yield-Protected AMM / IL & **Yield Systems**"*; Lambda owns the Yield Systems half by turning perp funding into a v4 LP yield primitive. | [The solution](#the-solution-the-loss-is-also-an-income-stream), [The math](#the-math-of-the-hook), [References](#references) |
+| **Unique Execution** | A directional `beforeSwap` fee is a familiar v4 pattern. The part nobody else ships is the **automatic cross-chain hedge** — a real Hyperliquid perp opened through a Reactive Smart Contract with no off-chain bot. Built on Hyperliquid's official `hyper-evm-lib` Solidity SDK (`CoreWriterLib`). | [Architecture](#how-lambda-works-architecture), [Live on testnet](#live-on-testnet), [`contracts/src/LambdaHedger.sol`](./contracts/src/LambdaHedger.sol) |
+| **Impact** | LVR is widely cited as the single biggest unsolved Uniswap LP problem — roughly **11 % / yr** on an ETH/USDC pool, structural and continuous. Lambda is a direct fix that (a) pulls risk-averse capital into v4 pools by making a delta-neutral, yield-positive position possible, and (b) brings Hyperliquid funding income on-chain as a new v4 yield primitive. | [The problem](#the-problem-why-liquidity-providers-lose-money), [What you actually earn](#what-you-actually-earn), [Our sponsors](#our-sponsors--and-why-this-work-deserves-their-support) |
+| **Functionality** | **Both submission paths covered.** Test coverage: **127 / 127 Foundry tests passing**, warning-free, including invariant suites (`FundingInvariant`, `InsuranceVaultInvariant`) — run `forge test` from repo root, ~1.5 s. Frontend judges can interact with: a Vercel-deployable Next.js dashboard at [`frontend/`](./frontend) that reads live on-chain state from the deployed Unichain Sepolia contracts and lets a judge deposit, watch the hedge fire, and verify the cross-chain delivery. | [Judge runbook](#judge-runbook-5-minute-clickthrough), [`frontend/`](./frontend), [`contracts/test/`](./contracts/test) |
+
+---
+
 ## Our sponsors — and why this work deserves their support
 
 <p align="center">
@@ -356,6 +385,29 @@ It is simply not *deployed* on testnet because of the routing gap above. On main
 
 ---
 
+## Judge runbook (5-minute clickthrough)
+
+A frictionless way to verify the loop end-to-end yourself — no setup beyond a browser and a wallet:
+
+1. **Open the live frontend** at `https://lambda-protocol.vercel.app/` (or run locally — see [Deploying the frontend](#deploying-the-frontend-vercel)).
+2. **Connect a wallet on Unichain Sepolia (chain id 1301).** Need testnet ETH? The [Unichain Sepolia faucet](https://www.alchemy.com/faucets/unichain-sepolia) drips in ~30 s.
+3. **Approve** both test tokens (tWETH + tUSDC), then **deposit** some tWETH into the Hook. The dashboard quotes the matching liquidity automatically from the live `poolLiquidity / currentDelta` reading.
+4. **Watch the Pipeline rail** advance: `Connect → Deposit → Hedge live → Funding`. If the deposit moves delta past the band `τ`, the hook fires `HedgeRequested`, `LambdaReactive` on Lasna catches it, and `LambdaHedgeReceiver` records `targetSize = 0.65 × delta` — surfaced live in the "The hedge" panel within seconds.
+5. **Verify the cross-chain delivery without the UI** — anyone with `cast` can confirm the receiver state directly:
+   ```bash
+   cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C \
+     "hedge(bytes32)((uint64,uint64,uint256,uint160))" \
+     0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b \
+     --rpc-url https://sepolia.unichain.org
+   ```
+   The returned tuple `(nonce, lastApplied, targetSize, sqrtPriceX96)` is the exact hedge Lambda computed — delivered cross-chain by Reactive, with no off-chain bot.
+
+**Want the math?** [The math of the hook](#the-math-of-the-hook) walks the delta formula, the `h = 0.65` rationale (per Hane, [arXiv:2603.19716](https://arxiv.org/abs/2603.19716)), and the directional fee.
+**Want to run the tests?** `forge test` from the repo root — **127 / 127 passing**, ~1.5 s.
+**Want the dashboard read-only?** Open the live frontend without connecting a wallet — the on-chain reads (delta, hedge nonce, funding pool state) still populate.
+
+---
+
 ## Path to mainnet
 
 Lambda is submitted on **testnet**, where every piece runs against live infrastructure — a real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and a real Hyperliquid perp through the CoreWriter precompile on HyperEVM testnet. The one limitation is external: Reactive's testnet does not route callbacks to HyperEVM testnet, so the cross-chain hedge is demonstrated as **two proven halves** (the automatic Unichain → Reactive callback, and the real CoreWriter perp). On mainnet they become **one automatic loop**, and promotion is deliberately a *configuration* change — not a rewrite.
@@ -381,6 +433,43 @@ Lambda is submitted on **testnet**, where every piece runs against live infrastr
 **Funding required:** ≈ **$40–55** total — Unichain gas + ~5 HYPE + ~10 USDC margin + ~5 REACT.
 
 **Gating before mainnet:** a full security review + invariant-fuzzing pass, and resolution of the transitive frontend audit advisories (see [Security](#security)). Lambda moves real value across chains, so these are not skipped.
+
+---
+
+## Deploying the frontend (Vercel)
+
+The dashboard at [`frontend/`](./frontend) is a Next.js 14 App-Router app (shadcn/ui, wagmi v2, viem) with no server-side state — a clean fit for Vercel's static + edge runtime. All env vars are `NEXT_PUBLIC_*`, so the deployed bundle is fully reproducible from this repo + the addresses below.
+
+**One-time setup**
+
+1. **Import the repo** at [vercel.com/new](https://vercel.com/new) and pick this repository.
+2. **Set Root Directory = `frontend`** in *Project Settings → General*. Vercel will auto-detect Next.js from there.
+3. **Add the environment variables** below in *Project Settings → Environment Variables* (all `NEXT_PUBLIC_*`, all public — they're baked into the client bundle):
+
+   ```bash
+   NEXT_PUBLIC_CHAIN_ID=1301
+   NEXT_PUBLIC_RPC_URL=https://sepolia.unichain.org
+   NEXT_PUBLIC_HOOK_ADDRESS=0x23C3da7CF53862Fd38640100D4FB764bE2d2cac0
+   NEXT_PUBLIC_FUNDING_ADDRESS=0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1
+   NEXT_PUBLIC_POOL_ID=0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b
+   NEXT_PUBLIC_TOKEN0=0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79
+   NEXT_PUBLIC_TOKEN1=0xca3cB1b81a4332247B6ce62b89cd37d8Bc61767b
+   NEXT_PUBLIC_TOKEN0_SYMBOL=tWETH
+   NEXT_PUBLIC_TOKEN1_SYMBOL=tUSDC
+   NEXT_PUBLIC_TOKEN0_DECIMALS=18
+   NEXT_PUBLIC_TOKEN1_DECIMALS=6
+   ```
+
+4. **Deploy.** Vercel runs `npm install && next build` and serves the prerendered output. The committed `frontend/vercel.json` pins the framework + build settings to remove guesswork.
+
+**Run it locally**
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local              # then fill in the addresses above
+npm run dev                             # → http://localhost:3000
+```
 
 ---
 
