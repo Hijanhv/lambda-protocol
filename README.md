@@ -25,11 +25,6 @@ Project ID number: HK-UHI9-0872
   A Uniswap v4 protocol that hedges every position on a real perpetual market — automatically, across chains.<br>
   <sub><i>Lambda the hook catches λ before it leaves.</i></sub>
 </p>
-
-<p align="center">
-  <sub>Sibling planning repo (research spec, joint UHI9 strategy): <a href="https://github.com/Hijanhv/lambda">Hijanhv/lambda</a> (private during build phase).</sub>
-</p>
-
 ---
 
 ## The 30-second version
@@ -414,7 +409,7 @@ Lambda is submitted on **testnet**, where every piece runs against live infrastr
 
 **The one change.** Point the Reactive leg's destination at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`) and use the real `LambdaHedger` as the destination instead of the testnet receiver. Same contracts, same code — the testnet receiver exists only because Lasna can't reach HyperEVM testnet.
 
-**Verified mainnet addresses** (probed live on-chain; see `verified_addresses_and_topics.md` in the ideation repo):
+**Verified mainnet addresses** (probed live on-chain):
 
 | Leg | Chain (id) | RPC | Anchor address |
 |---|---|---|---|
