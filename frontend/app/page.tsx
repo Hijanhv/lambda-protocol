@@ -529,7 +529,7 @@ function short(addr: string) {
 
 function LiveOnTestnet() {
   return (
-    <section className="border-b border-edge">
+    <section id="live-on-testnet" className="border-b border-edge">
       <div className="mx-auto max-w-content px-5 py-14 md:px-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>

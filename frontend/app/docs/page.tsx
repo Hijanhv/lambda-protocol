@@ -146,7 +146,7 @@ export default function Docs() {
                 README → Path to mainnet ↗
               </a>
               . The live <em>testnet</em> deployment (Hook, Funding, Reactive, Receiver addresses) is on the{" "}
-              <Link href="/#how" className="text-brand underline-offset-2 hover:underline">
+              <Link href="/#live-on-testnet" className="text-brand underline-offset-2 hover:underline">
                 landing page&apos;s &quot;Live on testnet&quot; section
               </Link>
               .
