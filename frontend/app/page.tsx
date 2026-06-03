@@ -53,7 +53,7 @@ export default function Landing() {
 
 const TICKER = [
   "Hedge loop live on Unichain Sepolia",
-  "Cross-chain callback verified end-to-end — no off-chain bot",
+  "Cross-chain callback verified end-to-end, no off-chain bot",
   "127 passing Foundry tests · warning-free build",
   "A real short on Hyperliquid via the CoreWriter precompile",
   "Built on Uniswap v4 + Reactive Network",
@@ -104,8 +104,8 @@ function Hero() {
 
           <p className="mx-auto mt-6 max-w-xl animate-rise font-sans text-[16px] leading-relaxed text-ink-soft [animation-delay:120ms] lg:mx-0">
             A normal Uniswap position quietly bleeds about <strong className="font-semibold text-ink">11% a year</strong> to
-            arbitrageurs. Lambda cancels it with a <strong className="font-semibold text-brand">real short on Hyperliquid</strong>{" "}
-            — opened and resized automatically, across chains, with no off-chain bot — so the loss returns to you as funding income.
+            arbitrageurs. Lambda cancels it with a <strong className="font-semibold text-brand">real short on Hyperliquid</strong>,
+            opened and resized automatically, across chains, with no off-chain bot, so the loss returns to you as funding income.
           </p>
 
           <div className="mt-8 flex animate-rise flex-wrap items-center justify-center gap-3 [animation-delay:180ms] lg:justify-start">
@@ -177,7 +177,7 @@ function Idea() {
       <div className="mx-auto max-w-content px-5 py-14 md:px-8">
         <Eyebrow>The idea</Eyebrow>
         <h2 className="mt-3 max-w-2xl font-display text-[28px] font-semibold tracking-tight text-ink md:text-[38px]">
-          The loss has a mirror image — and it pays.
+          The loss has a mirror image, and it pays.
         </h2>
         <p className="mt-4 max-w-2xl prose-doc">
           A short position on a perpetual exchange <em>collects</em> a funding fee that, over time, is the same size as the
@@ -221,7 +221,7 @@ function Idea() {
           </Card>
         </div>
         <p className="mt-4 font-sans text-[12px] text-faint">
-          Modeled from historical volatility and funding rates — not a guarantee. Full model in the docs.
+          Modeled from historical volatility and funding rates, not a guarantee. Full model in the docs.
         </p>
       </div>
     </section>
@@ -269,7 +269,7 @@ function HowItWorks() {
       n: "②",
       place: "Reactive Network",
       title: "The brain",
-      body: "A Reactive Smart Contract watches that event from another chain and fires the hedge instruction in response — entirely on-chain, with no centralized bot in the loop.",
+      body: "A Reactive Smart Contract watches that event from another chain and fires the hedge instruction in response, entirely on-chain, with no centralized bot in the loop.",
       badge: "Verified end-to-end · Lasna",
       kind: "brand" as const,
       mini: <ReactiveMini />,
@@ -318,7 +318,7 @@ function HowItWorks() {
           <CardContent className="p-5">
             <p className="font-sans text-[12.5px] leading-relaxed text-muted">
               On testnet, Reactive&apos;s Lasna can&apos;t route callbacks to HyperEVM, so legs ①–② run live and the
-              Hyperliquid leg is proven separately against the real CoreWriter precompile. On mainnet they become one loop —
+              Hyperliquid leg is proven separately against the real CoreWriter precompile. On mainnet they become one loop,
               a one-line config change.{" "}
               <Link href="/docs" className="font-semibold text-brand link-quiet">See the full mechanism →</Link>
             </p>
@@ -401,9 +401,9 @@ function HedgeMini() {
 
 function HedgeBlack() {
   const points: [string, string][] = [
-    ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile — not a mock."],
-    ["Automatic & cross-chain", "A Reactive Smart Contract routes the hedge across chains itself — no off-chain bot in the loop."],
-    ["Honest risk math", "Ships h = 0.65 — about 1.4% liquidation risk over 90 days, versus ~19% for a full hedge."],
+    ["Real, not simulated", "The short is a live position on Hyperliquid via the CoreWriter precompile, not a mock."],
+    ["Automatic & cross-chain", "A Reactive Smart Contract routes the hedge across chains itself, with no off-chain bot in the loop."],
+    ["Honest risk math", "Ships h = 0.65, about 1.4% liquidation risk over 90 days, versus ~19% for a full hedge."],
     ["Peer-reviewed", "Composes Milionis (LVR), Chitra & Diamandis, Hane, and Maire & Wunsch."],
   ];
   return (
@@ -416,9 +416,9 @@ function HedgeBlack() {
         <p className="mt-4 max-w-2xl font-sans text-[15.5px] leading-relaxed text-background/75">
           A directional fee in{" "}
           <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[13.5px] text-gold-bright">beforeSwap</code>{" "}
-          is becoming a standard v4 pattern — Lambda has it, fuzz-tested. The part nobody else ships is the hedge itself: a
+          is becoming a standard v4 pattern. Lambda has it, fuzz-tested. The part nobody else ships is the hedge itself: a
           real short on Hyperliquid, opened automatically across chains through Reactive, with no off-chain bot. That live
-          cross-chain loop is the hard part — and the whole point.
+          cross-chain loop is the hard part, and the whole point.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -567,7 +567,7 @@ function LiveOnTestnet() {
         <p className="mt-4 font-sans text-[12.5px] leading-relaxed text-muted">
           A deposit + swap fire <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[12px] text-brand">HedgeRequested</code>{" "}
           on Unichain; <span className="font-semibold text-ink">LambdaReactive</span> catches it on Lasna and routes a
-          callback back across chains — with no off-chain bot — recording the exact hedge the protocol computed
+          callback back across chains, with no off-chain bot, recording the exact hedge the protocol computed
           (<span className="font-mono text-[12px]">targetSize = 0.65 × delta</span>).
         </p>
       </div>

@@ -33,7 +33,7 @@ export function HedgePanel() {
     ["Short target on Hyperliquid (h · Δ)", fmt(shortTarget, dec), "text-brand"],
     ["Hedge signals sent (nonce)", state ? String(state.hedgeNonce) : "—"],
     ["Hedge ratio h", state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—", "text-gold"],
-    ["Directional fee — buy / sell", `${feePctFromPips(feeBuy as bigint)} / ${feePctFromPips(feeSell as bigint)}`],
+    ["Directional fee, buy / sell", `${feePctFromPips(feeBuy as bigint)} / ${feePctFromPips(feeSell as bigint)}`],
   ];
 
   return (
@@ -57,7 +57,7 @@ export function HedgePanel() {
         <p className="note mt-5">
           The short is opened on Hyperliquid through the Reactive → CoreWriter loop whenever the live
           delta drifts past the band τ; each drift bumps the nonce. The directional fee makes
-          trend-continuing (informed) flow pay more — the on-chain half of the LVR defense.
+          trend-continuing (informed) flow pay more, the on-chain half of the LVR defense.
         </p>
       </CardContent>
     </Card>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "How Lambda works — docs",
+  title: "How Lambda works · docs",
   description:
     "The logic behind Lambda: LVR, the LVR ⇋ funding identity, the cross-chain architecture, the delta math, the h = 0.65 hedge ratio, and the directional fee.",
 };
@@ -34,7 +34,7 @@ export default function Docs() {
           How Lambda works
         </h1>
         <p className="mt-4 max-w-2xl font-sans text-[17px] leading-relaxed text-ink-soft">
-          Lambda turns the money liquidity providers quietly lose into money they earn. Here&apos;s the whole idea —
+          Lambda turns the money liquidity providers quietly lose into money they earn. Here&apos;s the whole idea,
           first in plain English, then with the actual math and architecture.
         </p>
 
@@ -44,10 +44,10 @@ export default function Docs() {
           <section id="problem">
             <h2>The problem: why LPs lose money</h2>
             <p>
-              A liquidity provider deposits two assets — say ETH and USDC — into a pool so others can trade between
+              A liquidity provider deposits two assets, say ETH and USDC, into a pool so others can trade between
               them, earning a fee on each trade. The catch is in how the pool rebalances:{" "}
               <strong>when ETH&apos;s price rises, the pool sells ETH; when it falls, the pool buys.</strong> It sells
-              the thing going up and buys the thing going down — the opposite of what any investor would choose.
+              the thing going up and buys the thing going down, the opposite of what any investor would choose.
             </p>
             <p>
               Arbitrageurs take the other side and pocket a small, certain profit every time the price moves. The 2022
@@ -58,7 +58,7 @@ export default function Docs() {
             <p>
               where <code>σ</code> is the asset&apos;s volatility. For an ETH/USDC pool, that works out to roughly{" "}
               <strong>11% per year</strong> handed silently from the LP to arbitrageurs. This is <strong>LVR</strong>{" "}
-              (loss-versus-rebalancing) — the sharper cousin of impermanent loss, and the single biggest reason
+              (loss-versus-rebalancing), the sharper cousin of impermanent loss, and the single biggest reason
               providing liquidity is harder to profit from than it looks.
             </p>
           </section>
@@ -75,7 +75,7 @@ export default function Docs() {
               same time. They are the same quantity with the sign flipped.
             </Callout>
             <p>
-              Both are paid by the same force — people demanding exposure to a moving price. So Lambda measures exactly
+              Both are paid by the same force: people demanding exposure to a moving price. So Lambda measures exactly
               how much price exposure your position carries, opens a matching short on Hyperliquid so the risk roughly
               cancels (your position becomes near <strong>delta-neutral</strong>), and the funding that short collects
               becomes your yield. The structural loss becomes structural income.
@@ -84,23 +84,23 @@ export default function Docs() {
 
           <section id="architecture">
             <h2>The architecture: one loop, three chains</h2>
-            <p>Lambda is a small system spread across three places, each doing the thing it&apos;s best at — talking to each other automatically, with no off-chain bot.</p>
-            <Step n="①" place="Unichain — the hook">
+            <p>Lambda is a small system spread across three places, each doing the thing it&apos;s best at, talking to each other automatically, with no off-chain bot.</p>
+            <Step n="①" place="Unichain: the hook">
               A self-contained Uniswap v4 hook doubles as the protocol&apos;s vault. It owns the pool&apos;s single
               position (so its tracked liquidity is <em>exactly</em> the pool&apos;s), tracks the precise delta of every
               position, and emits a <code>HedgeRequested</code> event the instant delta drifts too far. It also charges
-              a directional dynamic fee from <code>beforeSwap</code> — all without touching the swap curve.
+              a directional dynamic fee from <code>beforeSwap</code>, all without touching the swap curve.
             </Step>
-            <Step n="②" place="Reactive Network — the brain">
+            <Step n="②" place="Reactive Network: the brain">
               A Reactive Smart Contract subscribes to that event from another chain and triggers a transaction in
               response, entirely on-chain. It decides whether to act and drops replays by nonce.
             </Step>
-            <Step n="③" place="Hyperliquid — the hedge">
+            <Step n="③" place="Hyperliquid: the hedge">
               When the cross-chain callback reaches the hedger, it calls the live <code>CoreWriter</code> precompile at{" "}
-              <code>0x3333…3333</code> — a real system contract that places real orders on Hyperliquid — and the funding
+              <code>0x3333…3333</code>, a real system contract that places real orders on Hyperliquid, and the funding
               the resulting short earns flows back to LPs. <strong>On testnet</strong>, Reactive&apos;s Lasna can&apos;t
-              route callbacks to HyperEVM, so the callback lands on a <code>LambdaHedgeReceiver</code> stand-in instead
-              — with the <em>same</em> authorization and monotonic-nonce rules as the real hedger; only the CoreWriter
+              route callbacks to HyperEVM, so the callback lands on a <code>LambdaHedgeReceiver</code> stand-in instead,
+              with the <em>same</em> authorization and monotonic-nonce rules as the real hedger; only the CoreWriter
               order itself is omitted. Promotion to mainnet is a one-line config change (see{" "}
               <a href="#mainnet" className="text-brand underline-offset-2 hover:underline">Mainnet readiness</a>).
             </Step>
@@ -109,10 +109,10 @@ export default function Docs() {
           <section id="mainnet">
             <h2>Mainnet readiness: a configuration, not a rewrite</h2>
             <p>
-              Lambda is submitted on <strong>testnet</strong>, where every piece runs against live infrastructure — a
+              Lambda is submitted on <strong>testnet</strong>, where every piece runs against live infrastructure: a
               real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and the real Hyperliquid CoreWriter
               precompile probed on HyperEVM. The one limitation is external: Reactive&apos;s Lasna routes callbacks to
-              Unichain / Base / Ethereum Sepolia <em>but not</em> to HyperEVM testnet — HyperEVM is a Reactive
+              Unichain / Base / Ethereum Sepolia <em>but not</em> to HyperEVM testnet; HyperEVM is a Reactive
               destination only on <strong>mainnet</strong> (chain id 999). So on testnet the cross-chain callback lands
               on the receiver stand-in described in Step ③.
             </p>
@@ -120,17 +120,17 @@ export default function Docs() {
             <Callout>
               Promotion to mainnet is a <strong>one-line configuration change</strong>:{" "}
               <code>DESTINATION_CHAIN_ID=999</code>. The Reactive leg then targets the real <code>LambdaHedger</code> on
-              HyperEVM instead of the testnet receiver — same contracts, same code.
+              HyperEVM instead of the testnet receiver, same contracts, same code.
             </Callout>
 
             <p>The mainnet rails Lambda will use are already live and were probed directly on-chain:</p>
             <ul className="prose-doc list-disc space-y-2 pl-5">
               <li>
-                <strong>Unichain Mainnet (130)</strong> — Uniswap v4 <code>PoolManager</code> at{" "}
+                <strong>Unichain Mainnet (130)</strong>: Uniswap v4 <code>PoolManager</code> at{" "}
                 <code>0x1f98…0004</code>.
               </li>
               <li>
-                <strong>HyperEVM Mainnet (999)</strong> — CoreWriter precompile at <code>0x3333…3333</code>; Reactive
+                <strong>HyperEVM Mainnet (999)</strong>: CoreWriter precompile at <code>0x3333…3333</code>; Reactive
                 callback proxy at <code>0x9299…FC4</code>.
               </li>
             </ul>
@@ -155,7 +155,7 @@ export default function Docs() {
 
           <section id="math">
             <h2>The math of the hook</h2>
-            <h3>1. Delta — how much price risk a position carries</h3>
+            <h3>1. Delta: how much price risk a position carries</h3>
             <p>A v4 position with liquidity <code>L</code> holds, at price <code>P</code> in range <code>[Pₐ, P_b]</code>:</p>
             <Formula>x(P) = L · ( 1/√P − 1/√P_b )</Formula>
             <p>
@@ -172,12 +172,12 @@ export default function Docs() {
             <p>Over a period <code>Δt</code> on a position worth <code>V</code>, the funding you collect is about the loss you&apos;d otherwise eat. Hold both, scaled by <code>h</code>, and the loss routes back to you.</p>
 
             <h3>4. Why the hedge ratio is 0.65, not 1.0</h3>
-            <p>A full hedge cancels the most risk — but a short can be <strong>liquidated</strong> if price spikes against it. Hane (2026) finds the sweet spot:</p>
+            <p>A full hedge cancels the most risk, but a short can be <strong>liquidated</strong> if price spikes against it. Hane (2026) finds the sweet spot:</p>
             <Formula>{`h = 1.00  →  ~19% liquidation risk over 90 days
 h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula>
             <p>Lambda ships <code>h = 0.65</code>: give up a sliver of hedging to make the position dramatically safer.</p>
 
-            <h3>5. The directional fee — defending the pool on-chain</h3>
+            <h3>5. The directional fee: defending the pool on-chain</h3>
             <p>
               Arbitrageurs profit by trading whichever direction drags the pool price toward the already-moved market
               price. So Lambda charges an asymmetric, direction-aware fee (Nezlobin&apos;s MEV-defense model):
@@ -185,7 +185,7 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
             <Formula>{`fee = base ± sensitivity · |drift|
   • a trade that continues the drift  (likely-informed)  →  base + surcharge
   • a trade that reverts the drift     (benign flow)       →  base − discount`}</Formula>
-            <p>The toxic side of order flow ends up paying the LP — a second income stream aimed at the same leak the hedge attacks.</p>
+            <p>The toxic side of order flow ends up paying the LP, a second income stream aimed at the same leak the hedge attacks.</p>
             <p className="font-sans text-[13px] text-muted">
               The exact base, sensitivity, and cap parameters are tuned in{" "}
               <a
@@ -199,7 +199,7 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
               and exercised by <code>forge test --match-contract Calibration -vv</code>.
             </p>
             <Callout>
-              Directional pricing in <code>beforeSwap</code> is becoming a standard v4 pattern — Lambda implements it
+              Directional pricing in <code>beforeSwap</code> is becoming a standard v4 pattern. Lambda implements it
               and fuzz-tests it. Lambda&apos;s distinct contribution is the other half: a <strong>real, cross-chain,
               automatic perp hedge</strong> on Hyperliquid, which no off-chain bot drives.
             </Callout>
@@ -208,7 +208,7 @@ h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula
           <section id="security">
             <h2>Security</h2>
             <ul className="prose-doc list-disc space-y-2 pl-5">
-              <li><strong>The trading curve is never modified</strong> — protection is fees + an off-pool hedge, so swap behavior stays standard.</li>
+              <li><strong>The trading curve is never modified</strong>: protection is fees + an off-pool hedge, so swap behavior stays standard.</li>
               <li><strong>Liquidation risk is bounded by design</strong> via the <code>h = 0.65</code> hedge ratio.</li>
               <li><strong>Cross-chain messages are authenticated</strong> on both legs and replay-protected by nonce.</li>
               <li><strong>An insurance reserve</strong> (earning Aave V3 yield on Base while idle) backstops rare tail cases.</li>

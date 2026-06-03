@@ -74,7 +74,7 @@ export default function AppPage() {
         {!isConfigured && (
           <Card className="mb-6 animate-rise border-gold/40 bg-gold/[0.06]">
             <CardContent className="p-4 text-[13.5px] leading-relaxed text-ink-soft">
-              <span className="font-semibold text-gold">Demo mode —</span> no contract addresses
+              <span className="font-semibold text-gold">Demo mode:</span> no contract addresses
               configured. Copy <code className="font-mono text-brand">.env.example</code> →{" "}
               <code className="font-mono text-brand">.env.local</code> and fill in the addresses from
               the deploy scripts (see <code className="font-mono text-brand">DEPLOY.md</code>), then

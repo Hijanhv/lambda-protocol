@@ -26,7 +26,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lambda — yield-protected liquidity",
+  title: "Lambda: yield-protected liquidity",
   description:
     "Deposit into a Uniswap v4 pool, watch the delta-hedge open on Hyperliquid, and collect the funding it earns. The LVR loss, routed back to you.",
 };

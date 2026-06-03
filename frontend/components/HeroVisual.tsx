@@ -85,7 +85,7 @@ export function HeroVisual() {
       <Card className="absolute bottom-2 left-[46px] z-10 w-[404px] animate-floaty p-4 shadow-lift [animation-duration:8s] [animation-delay:0.3s]">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] font-semibold text-brand">HedgeRequested</span>
-          <span className="font-sans text-[11px] text-faint">routed on-chain — no off-chain bot</span>
+          <span className="font-sans text-[11px] text-faint">routed on-chain, no off-chain bot</span>
         </div>
         <div className="relative mt-3 h-8">
           <div className="absolute left-[12%] right-[12%] top-1/2 h-px -translate-y-1/2 bg-edge/30" />

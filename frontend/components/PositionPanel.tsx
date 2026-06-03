@@ -111,8 +111,8 @@ export function PositionPanel() {
               : canQuote
               ? `≈ ${fmt(liquidity, 18)} liquidity`
               : aboveRange
-              ? `price is above the range — entering raw liquidity`
-              : "pool not seeded yet — entering raw liquidity")}
+              ? `price is above the range, entering raw liquidity`
+              : "pool not seeded yet, entering raw liquidity")}
         </div>
 
         {/* Approve / withdraw secondary actions */}
@@ -135,7 +135,7 @@ export function PositionPanel() {
         </div>
 
         <p className="note mt-4">
-          Approve both tokens once, enter how much {currency0.symbol} to add, and deposit — the hook
+          Approve both tokens once, enter how much {currency0.symbol} to add, and deposit, and the hook
           quotes the matching liquidity, pulls both token amounts, mints your shares, and (if delta
           has moved enough) fires the first hedge. Withdraw burns shares and returns your tokens plus
           accrued LP fees.
