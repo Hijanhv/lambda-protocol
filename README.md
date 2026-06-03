@@ -8,7 +8,7 @@ Project ID number: HK-UHI9-0872
 
 <p align="center">
   <img src="https://img.shields.io/badge/UHI9-HK--0872-B5276F?style=flat-square" alt="UHI9 Submission">
-  <img src="https://img.shields.io/badge/forge%20test-127%20passing-1f7a4d?style=flat-square" alt="127 tests passing">
+  <img src="https://img.shields.io/badge/forge%20test-131%20passing-1f7a4d?style=flat-square" alt="131 tests passing">
   <img src="https://img.shields.io/badge/cross--chain-verified%20live-1f7a4d?style=flat-square" alt="Cross-chain verified live on testnet">
   <img src="https://img.shields.io/badge/arXiv-2603.19716-B5276F?style=flat-square" alt="arXiv 2603.19716 — Hane (2026)">
   <img src="https://img.shields.io/badge/license-MIT-444?style=flat-square" alt="MIT License">
@@ -308,7 +308,7 @@ It's a direct answer to Uniswap's own most-cited open problem, built the way v4 
 
 - The **Uniswap v4 hook** (`LambdaHook`) and per-LP **funding accrual** (`Funding`) are live on **Unichain Sepolia**.
 - The **Reactive Smart Contract** (`LambdaReactive`) is live on **Reactive Lasna** and has caught the hook's `HedgeRequested` event and routed a cross-chain callback **back across chains with no off-chain bot** — verified end-to-end (`hedge(poolId)` records `targetSize = 0.65 × delta`).
-- **127 / 127 Foundry tests pass**, warning-free, including invariant suites, and a **Next.js dashboard** lets a judge deposit, watch the hedge fire, and verify the delivered state. Addresses and a one-command verification are in [Live on testnet](#live-on-testnet); a click-through is in the [judge runbook](#judge-runbook-5-minute-clickthrough).
+- **131 Foundry tests pass**, warning-free, including invariant suites — and **4 of them replay the entire hedge loop against the *live* deployed contracts on a local fork** (real swap → live hook emits `HedgeRequested` → Reactive routes → live receiver records it), so the integration is proven against real on-chain state, not just simulated. A **Next.js dashboard** lets a judge deposit, watch the hedge fire, and verify the delivered state. Addresses and a one-command verification are in [Live on testnet](#live-on-testnet); a click-through is in the [judge runbook](#judge-runbook-5-minute-clickthrough).
 
 **What's coded but not yet mainnet-deployed — and how it works once it is.** The third leg, the real Hyperliquid perp (`LambdaHedger` + `CoreWriterLib`), is **fully written and unit-tested** — it is not on *testnet* for one external reason only: Reactive's testnet (Lasna) doesn't route callbacks to HyperEVM testnet; HyperEVM is a Reactive destination on **mainnet (999)** only. On mainnet, the exact same loop closes automatically and end-to-end:
 
@@ -393,7 +393,7 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Frontend LP dashboard, reading live on-chain state | ✅ Done |
 | First real CoreWriter perp on HyperEVM (Reactive→HyperEVM is mainnet-only on Reactive) | 🔜 Next |
 
-**What's implemented today** — Solidity on Foundry, **127 passing tests**, warning-free build, and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
+**What's implemented today** — Solidity on Foundry, **131 passing tests** (incl. invariant fuzzing and a live-fork replay of the whole loop), warning-free build, and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
 
 | Contract(s) | Role |
 |---|---|
@@ -430,6 +430,8 @@ cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C \
   --rpc-url https://sepolia.unichain.org
 ```
 
+And you can replay the **entire loop against these live contracts** on a local fork — no gas, no faucet — with `LambdaForkE2E.t.sol`: it routes a real swap through the live `PoolManager` + `LambdaHook`, captures the real `HedgeRequested` the hook emits, runs it through `LambdaReactive`, and delivers the callback to the live receiver (impersonating the real Reactive proxy), asserting the recorded hedge. All four pass against a live Unichain Sepolia fork — see [`FORK_TESTING.md`](./FORK_TESTING.md).
+
 Explore on [uniscan (Unichain Sepolia)](https://sepolia.uniscan.xyz/) and [reactscan (Lasna)](https://lasna.reactscan.net/).
 
 ### The hedge leg (`LambdaHedger`) — implemented and tested, not deployed on testnet
@@ -464,7 +466,11 @@ A frictionless way to verify the loop end-to-end yourself — no setup beyond a 
    The returned tuple `(nonce, lastApplied, targetSize, sqrtPriceX96)` is the exact hedge Lambda computed — delivered cross-chain by Reactive, with no off-chain bot.
 
 **Want the math?** [The math of the hook](#the-math-of-the-hook) walks the delta formula, the `h = 0.65` rationale (per Hane, [arXiv:2603.19716](https://arxiv.org/abs/2603.19716)), and the directional fee.
-**Want to run the tests?** `forge test` from the repo root — **127 / 127 passing**, ~1.5 s.
+**Want to run the tests?** `forge test` from the repo root — **127 unit/invariant tests pass**, ~1.5 s. To replay the whole loop against the live contracts on a fork (all green, no gas — see [`FORK_TESTING.md`](./FORK_TESTING.md)):
+```bash
+export UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org
+forge test --match-path 'contracts/test/fork/LambdaForkE2E.t.sol' -vvv
+```
 **Want the dashboard read-only?** Open the live frontend without connecting a wallet — the on-chain reads (delta, hedge nonce, funding pool state) still populate.
 
 ---
@@ -541,7 +547,7 @@ npm run dev                             # → http://localhost:3000
 - **[Hyperliquid](https://hyperliquid.xyz)** — on-chain perpetuals, accessed directly through the HyperEVM CoreWriter precompile (`0x3333…3333`)
 - **[Aave V3](https://aave.com)** — yield venue for the idle insurance reserve
 - **[Solady](https://github.com/Vectorized/solady)** — gas-optimized `Ownable`, `ReentrancyGuard`, `SafeTransferLib`, `FixedPointMathLib`
-- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, and property tests (127 passing)
+- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, property tests, and live-fork integration (131 passing)
 
 ---
 

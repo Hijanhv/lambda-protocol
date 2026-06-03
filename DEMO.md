@@ -71,7 +71,14 @@ each leg as you name it — **linger on the leg-2 cross-chain arrow.**
      --rpc-url https://sepolia.unichain.org
    ```
    *"No UI in the loop — the cross-chain hedge is recorded on-chain. Nonce, target size, price."*
-6. *(Optional, 10s)* `forge test` → *"127 tests, including invariant fuzzing, all green."*
+6. *(Optional but strong, 15s)* Run the **live-fork test** and let it go green on camera:
+   ```bash
+   UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org \
+     forge test --match-path 'contracts/test/fork/LambdaForkE2E.t.sol' -vvv
+   ```
+   *"To prove this isn't a simulation: this replays the whole loop against the live deployed
+   contracts on a fork — real swap, the real hook emits the hedge, Reactive routes it, the
+   live receiver records it. Four green. Plus 127 unit and invariant tests."*
 
 ---
 

@@ -52,7 +52,8 @@ which v4's `validateHookPermissions` enforces at construction. See `VERIFICATION
 ## Dynamic analysis (skill's testing step)
 
 ```
-forge test                                   → 127 / 127 passing, warning-free build
+forge test                                   → 127 unit/invariant passing, warning-free build
+forge test (+ live-fork e2e, UNICHAIN RPC)   → 131 / 131 passing (4 fork tests replay the loop on live contracts)
 FOUNDRY_FUZZ_RUNS=10000 forge test (core)    → 57 / 57 passing, 0 invariant failures
 ```
 
