@@ -53,7 +53,7 @@ which v4's `validateHookPermissions` enforces at construction. See `VERIFICATION
 
 ```
 forge test                                   → 127 unit/invariant passing, warning-free build
-forge test (+ live-fork e2e, UNICHAIN RPC)   → 131 / 131 passing (4 fork tests replay the loop on live contracts)
+forge test (+ live forks: UNICHAIN+HYPEREVM) → 134 / 134 passing (7 fork tests replay all 3 legs on real chain state)
 FOUNDRY_FUZZ_RUNS=10000 forge test (core)    → 57 / 57 passing, 0 invariant failures
 ```
 
