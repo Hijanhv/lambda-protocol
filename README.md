@@ -360,6 +360,7 @@ Lambda moves real value across chains, so safety is treated as a first-class des
 - **Cross-chain messages are authenticated** on both legs of the loop, so a hedge can only be triggered by a genuine, replay-protected event from the hook.
 - **An insurance reserve** is planned to backstop the rare tail cases.
 - A full security review and invariant fuzzing are part of the build plan before any mainnet deployment. Responsible-disclosure contact is in [`SECURITY.md`](./SECURITY.md).
+- The hook was self-audited with Uniswap's official **`v4-security-foundations`** skill — all twelve catalogued v4 vulnerability classes checked, plus 10,000-run fuzzing and invariant suites, with no Medium-or-above findings. Full write-up in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
 
 ---
 

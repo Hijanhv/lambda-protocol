@@ -22,3 +22,7 @@ broadcast/
 contracts/out/
 contracts/cache/
 contracts/broadcast/
+
+# Installed agent skills tooling (npx skills add)
+.agents/
+skills-lock.json
