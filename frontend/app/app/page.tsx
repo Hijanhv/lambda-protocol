@@ -6,6 +6,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { Connect } from "@/components/Connect";
 import { SiteNav } from "@/components/SiteNav";
 import { Pipeline } from "@/components/Pipeline";
+import { NetworkBanner } from "@/components/NetworkBanner";
 import { HedgePanel, usePoolKeyArg } from "@/components/HedgePanel";
 import { FundingPanel } from "@/components/FundingPanel";
 import { PositionPanel } from "@/components/PositionPanel";
@@ -70,6 +71,8 @@ export default function AppPage() {
         <div className="mb-6 animate-rise">
           <Pipeline step={step} />
         </div>
+
+        <NetworkBanner />
 
         {!isConfigured && (
           <Card className="mb-6 animate-rise border-gold/40 bg-gold/[0.06]">

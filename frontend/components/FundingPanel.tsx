@@ -2,8 +2,9 @@
 
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { funding } from "@/lib/contracts";
-import { addresses, currency1 } from "@/lib/config";
+import { addresses, currency1, hookChain } from "@/lib/config";
 import { fmt } from "@/lib/format";
+import { useWrongNetwork } from "./NetworkBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function FundingPanel() {
   const { address } = useAccount();
   const { writeContract, isPending } = useWriteContract();
+  const wrongNetwork = useWrongNetwork();
 
   const { data: pending, refetch } = useReadContract({
     ...funding,
@@ -65,10 +67,10 @@ export function FundingPanel() {
           <Button
             size="lg"
             className="shrink-0"
-            disabled={!address || isPending || !hasClaim}
+            disabled={!address || wrongNetwork || isPending || !hasClaim}
             onClick={() =>
               writeContract(
-                { ...funding, functionName: "claim", args: [addresses.poolId] },
+                { ...funding, functionName: "claim", args: [addresses.poolId], chainId: hookChain.id },
                 { onSuccess: () => setTimeout(() => refetch(), 2500) }
               )
             }

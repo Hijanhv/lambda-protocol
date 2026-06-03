@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { maxUint128, maxUint256, parseUnits } from "viem";
 import { hook, erc20Abi } from "@/lib/contracts";
-import { addresses, tokenMeta, currency0 } from "@/lib/config";
+import { addresses, tokenMeta, currency0, hookChain } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { usePoolKeyArg } from "./HedgePanel";
+import { useWrongNetwork } from "./NetworkBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ export function PositionPanel() {
   const { address } = useAccount();
   const poolKey = usePoolKeyArg();
   const { writeContract, isPending } = useWriteContract();
+  const wrongNetwork = useWrongNetwork();
   const [amt, setAmt] = useState("");
 
   const { data: shares, refetch } = useReadContract({
@@ -45,7 +47,13 @@ export function PositionPanel() {
   const tooBig = liquidity > maxUint128; // deposit() takes uint128 — guard the encode
 
   const approve = (token: `0x${string}`) =>
-    writeContract({ address: token, abi: erc20Abi, functionName: "approve", args: [addresses.hook, maxUint256] });
+    writeContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [addresses.hook, maxUint256],
+      chainId: hookChain.id,
+    });
 
   const deposit = () =>
     writeContract(
@@ -53,13 +61,19 @@ export function PositionPanel() {
         ...hook,
         functionName: "deposit",
         args: [poolKey[0], liquidity, maxUint256, maxUint256, address],
+        chainId: hookChain.id,
       },
       { onSuccess: () => setTimeout(() => refetch(), 2500) }
     );
 
   const withdrawAll = () =>
     writeContract(
-      { ...hook, functionName: "withdraw", args: [poolKey[0], (shares as bigint) ?? 0n, 0n, 0n, address] },
+      {
+        ...hook,
+        functionName: "withdraw",
+        args: [poolKey[0], (shares as bigint) ?? 0n, 0n, 0n, address],
+        chainId: hookChain.id,
+      },
       { onSuccess: () => setTimeout(() => refetch(), 2500) }
     );
 
@@ -97,7 +111,7 @@ export function PositionPanel() {
           </div>
           <Button
             className="shrink-0"
-            disabled={!address || isPending || liquidity === 0n || tooBig}
+            disabled={!address || wrongNetwork || isPending || liquidity === 0n || tooBig}
             onClick={deposit}
           >
             Deposit
@@ -117,17 +131,17 @@ export function PositionPanel() {
 
         {/* Approve / withdraw secondary actions */}
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" disabled={!address} onClick={() => approve(addresses.token0)}>
+          <Button variant="outline" size="sm" disabled={!address || wrongNetwork} onClick={() => approve(addresses.token0)}>
             Approve {tokenMeta.token0.symbol}
           </Button>
-          <Button variant="outline" size="sm" disabled={!address} onClick={() => approve(addresses.token1)}>
+          <Button variant="outline" size="sm" disabled={!address || wrongNetwork} onClick={() => approve(addresses.token1)}>
             Approve {tokenMeta.token1.symbol}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             className="ml-auto"
-            disabled={!address || !shares || (shares as bigint) === 0n}
+            disabled={!address || wrongNetwork || !shares || (shares as bigint) === 0n}
             onClick={withdrawAll}
           >
             Withdraw all
