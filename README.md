@@ -9,6 +9,7 @@ Project ID number: HK-UHI9-0872
 <p align="center">
   <img src="https://img.shields.io/badge/UHI9-HK--0872-B5276F?style=flat-square" alt="UHI9 Submission">
   <img src="https://img.shields.io/badge/forge%20test-134%20passing-1f7a4d?style=flat-square" alt="134 tests passing">
+  <img src="https://img.shields.io/github/actions/workflow/status/Hijanhv/lambda-protocol/test.yml?style=flat-square&label=CI" alt="CI status">
   <img src="https://img.shields.io/badge/cross--chain-verified%20live-1f7a4d?style=flat-square" alt="Cross-chain verified live on testnet">
   <img src="https://img.shields.io/badge/arXiv-2603.19716-B5276F?style=flat-square" alt="arXiv 2603.19716 — Hane (2026)">
   <img src="https://img.shields.io/badge/license-MIT-444?style=flat-square" alt="MIT License">
@@ -41,6 +42,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 
 ## Table of contents
 
+- [Verification at a glance](#verification-at-a-glance)
 - [The problem: why liquidity providers lose money](#the-problem-why-liquidity-providers-lose-money)
 - [The solution: the loss is also an income stream](#the-solution-the-loss-is-also-an-income-stream)
 - [How Lambda works (architecture)](#how-lambda-works-architecture)
@@ -61,6 +63,18 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [Glossary for non-experts](#glossary-for-non-experts)
 - [References](#references)
 - [License](#license)
+
+---
+
+## Verification at a glance
+
+Everything here is checkable from this repo — nothing is taken on faith:
+
+- **134 tests, warning-free build.** 127 unit/invariant (incl. fuzzing) **+ 7 live-fork tests that replay all three legs against their real chains' state** — legs ① + ③ on a Unichain Sepolia fork (the live hook + receiver), and leg ② on a HyperEVM **mainnet** fork (the real `LambdaHedger` firing a correct CoreWriter order, asserted byte-for-byte). Run: `forge test`; for the forks see [`FORK_TESTING.md`](./FORK_TESTING.md).
+- **Live on testnet, verified on-chain.** The v4 hook and the Reactive cross-chain callback run live on Unichain Sepolia + Reactive Lasna; the delivered hedge is readable with one `cast call` — see [Live on testnet](#live-on-testnet).
+- **CI on every push.** GitHub Actions runs `forge build --sizes` + the full suite on each push and PR ([`.github/workflows/test.yml`](./.github/workflows/test.yml)).
+- **Mainnet is a config flip, vendor-confirmed.** The only un-routable hop is Reactive → HyperEVM *testnet*; the Reactive Network team confirmed a setup proven on a supported testnet carries to HyperEVM mainnet unchanged — promotion is `DESTINATION_CHAIN_ID=999`, no code change ([Path to mainnet](#path-to-mainnet)).
+- **Demo-ready dashboard.** A Next.js app with live on-chain reads (no wallet needed), a wrong-network guard with one-click switch, and inline transaction status — live at [`lambda-protocol.vercel.app`](https://lambda-protocol.vercel.app).
 
 ---
 
@@ -393,7 +407,7 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Frontend LP dashboard, reading live on-chain state | ✅ Done |
 | First real CoreWriter perp on HyperEVM (Reactive→HyperEVM is mainnet-only on Reactive) | 🔜 Next |
 
-**What's implemented today** — Solidity on Foundry, **134 passing tests** (incl. invariant fuzzing and live-fork replays of all three legs against their real chains), warning-free build, and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
+**What's implemented today** — Solidity on Foundry, **134 passing tests** (incl. invariant fuzzing and live-fork replays of all three legs against their real chains), warning-free build, **CI on every push** ([`.github/workflows/test.yml`](./.github/workflows/test.yml)), and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
 
 | Contract(s) | Role |
 |---|---|
@@ -509,7 +523,7 @@ Lambda is submitted on **testnet**, where the live pieces run against real infra
 
 ## Deploying the frontend (Vercel)
 
-The dashboard at [`frontend/`](./frontend) is a Next.js 14 App-Router app (shadcn/ui, wagmi v2, viem) with no server-side state — a clean fit for Vercel's static + edge runtime. All env vars are `NEXT_PUBLIC_*`, so the deployed bundle is fully reproducible from this repo + the addresses below.
+The dashboard at [`frontend/`](./frontend) is a Next.js 14 App-Router app (shadcn/ui, wagmi v2, viem) with no server-side state — a clean fit for Vercel's static + edge runtime. All env vars are `NEXT_PUBLIC_*`, so the deployed bundle is fully reproducible from this repo + the addresses below. It's demo-hardened: on-chain reads populate **without a connected wallet**, a **wrong-network guard** prompts a one-click switch to the hook's chain, and every action shows **inline transaction status** with an explorer link.
 
 **One-time setup**
 
