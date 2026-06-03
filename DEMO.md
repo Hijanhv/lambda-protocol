@@ -4,6 +4,14 @@ A tight, judge-friendly script. Record your own voice (Atrium docks AI voices). 
 **~4:00**, leaving slack under the 5-minute hard cut. Three movements: **30s hook → 60s how →
 90s live demo → 60s why it's new + close.**
 
+> **The one line the whole video orbits** (say a version of this early, and again at the close):
+> *"Lambda is the first v4 hook that hedges your LP position on a real Hyperliquid perp —
+> **automatically and cross-chain, with no off-chain bot.** The loss LPs bleed to LVR and the
+> funding a short collects are the same number with the sign flipped, so Lambda captures it."*
+>
+> Delta-neutral LP vaults exist. A **fully on-chain, cross-chain, automatic** hedge into a real
+> perp does not — that's the thing a similar project won't have. Make it impossible to miss.
+
 > Have these open before you hit record: the live frontend (Unichain Sepolia), a wallet with
 > testnet ETH + tWETH approved, a terminal at the repo root, and `VERIFICATION.md` on a tab.
 
@@ -15,9 +23,13 @@ A tight, judge-friendly script. Record your own voice (Atrium docks AI voices). 
 > "If you provide liquidity on Uniswap, you lose money by design — it's called LVR. When the
 > price moves, the pool sells the asset that's rising and buys the one that's falling, and
 > arbitrage bots pocket the difference. For an ETH pool that's about **11% a year**, bleeding
-> quietly from LPs. Lambda turns that loss into yield."
+> quietly from LPs. Lambda turns that loss into yield — by automatically opening a matching short
+> on Hyperliquid, **cross-chain, with no bot in the loop.**"
 
 **Show:** the landing page hero / the "Normal LP vs Lambda LP" comparison.
+
+> ⏱ Drop the "cross-chain, no bot" differentiator *here, in the first 30 seconds* — don't save it
+> for the end. It's what separates Lambda from every other delta-neutral hook in the field.
 
 ---
 
@@ -31,11 +43,12 @@ A tight, judge-friendly script. Record your own voice (Atrium docks AI voices). 
 >
 > "It's three legs. **One** — a Uniswap v4 hook on Unichain tracks your position's exact delta
 > and charges a directional fee. **Two** — when delta drifts, it emits one event, and a Reactive
-> Smart Contract catches it cross-chain with no off-chain bot. **Three** — that fires a real perp
-> on Hyperliquid through the CoreWriter precompile. All automatic."
+> Smart Contract catches it cross-chain — **this is the part nobody else ships: no keeper, no
+> off-chain bot, the coordination is all on-chain.** **Three** — that fires a real perp on
+> Hyperliquid through the CoreWriter precompile. All automatic."
 
 **Show:** the architecture diagram (README mermaid or the in-app `/docs` diagram), pointing to
-each leg as you name it.
+each leg as you name it — **linger on the leg-2 cross-chain arrow.**
 
 ---
 

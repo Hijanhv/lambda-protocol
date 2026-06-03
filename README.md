@@ -22,7 +22,7 @@ Project ID number: HK-UHI9-0872
 
 <p align="center">
   <b>Lambda turns the money liquidity providers quietly lose into money they earn.</b><br>
-  A Uniswap v4 protocol that hedges every position on a real perpetual market — automatically, across chains.<br>
+  The first Uniswap v4 hook that hedges every LP position on a real perpetual market <b>automatically and cross-chain</b> — Unichain → Hyperliquid, driven by Reactive Smart Contracts with <b>no off-chain bot in the loop</b>.<br>
   <sub><i>Lambda the hook catches λ before it leaves.</i></sub>
 </p>
 ---
