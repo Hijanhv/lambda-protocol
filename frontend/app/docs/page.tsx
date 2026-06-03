@@ -109,12 +109,15 @@ export default function Docs() {
           <section id="mainnet">
             <h2>Mainnet readiness: a configuration, not a rewrite</h2>
             <p>
-              Lambda is submitted on <strong>testnet</strong>, where every piece runs against live infrastructure: a
-              real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and the real Hyperliquid CoreWriter
-              precompile probed on HyperEVM. The one limitation is external: Reactive&apos;s Lasna routes callbacks to
-              Unichain / Base / Ethereum Sepolia <em>but not</em> to HyperEVM testnet; HyperEVM is a Reactive
-              destination only on <strong>mainnet</strong> (chain id 999). So on testnet the cross-chain callback lands
-              on the receiver stand-in described in Step ③.
+              Lambda is submitted on <strong>testnet</strong>, where the live pieces run against real infrastructure: a
+              real v4 hook on Unichain Sepolia and real Reactive automation on Lasna. The Hyperliquid hedge leg is
+              proven against <strong>real HyperEVM mainnet state on a fork</strong> — the real <code>LambdaHedger</code>{" "}
+              fires a correct CoreWriter order, asserted byte-for-byte — and the CoreWriter precompile itself was probed
+              live on-chain. The one limitation is external: Reactive&apos;s Lasna routes callbacks to Unichain / Base /
+              Ethereum Sepolia <em>but not</em> to HyperEVM testnet; HyperEVM is a Reactive destination only on{" "}
+              <strong>mainnet</strong> (chain id 999). So on testnet the cross-chain callback lands on the receiver
+              stand-in described in Step ③ — an approach the <strong>Reactive Network team confirmed directly</strong>,
+              noting a setup proven on a supported testnet carries over to HyperEVM mainnet unchanged.
             </p>
 
             <Callout>

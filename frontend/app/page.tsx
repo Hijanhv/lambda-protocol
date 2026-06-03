@@ -318,8 +318,9 @@ function HowItWorks() {
           <CardContent className="p-5">
             <p className="font-sans text-[12.5px] leading-relaxed text-muted">
               On testnet, Reactive&apos;s Lasna can&apos;t route callbacks to HyperEVM, so legs ①–② run live and the
-              Hyperliquid leg is proven separately against the real CoreWriter precompile. On mainnet they become one loop,
-              a one-line config change.{" "}
+              Hyperliquid leg is proven separately against real HyperEVM mainnet state on a fork (the real hedger fires a
+              correct CoreWriter order, asserted byte-for-byte). On mainnet they become one loop, a one-line config change
+              the Reactive Network team confirmed carries over unchanged.{" "}
               <Link href="/docs" className="font-semibold text-brand link-quiet">See the full mechanism →</Link>
             </p>
           </CardContent>
