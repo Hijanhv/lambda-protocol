@@ -6,8 +6,10 @@ contracts (`lib/v4-core`, `lib/reactive-lib`) and the official Hyperliquid CoreW
 The intent is that a judge can confirm the integrations are real and correct without taking
 anything on faith.
 
-**Status at time of writing:** `forge build` clean (no warnings), **127 / 127 tests passing**
-across 15 suites (incl. invariant fuzzing), `LambdaHook` 14,393 bytes (< 24,576 deploy limit).
+**Status at time of writing:** `forge build` clean (no warnings), **131 tests across 16
+suites** (incl. invariant fuzzing) — 127 unit/invariant passing offline, plus 4 fork tests
+that run the full loop against the live contracts on a Unichain Sepolia fork (they self-skip
+when no RPC is set). `LambdaHook` 14,393 bytes (< 24,576 deploy limit).
 
 ---
 
@@ -103,6 +105,15 @@ relayer fills in; it is **not trusted**. Authorization is (a) the callback-proxy
 (`authorizedSenderOnly`) and (b) a strictly-increasing per-pool nonce re-checked on the
 destination — replays and out-of-order callbacks are dropped on both legs.
 
+### Mainnet readiness — confirmed by Reactive Network
+
+HyperEVM testnet (998) is not a supported Reactive callback destination; only mainnet (999)
+is. Per Reactive Network's team, the supported path is to prove callbacks on any other
+supported testnet — which Lambda does on Unichain Sepolia, end-to-end. Their guidance:
+*"if the setup works, it'll definitely also work once deployed on HyperEVM mainnet."* Going
+live is therefore a configuration change only — `DESTINATION_CHAIN_ID 1301 → 999` and the
+HyperEVM callback proxy — with **no contract code change**.
+
 ---
 
 ## ③ Hyperliquid — the perp hedge (CoreWriter)
@@ -165,7 +176,13 @@ without redeploying — not a hard-coded guess. The byte framing is unit-tested 
 
 ```bash
 forge build --sizes      # clean, no warnings; LambdaHook < 24,576 bytes
-forge test               # 127 / 127 passing, ~1.5 s
+forge test               # full unit/invariant suite (fork tests self-skip offline)
+
+# Run the loop against the LIVE contracts on a local fork — no gas, no faucet
+# (see FORK_TESTING.md): real swap → live hook emits HedgeRequested → reactive
+# routes → live receiver records it.
+export UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org
+forge test --match-path 'contracts/test/fork/LambdaForkE2E.t.sol' -vvv
 
 # Verify the live cross-chain delivery (no setup beyond cast):
 cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C \
