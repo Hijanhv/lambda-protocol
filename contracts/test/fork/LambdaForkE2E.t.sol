@@ -134,6 +134,7 @@ contract LambdaForkE2E is Test {
             key,
             IPoolManager.SwapParams({
                 zeroForOne: true,
+                // forge-lint: disable-next-line(unsafe-typecast)
                 amountSpecified: -int256(amtIn),
                 sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
             }),
