@@ -420,7 +420,7 @@ Explore on [uniscan (Unichain Sepolia)](https://sepolia.uniscan.xyz/) and [react
 
 ### The hedge leg (`LambdaHedger`) — implemented and tested, not deployed on testnet
 
-Reactive's testnet (Lasna) delivers callbacks to Unichain Sepolia, Base Sepolia, and Ethereum Sepolia — **but not to HyperEVM testnet (998)**; HyperEVM is a Reactive destination only on **mainnet (999)** (confirmed against Reactive's [origins & destinations](https://dev.reactive.network/origins-and-destinations)). So on testnet the cross-chain callback lands on a `LambdaHedgeReceiver`, which records the hedge with the **same authorization and monotonic-nonce rules as the real hedger** — only the CoreWriter order itself is omitted.
+Reactive's testnet (Lasna) delivers callbacks to Unichain Sepolia, Base Sepolia, and Ethereum Sepolia — **but not to HyperEVM testnet (998)**; HyperEVM is a Reactive destination only on **mainnet (999)** (confirmed against Reactive's [origins & destinations](https://dev.reactive.network/origins-and-destinations)). This was also **confirmed directly with the Reactive Network team**, who advised validating the callback on a supported testnet — exactly as Lambda does on Unichain Sepolia — and noted that a setup proven there will operate unchanged once the destination is HyperEVM mainnet. So on testnet the cross-chain callback lands on a `LambdaHedgeReceiver`, which records the hedge with the **same authorization and monotonic-nonce rules as the real hedger** — only the CoreWriter order itself is omitted.
 
 The real perp leg is **fully built, not stubbed**:
 
@@ -457,7 +457,7 @@ A frictionless way to verify the loop end-to-end yourself — no setup beyond a 
 
 ## Path to mainnet
 
-Lambda is submitted on **testnet**, where every piece runs against live infrastructure — a real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and a real Hyperliquid perp through the CoreWriter precompile on HyperEVM testnet. The one limitation is external: Reactive's testnet does not route callbacks to HyperEVM testnet, so the cross-chain hedge is demonstrated as **two proven halves** (the automatic Unichain → Reactive callback, and the real CoreWriter perp). On mainnet they become **one automatic loop**, and promotion is deliberately a *configuration* change — not a rewrite.
+Lambda is submitted on **testnet**, where every piece runs against live infrastructure — a real v4 hook on Unichain Sepolia, real Reactive automation on Lasna, and a real Hyperliquid perp through the CoreWriter precompile on HyperEVM testnet. The one limitation is external: Reactive's testnet does not route callbacks to HyperEVM testnet, so the cross-chain hedge is demonstrated as **two proven halves** (the automatic Unichain → Reactive callback, and the real CoreWriter perp). The Reactive Network team confirmed this routing limitation directly and confirmed that the testnet-proven setup will carry over to HyperEVM mainnet without change. On mainnet the two halves become **one automatic loop**, and promotion is deliberately a *configuration* change — not a rewrite.
 
 **The one change.** Point the Reactive leg's destination at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`) and use the real `LambdaHedger` as the destination instead of the testnet receiver. Same contracts, same code — the testnet receiver exists only because Lasna can't reach HyperEVM testnet.
 
