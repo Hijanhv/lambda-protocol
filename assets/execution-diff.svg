@@ -1,0 +1,81 @@
+<svg width="980" height="540" viewBox="0 0 980 540" xmlns="http://www.w3.org/2000/svg" font-family="'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="pinkbar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B5276F"/>
+      <stop offset="1" stop-color="#E0529A"/>
+    </linearGradient>
+    <marker id="arrowGrey" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#8a8275"/>
+    </marker>
+    <marker id="arrowPink" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#B5276F"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="980" height="540" fill="#faf8f2"/>
+
+  <!-- title -->
+  <text x="490" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#191710" font-family="Georgia, 'Times New Roman', serif">The same idea. A different execution.</text>
+  <text x="490" y="72" text-anchor="middle" font-size="15" fill="#6b6356">Delta-neutral LP vaults exist — Lambda's edge is <tspan font-weight="700" fill="#B5276F">how</tspan> the hedge actually fires.</text>
+
+  <!-- ============ LEFT PANEL: the usual way ============ -->
+  <rect x="40" y="96" width="420" height="404" rx="14" fill="#f0ede4" stroke="#d9d3c5" stroke-width="1.5"/>
+  <text x="250" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#5c5448" letter-spacing="0.5">TYPICAL DELTA-NEUTRAL HOOK</text>
+
+  <!-- L box 1 -->
+  <rect x="80" y="150" width="340" height="58" rx="10" fill="#ffffff" stroke="#cfc8b8" stroke-width="1.5"/>
+  <text x="250" y="178" text-anchor="middle" font-size="15.5" font-weight="600" fill="#2a261d">LP position · Uniswap v4 hook</text>
+  <text x="250" y="197" text-anchor="middle" font-size="12.5" fill="#8a8275">tracks delta / impermanent loss</text>
+  <line x1="250" y1="208" x2="250" y2="240" stroke="#8a8275" stroke-width="2" marker-end="url(#arrowGrey)"/>
+
+  <!-- L box 2: the weak point -->
+  <rect x="80" y="244" width="340" height="64" rx="10" fill="#fbf3e6" stroke="#d99a2b" stroke-width="2" stroke-dasharray="6 4"/>
+  <circle cx="104" cy="276" r="6" fill="#d99a2b"/>
+  <text x="250" y="270" text-anchor="middle" font-size="15.5" font-weight="700" fill="#9a6a12">Off-chain keeper / bot</text>
+  <text x="250" y="290" text-anchor="middle" font-size="12.5" fill="#9a6a12">a server watches events &amp; signs the hedge</text>
+  <line x1="250" y1="308" x2="250" y2="340" stroke="#8a8275" stroke-width="2" marker-end="url(#arrowGrey)"/>
+
+  <!-- L box 3 -->
+  <rect x="80" y="344" width="340" height="58" rx="10" fill="#ffffff" stroke="#cfc8b8" stroke-width="1.5"/>
+  <text x="250" y="372" text-anchor="middle" font-size="15.5" font-weight="600" fill="#2a261d">Hedge — same chain, or manual</text>
+  <text x="250" y="391" text-anchor="middle" font-size="12.5" fill="#8a8275">rebalance LP, or off-chain perp</text>
+
+  <!-- L footer -->
+  <text x="250" y="438" text-anchor="middle" font-size="12.5" fill="#8a7a5c">Needs a server running 24/7 · trusted operator</text>
+  <text x="250" y="458" text-anchor="middle" font-size="12.5" font-weight="700" fill="#a9601f">⚠ single point of failure, off-chain trust</text>
+
+  <!-- divider VS -->
+  <circle cx="490" cy="298" r="26" fill="#191710"/>
+  <text x="490" y="305" text-anchor="middle" font-size="16" font-weight="700" fill="#faf8f2">VS</text>
+
+  <!-- ============ RIGHT PANEL: Lambda ============ -->
+  <rect x="520" y="96" width="420" height="404" rx="14" fill="#fbeef4" stroke="#B5276F" stroke-width="2"/>
+  <rect x="520" y="96" width="420" height="8" rx="4" fill="url(#pinkbar)"/>
+  <text x="730" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#B5276F" letter-spacing="0.5">LAMBDA — FULLY ON-CHAIN</text>
+
+  <!-- R box 1 -->
+  <rect x="560" y="150" width="340" height="58" rx="10" fill="#ffffff" stroke="#e7a9c8" stroke-width="1.5"/>
+  <text x="730" y="178" text-anchor="middle" font-size="15.5" font-weight="600" fill="#2a261d">LambdaHook · Unichain</text>
+  <text x="730" y="197" text-anchor="middle" font-size="12.5" fill="#9a6e84">exact delta → emits HedgeRequested</text>
+  <line x1="730" y1="208" x2="730" y2="240" stroke="#B5276F" stroke-width="2.2" marker-end="url(#arrowPink)"/>
+
+  <!-- R box 2: the differentiator -->
+  <rect x="560" y="244" width="340" height="64" rx="10" fill="#ffffff" stroke="#B5276F" stroke-width="2"/>
+  <circle cx="584" cy="276" r="6" fill="#1f7a4d"/>
+  <text x="730" y="270" text-anchor="middle" font-size="15.5" font-weight="700" fill="#B5276F">Reactive Smart Contract</text>
+  <text x="730" y="290" text-anchor="middle" font-size="12.5" fill="#9a6e84">subscribes on-chain · NO bot · cross-chain callback</text>
+  <line x1="730" y1="308" x2="730" y2="340" stroke="#B5276F" stroke-width="2.2" marker-end="url(#arrowPink)"/>
+
+  <!-- R box 3 -->
+  <rect x="560" y="344" width="340" height="58" rx="10" fill="#ffffff" stroke="#e7a9c8" stroke-width="1.5"/>
+  <text x="730" y="372" text-anchor="middle" font-size="15.5" font-weight="600" fill="#2a261d">Real perp · Hyperliquid CoreWriter</text>
+  <text x="730" y="391" text-anchor="middle" font-size="12.5" fill="#9a6e84">a real position on a real venue</text>
+
+  <!-- R footer -->
+  <text x="730" y="438" text-anchor="middle" font-size="12.5" fill="#8a4a70">Fully on-chain · cross-chain · automatic</text>
+  <text x="730" y="458" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f7a4d">✓ no off-chain bot anywhere in the loop</text>
+
+  <!-- baseline note -->
+  <text x="490" y="520" text-anchor="middle" font-size="12" fill="#8a8275">Live &amp; verified end-to-end on Unichain Sepolia + Reactive Lasna · 127 tests · self-audited with Uniswap v4-security-foundations</text>
+</svg>

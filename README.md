@@ -47,6 +47,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [The math of the hook](#the-math-of-the-hook)
 - [What you actually earn](#what-you-actually-earn)
 - [What makes this new](#what-makes-this-new)
+- [What makes our execution different](#what-makes-our-execution-different)
 - [What Lambda is, in one place](#what-lambda-is-in-one-place)
 - [Partner integrations (where they live in code)](#partner-integrations-where-they-live-in-code)
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
@@ -254,6 +255,18 @@ The LVR and the funding income are *the same dollars with the sign flipped* — 
 - **The hedge is real, and it's cross-chain, and it's automatic.** The short is a real position on Hyperliquid, opened through the live CoreWriter precompile — not a simulated stand-in. The cross-chain coordination runs on Reactive Smart Contracts with no off-chain bot.
 - **The risk math is honest.** Lambda doesn't blindly fully-hedge. It uses the research-backed `h = 0.65` to keep liquidation risk near 1% instead of near 20%.
 - **It stands on peer-reviewed work.** The design composes results from Milionis et al. (LVR), Chitra & Diamandis et al. (which proves venues like Hyperliquid are well-suited to delta-hedging), Hane (optimal hedge ratio), and Maire & Wunsch (market-neutral LP construction). See [References](#references).
+
+---
+
+## What makes our execution different
+
+Delta-neutral LP vaults are not new — and "hedge LP exposure" is even a named theme in Atrium's Request for Hooks. So the idea is not the moat; **the execution is.** Almost every delta-neutral hook hedges through an **off-chain keeper or bot** — a server that watches events and signs the hedge transaction, which means a trusted operator, uptime risk, and a single point of failure. Lambda removes that entirely: the hedge fires **fully on-chain, across chains, automatically**, driven by a Reactive Smart Contract with **no off-chain bot anywhere in the loop**.
+
+<p align="center">
+  <img src="assets/execution-diff.svg" alt="Comparison: a typical delta-neutral hook hedges through an off-chain bot; Lambda hedges fully on-chain and cross-chain via a Reactive Smart Contract with no bot" width="100%">
+</p>
+
+That difference is the part a similar project is least likely to have: rebalancing an LP position on one chain is comparatively easy; coordinating a **real perp on a different chain** with no centralized component is the hard, distinctive systems work — and in Lambda it's built, live on testnet, and verified end-to-end on-chain.
 
 ---
 
