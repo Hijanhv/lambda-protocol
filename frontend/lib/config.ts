@@ -35,6 +35,10 @@ export const addresses = {
   token1: required(process.env.NEXT_PUBLIC_TOKEN1, "TOKEN1"),
 };
 
+/** Block explorer base for the hook's chain (tx/address links). Override via env. */
+export const explorerUrl =
+  process.env.NEXT_PUBLIC_EXPLORER_URL ?? "https://sepolia.uniscan.xyz";
+
 export const tokenMeta = {
   token0: {
     symbol: process.env.NEXT_PUBLIC_TOKEN0_SYMBOL ?? "WETH",

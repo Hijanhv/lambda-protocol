@@ -5,13 +5,14 @@ import { funding } from "@/lib/contracts";
 import { addresses, currency1, hookChain } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { useWrongNetwork } from "./NetworkBanner";
+import { TxStatus } from "./TxStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /** The income side: funding accrued to the connected LP, with a claim button. */
 export function FundingPanel() {
   const { address } = useAccount();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContract, isPending, data: txHash, error: txError } = useWriteContract();
   const wrongNetwork = useWrongNetwork();
 
   const { data: pending, refetch } = useReadContract({
@@ -78,6 +79,8 @@ export function FundingPanel() {
             {isPending ? "Claiming…" : "Claim funding"}
           </Button>
         </div>
+
+        <TxStatus hash={txHash} error={txError} />
 
         <p className="note mt-5 max-w-2xl">
           Funding the Hyperliquid short collects flows back here and accrues to your shares pro-rata,

@@ -8,6 +8,7 @@ import { addresses, tokenMeta, currency0, hookChain } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { usePoolKeyArg } from "./HedgePanel";
 import { useWrongNetwork } from "./NetworkBanner";
+import { TxStatus } from "./TxStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input";
 export function PositionPanel() {
   const { address } = useAccount();
   const poolKey = usePoolKeyArg();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContract, isPending, data: txHash, error: txError } = useWriteContract();
   const wrongNetwork = useWrongNetwork();
   const [amt, setAmt] = useState("");
 
@@ -147,6 +148,8 @@ export function PositionPanel() {
             Withdraw all
           </Button>
         </div>
+
+        <TxStatus hash={txHash} error={txError} />
 
         <p className="note mt-4">
           Approve both tokens once, enter how much {currency0.symbol} to add, and deposit, and the hook
