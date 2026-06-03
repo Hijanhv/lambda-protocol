@@ -47,7 +47,8 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [The math of the hook](#the-math-of-the-hook)
 - [What you actually earn](#what-you-actually-earn)
 - [What makes this new](#what-makes-this-new)
-- [How Lambda scores on Atrium's rubric](#how-lambda-scores-on-atriums-rubric)
+- [What Lambda is, in one place](#what-lambda-is-in-one-place)
+- [Partner integrations (where they live in code)](#partner-integrations-where-they-live-in-code)
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
@@ -256,16 +257,67 @@ The LVR and the funding income are *the same dollars with the sign flipped* — 
 
 ---
 
-## How Lambda scores on Atrium's rubric
+## What Lambda is, in one place
 
-Atrium evaluates hookathon submissions on four axes. Where each one lands in this repo:
+This section pulls the whole project together — the problem it solves, the idea behind it, what's genuinely new in how it's built, why that matters, and exactly how it works (including what closing the loop on mainnet looks like, since the code is finished but the final leg isn't mainnet-deployed yet).
 
-| Criterion | What Lambda ships | Where to look |
+### The problem it solves
+
+If you provide liquidity on Uniswap, you lose money in a way that has nothing to do with hacks or bad luck — it's baked into how an AMM works. When the price moves, the pool sells the asset that's rising and buys the one that's falling, and arbitrage bots collect the difference. Researchers named and measured this: **loss-versus-rebalancing (LVR)**, at a rate of `σ²/8`, which for an ETH/USDC pool works out to roughly **11% a year** bleeding quietly from LPs to arbitrageurs. Trading fees often don't cover it, so a lot of LPs are underwater without realizing it. That structural loss is the problem Lambda exists to fix.
+
+### The original idea
+
+LVR has a mirror image in another market. A **short position on a perpetual exchange collects a funding rate** — and over time, that funding income is statistically *the same size* as the LVR an LP loses. Same number, opposite sign, because both are paid by the same force: people demanding exposure to a moving price. Lambda is, as far as we know, the **first Uniswap v4 hook to make this LVR ⇋ funding identity explicit on-chain** and act on it: hold the LP position and a matching Hyperliquid short together, and the loss that used to leak out to arbitrageurs comes back to the LP as funding income. It turns perpetual funding into a native yield source for Uniswap LPs — not a new token, not leverage, just two positions that were always two halves of the same equation, finally held as one.
+
+### The unique execution
+
+A directional `beforeSwap` fee on its own is a familiar v4 pattern; Lambda ships one (a Nezlobin asymmetric fee that makes informed, pool-draining flow pay more), but that isn't the distinctive part. What nobody else ships is the **automatic, cross-chain hedge with no off-chain bot in the loop**:
+
+- The hook owns the pool's single position, so it tracks the LP's price exposure (**delta**) *exactly* — using the real concentrated-liquidity curve, cross-checked against Uniswap's own `getAmount0Delta`, not the `liquidity ÷ 2` shortcut most tools use.
+- When delta drifts past a band `τ`, the hook emits one event. A **Reactive Smart Contract** subscribed to that event fires a **cross-chain callback** — this is the coordination layer that would normally require a centralized server, done entirely on-chain.
+- The callback drives a **real perp order on Hyperliquid** through the live **CoreWriter precompile** (`0x3333…3333`) on HyperEVM — a real position on a real venue, not a mock or an IOU.
+
+So the architecture spans three chains, each doing what it's best at, wired together automatically. And the risk math is deliberately honest: instead of fully hedging, Lambda ships `h = 0.65` (per Hane, 2026), which keeps liquidation risk near **1.4%** instead of ~19% while still removing the large majority of price-risk variance.
+
+### The impact of that execution
+
+LVR is widely cited as the single biggest unsolved problem for Uniswap LPs — it's the reason sophisticated capital hesitates to provide liquidity, which caps how deep and competitive pools can get. By making a **delta-neutral, yield-positive** LP position possible, Lambda:
+
+- **pulls risk-averse capital into v4 pools** that would otherwise sit on the sidelines, because the position is designed to earn whether the market goes up, down, or sideways;
+- **brings Hyperliquid funding income on-chain as a new, reusable v4 yield primitive** other builders can compose on; and
+- **attacks the LVR leak from two independent sides at once** — the on-chain directional fee makes toxic flow pay the LP, while the off-chain hedge neutralizes the residual price risk.
+
+It's a direct answer to Uniswap's own most-cited open problem, built the way v4 is meant to be extended.
+
+### The functionality — today, and on mainnet
+
+**What runs live right now (testnet).** Two of the three legs are deployed and verified on-chain:
+
+- The **Uniswap v4 hook** (`LambdaHook`) and per-LP **funding accrual** (`Funding`) are live on **Unichain Sepolia**.
+- The **Reactive Smart Contract** (`LambdaReactive`) is live on **Reactive Lasna** and has caught the hook's `HedgeRequested` event and routed a cross-chain callback **back across chains with no off-chain bot** — verified end-to-end (`hedge(poolId)` records `targetSize = 0.65 × delta`).
+- **127 / 127 Foundry tests pass**, warning-free, including invariant suites, and a **Next.js dashboard** lets a judge deposit, watch the hedge fire, and verify the delivered state. Addresses and a one-command verification are in [Live on testnet](#live-on-testnet); a click-through is in the [judge runbook](#judge-runbook-5-minute-clickthrough).
+
+**What's coded but not yet mainnet-deployed — and how it works once it is.** The third leg, the real Hyperliquid perp (`LambdaHedger` + `CoreWriterLib`), is **fully written and unit-tested** — it is not on *testnet* for one external reason only: Reactive's testnet (Lasna) doesn't route callbacks to HyperEVM testnet; HyperEVM is a Reactive destination on **mainnet (999)** only. On mainnet, the exact same loop closes automatically and end-to-end:
+
+1. An LP deposits through `LambdaHook` on **Unichain mainnet**; the hook tracks delta and, past the band, emits `HedgeRequested`.
+2. `LambdaReactive` on **Reactive mainnet** catches that event and fires a cross-chain callback to the hedger — the change from testnet is a single config value (`DESTINATION_CHAIN_ID=999`), pointing at the real `LambdaHedger` instead of the testnet receiver.
+3. `LambdaHedger` on **HyperEVM mainnet** sizes the short to `h · delta` and places it on Hyperliquid through the CoreWriter precompile. The short collects funding; an authorized funder routes that income back to LPs via `funding.notifyFunding`.
+
+No rewrite is involved — promotion to mainnet is configuration, against infrastructure that already exists. The verified mainnet addresses, the step-by-step, and the (~$40–55) funding required are in [Path to mainnet](#path-to-mainnet).
+
+---
+
+## Partner integrations (where they live in code)
+
+Lambda integrates three partner technologies. Each is a real, in-code integration — not a plan — and each maps to specific files a judge can open:
+
+| Partner | How Lambda uses it | Where in code |
 |---|---|---|
-| **Original Idea** | First v4 hook to make the **LVR ⇋ funding identity** explicit on-chain — funding income on a Hyperliquid short statistically equals the LVR an LP would otherwise lose. Same number, opposite sign. UHI9's theme is *"Yield-Protected AMM / IL & **Yield Systems**"*; Lambda owns the Yield Systems half by turning perp funding into a v4 LP yield primitive. | [The solution](#the-solution-the-loss-is-also-an-income-stream), [The math](#the-math-of-the-hook), [References](#references) |
-| **Unique Execution** | A directional `beforeSwap` fee is a familiar v4 pattern. The part nobody else ships is the **automatic cross-chain hedge** — a real Hyperliquid perp opened through a Reactive Smart Contract with no off-chain bot. Built on Hyperliquid's official `hyper-evm-lib` Solidity SDK (`CoreWriterLib`). | [Architecture](#how-lambda-works-architecture), [Live on testnet](#live-on-testnet), [`contracts/src/LambdaHedger.sol`](./contracts/src/LambdaHedger.sol) |
-| **Impact** | LVR is widely cited as the single biggest unsolved Uniswap LP problem — roughly **11 % / yr** on an ETH/USDC pool, structural and continuous. Lambda is a direct fix that (a) pulls risk-averse capital into v4 pools by making a delta-neutral, yield-positive position possible, and (b) brings Hyperliquid funding income on-chain as a new v4 yield primitive. | [The problem](#the-problem-why-liquidity-providers-lose-money), [What you actually earn](#what-you-actually-earn), [Our sponsors](#our-sponsors--and-why-this-work-deserves-their-support) |
-| **Functionality** | **Both submission paths covered.** Test coverage: **127 / 127 Foundry tests passing**, warning-free, including invariant suites (`FundingInvariant`, `InsuranceVaultInvariant`) — run `forge test` from repo root, ~1.5 s. Frontend judges can interact with: a Vercel-deployable Next.js dashboard at [`frontend/`](./frontend) that reads live on-chain state from the deployed Unichain Sepolia contracts and lets a judge deposit, watch the hedge fire, and verify the cross-chain delivery. | [Judge runbook](#judge-runbook-5-minute-clickthrough), [`frontend/`](./frontend), [`contracts/test/`](./contracts/test) |
+| **Uniswap v4** | The hook *is* a v4 hook: `beforeAddLiquidity`/`beforeRemoveLiquidity` gate the vault, `afterSwap` tracks exact delta, and `beforeSwap` returns a dynamic-fee override (Nezlobin directional fee) on a dynamic-fee pool. Delta math is cross-checked against v4's own `getAmount0Delta`. | [`contracts/src/LambdaHook.sol`](./contracts/src/LambdaHook.sol), [`contracts/src/libraries/DeltaMath.sol`](./contracts/src/libraries/DeltaMath.sol), [`contracts/src/libraries/DirectionalFee.sol`](./contracts/src/libraries/DirectionalFee.sol) |
+| **Reactive Network** | A Reactive Smart Contract (`AbstractReactive`) subscribes to the hook's `HedgeRequested` event on Unichain and fires a cross-chain callback (`AbstractCallback`) to the hedger — no off-chain bot. Nonce-ordered replay protection on both legs. **Verified live** on Reactive Lasna → Unichain Sepolia. | [`contracts/src/LambdaReactive.sol`](./contracts/src/LambdaReactive.sol), [Live on testnet](#live-on-testnet) |
+| **Hyperliquid** | The hedger frames a real perp order and fires it through the **CoreWriter precompile** (`0x3333…3333`, `sendRawAction`) on HyperEVM — the live precompile was verified on-chain. Built on Hyperliquid's `CoreWriterLib`. | [`contracts/src/LambdaHedger.sol`](./contracts/src/LambdaHedger.sol), [`contracts/src/libraries/CoreWriterLib.sol`](./contracts/src/libraries/CoreWriterLib.sol) |
+
+> **On mainnet vs. testnet.** Everything above is written and tested. Two legs run live on testnet today (the Uniswap v4 hook on Unichain Sepolia and the Reactive callback on Lasna). The Hyperliquid hedge is fully coded and unit-tested but **not deployed on testnet** for one external reason only: Reactive's testnet (Lasna) does not route callbacks to HyperEVM testnet — HyperEVM is a Reactive destination on **mainnet (999)** only. On mainnet the same loop closes with a one-line config change (`DESTINATION_CHAIN_ID=999`), targeting the real `LambdaHedger` instead of the testnet receiver. Exact steps, verified mainnet addresses, and funding requirements are in [Path to mainnet](#path-to-mainnet). No partner integration here is theoretical — each is in the code above.
 
 ---
 
