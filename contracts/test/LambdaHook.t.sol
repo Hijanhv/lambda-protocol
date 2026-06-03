@@ -147,6 +147,15 @@ contract LambdaHookTest is Test, Deployers {
         hook.deposit(key, DEPOSIT_LIQ, 1, 1, address(this)); // max owed of 1 wei is unmeetable
     }
 
+    function test_deposit_revertsWithoutApproval() public {
+        _configure(TAU);
+        // Revoke the token0 approval setUp granted: the vault can no longer pull the LP's funds,
+        // so the settle's transferFrom fails and the whole deposit reverts (no funds half-moved).
+        MockERC20(Currency.unwrap(currency0)).approve(address(hook), 0);
+        vm.expectRevert(); // SafeTransferLib.TransferFromFailed inside _settle
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+    }
+
     function test_secondDeposit_sharesAreProRata() public {
         _configure(TAU);
         hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));

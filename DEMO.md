@@ -80,7 +80,7 @@ each leg as you name it — **linger on the leg-2 cross-chain arrow.**
    *"To prove this isn't a simulation: this replays all three legs against their real chains.
    On a Unichain fork — real swap, the real hook emits the hedge, Reactive routes it, the live
    receiver records it. On a HyperEVM mainnet fork — the real hedger fires a correct CoreWriter
-   short. Seven green, plus 127 unit and invariant tests."*
+   short. Seven green, plus 128 unit and invariant tests."*
 
 ---
 

@@ -6,8 +6,8 @@ contracts (`lib/v4-core`, `lib/reactive-lib`) and the official Hyperliquid CoreW
 The intent is that a judge can confirm the integrations are real and correct without taking
 anything on faith.
 
-**Status at time of writing:** `forge build` clean (no warnings), **134 tests across 17
-suites** (incl. invariant fuzzing) — 127 unit/invariant passing offline, plus 7 fork tests
+**Status at time of writing:** `forge build` clean (no warnings), **135 tests across 17
+suites** (incl. invariant fuzzing) — 128 unit/invariant passing offline, plus 7 fork tests
 that exercise all three legs against their real chains' state: legs ① + ③ on a Unichain
 Sepolia fork and leg ② (the real `LambdaHedger` firing a CoreWriter short) on a HyperEVM
 mainnet fork. The fork tests self-skip when no RPC is set. `LambdaHook` 14,393 bytes

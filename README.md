@@ -8,7 +8,7 @@ Project ID number: HK-UHI9-0872
 
 <p align="center">
   <img src="https://img.shields.io/badge/UHI9-HK--0872-B5276F?style=flat-square" alt="UHI9 Submission">
-  <img src="https://img.shields.io/badge/forge%20test-134%20passing-1f7a4d?style=flat-square" alt="134 tests passing">
+  <img src="https://img.shields.io/badge/forge%20test-135%20passing-1f7a4d?style=flat-square" alt="135 tests passing">
   <img src="https://img.shields.io/github/actions/workflow/status/Hijanhv/lambda-protocol/test.yml?style=flat-square&label=CI" alt="CI status">
   <img src="https://img.shields.io/badge/cross--chain-verified%20live-1f7a4d?style=flat-square" alt="Cross-chain verified live on testnet">
   <img src="https://img.shields.io/badge/arXiv-2603.19716-B5276F?style=flat-square" alt="arXiv 2603.19716 — Hane (2026)">
@@ -70,7 +70,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 
 Everything here is checkable from this repo — nothing is taken on faith:
 
-- **134 tests, warning-free build.** 127 unit/invariant (incl. fuzzing) **+ 7 live-fork tests that replay all three legs against their real chains' state** — legs ① + ③ on a Unichain Sepolia fork (the live hook + receiver), and leg ② on a HyperEVM **mainnet** fork (the real `LambdaHedger` firing a correct CoreWriter order, asserted byte-for-byte). Run: `forge test`; for the forks see [`FORK_TESTING.md`](./FORK_TESTING.md).
+- **135 tests, warning-free build.** 128 unit/invariant (incl. fuzzing) **+ 7 live-fork tests that replay all three legs against their real chains' state** — legs ① + ③ on a Unichain Sepolia fork (the live hook + receiver), and leg ② on a HyperEVM **mainnet** fork (the real `LambdaHedger` firing a correct CoreWriter order, asserted byte-for-byte). Run: `forge test`; for the forks see [`FORK_TESTING.md`](./FORK_TESTING.md).
 - **Live on testnet, verified on-chain.** The v4 hook and the Reactive cross-chain callback run live on Unichain Sepolia + Reactive Lasna; the delivered hedge is readable with one `cast call` — see [Live on testnet](#live-on-testnet).
 - **CI on every push.** GitHub Actions runs `forge build --sizes` + the full suite on each push and PR ([`.github/workflows/test.yml`](./.github/workflows/test.yml)).
 - **Mainnet is a config flip, vendor-confirmed.** The only un-routable hop is Reactive → HyperEVM *testnet*; the Reactive Network team confirmed a setup proven on a supported testnet carries to HyperEVM mainnet unchanged — promotion is `DESTINATION_CHAIN_ID=999`, no code change ([Path to mainnet](#path-to-mainnet)).
@@ -322,7 +322,7 @@ It's a direct answer to Uniswap's own most-cited open problem, built the way v4 
 
 - The **Uniswap v4 hook** (`LambdaHook`) and per-LP **funding accrual** (`Funding`) are live on **Unichain Sepolia**.
 - The **Reactive Smart Contract** (`LambdaReactive`) is live on **Reactive Lasna** and has caught the hook's `HedgeRequested` event and routed a cross-chain callback **back across chains with no off-chain bot** — verified end-to-end (`hedge(poolId)` records `targetSize = 0.65 × delta`).
-- **134 Foundry tests pass**, warning-free, including invariant suites — and **7 of them exercise all three legs against their real chains' state on local forks**: legs ① + ③ on a Unichain Sepolia fork (real swap → live hook emits `HedgeRequested` → Reactive routes → live receiver records it), and **leg ② on a HyperEVM mainnet fork** (the real `LambdaHedger` fires a correct CoreWriter short, asserted byte-for-byte). So the integration is proven against real on-chain state, not just simulated. A **Next.js dashboard** lets a judge deposit, watch the hedge fire, and verify the delivered state. Addresses and a one-command verification are in [Live on testnet](#live-on-testnet); a click-through is in the [judge runbook](#judge-runbook-5-minute-clickthrough).
+- **135 Foundry tests pass**, warning-free, including invariant suites — and **7 of them exercise all three legs against their real chains' state on local forks**: legs ① + ③ on a Unichain Sepolia fork (real swap → live hook emits `HedgeRequested` → Reactive routes → live receiver records it), and **leg ② on a HyperEVM mainnet fork** (the real `LambdaHedger` fires a correct CoreWriter short, asserted byte-for-byte). So the integration is proven against real on-chain state, not just simulated. A **Next.js dashboard** lets a judge deposit, watch the hedge fire, and verify the delivered state. Addresses and a one-command verification are in [Live on testnet](#live-on-testnet); a click-through is in the [judge runbook](#judge-runbook-5-minute-clickthrough).
 
 **What's coded but not yet mainnet-deployed — and how it works once it is.** The third leg, the real Hyperliquid perp (`LambdaHedger` + `CoreWriterLib`), is **fully written, unit-tested, and fork-proven against real HyperEVM mainnet state** (the real hedger fires a correct CoreWriter order on a fork, asserted byte-for-byte) — it is not on *testnet* for one external reason only: Reactive's testnet (Lasna) doesn't route callbacks to HyperEVM testnet; HyperEVM is a Reactive destination on **mainnet (999)** only. On mainnet, the exact same loop closes automatically and end-to-end:
 
@@ -407,7 +407,7 @@ Lambda is an active build for the Uniswap Hookathon (UHI9). The research and pro
 | Frontend LP dashboard, reading live on-chain state | ✅ Done |
 | First real CoreWriter perp on HyperEVM (Reactive→HyperEVM is mainnet-only on Reactive) | 🔜 Next |
 
-**What's implemented today** — Solidity on Foundry, **134 passing tests** (incl. invariant fuzzing and live-fork replays of all three legs against their real chains), warning-free build, **CI on every push** ([`.github/workflows/test.yml`](./.github/workflows/test.yml)), and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
+**What's implemented today** — Solidity on Foundry, **135 passing tests** (incl. invariant fuzzing and live-fork replays of all three legs against their real chains), warning-free build, **CI on every push** ([`.github/workflows/test.yml`](./.github/workflows/test.yml)), and a **live testnet deployment** (see [Live on testnet](#live-on-testnet)):
 
 | Contract(s) | Role |
 |---|---|
@@ -483,7 +483,7 @@ A frictionless way to verify the loop end-to-end yourself — no setup beyond a 
    The returned tuple `(nonce, lastApplied, targetSize, sqrtPriceX96)` is the exact hedge Lambda computed — delivered cross-chain by Reactive, with no off-chain bot.
 
 **Want the math?** [The math of the hook](#the-math-of-the-hook) walks the delta formula, the `h = 0.65` rationale (per Hane, [arXiv:2603.19716](https://arxiv.org/abs/2603.19716)), and the directional fee.
-**Want to run the tests?** `forge test` from the repo root — **127 unit/invariant tests pass**, ~1.5 s. To replay all three legs against their real chains on forks (7 green, no gas — see [`FORK_TESTING.md`](./FORK_TESTING.md)):
+**Want to run the tests?** `forge test` from the repo root — **128 unit/invariant tests pass**, ~1.5 s. To replay all three legs against their real chains on forks (7 green, no gas — see [`FORK_TESTING.md`](./FORK_TESTING.md)):
 ```bash
 export UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org   # legs ① + ③
 export HYPEREVM_RPC=https://rpc.hyperliquid.xyz/evm        # leg ②
@@ -565,7 +565,7 @@ npm run dev                             # → http://localhost:3000
 - **[Hyperliquid](https://hyperliquid.xyz)** — on-chain perpetuals, accessed directly through the HyperEVM CoreWriter precompile (`0x3333…3333`)
 - **[Aave V3](https://aave.com)** — yield venue for the idle insurance reserve
 - **[Solady](https://github.com/Vectorized/solady)** — gas-optimized `Ownable`, `ReentrancyGuard`, `SafeTransferLib`, `FixedPointMathLib`
-- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, property tests, and live-fork integration across two chains (134 passing)
+- **[Foundry](https://book.getfoundry.sh)** — build, fuzzing, property tests, and live-fork integration across two chains (135 passing)
 
 ---
 
