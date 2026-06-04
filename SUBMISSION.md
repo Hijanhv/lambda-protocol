@@ -26,9 +26,8 @@ pays into LP yield, via a real cross chain perpetual hedge on Hyperliquid.
 ## Preferred name / email / Discord
 
 ```
-{your preferred name}
-{your email}
-{your Discord}
+Janhavi Chavada
+(email and Discord are entered directly on the UHI9 submission portal; kept out of this public file to avoid scraping)
 ```
 
 ## How partners are integrated
