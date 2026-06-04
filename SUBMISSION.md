@@ -27,6 +27,8 @@ pays into LP yield, via a real cross chain perpetual hedge on Hyperliquid.
 
 ```
 Janhavi Chavada
+janh24gdsc@gmail.com
+janhavi_84024
 ```
 
 ## How partners are integrated
