@@ -148,11 +148,16 @@ abi.encodePacked(ENCODING_VERSION /*0x01*/, bytes3(ACTION_LIMIT_ORDER /*1*/), ab
 
 **TIF encoding:** `1 = Alo, 2 = Gtc, 3 = Ioc` → `CoreWriterLib.TIF_ALO/TIF_GTC/TIF_IOC` ✓.
 
-**Scaling** (`limitPx = px·1e8`, `sz = sz·1e8 / 10^(6−szDecimals)`) is **externalized** to the
-owner-set per-market `pxScaleWad` / `szScaleWad` in `LambdaHedger.configureMarket`, because
-`szDecimals` differs per asset. This is genuine per-asset calibration kept in storage — tunable
-without redeploying — not a hard-coded guess. The byte framing is unit-tested exactly in
-`contracts/test/CoreWriterLib.t.sol` against a `MockCoreWriter` mirroring the precompile.
+**Scaling.** Hyperliquid wants `limitPx` and `sz` as **`10^8 × the human value`**. Lambda
+**externalizes** this to the owner-set per-market `pxScaleWad` / `szScaleWad` in
+`LambdaHedger.configureMarket`, because the asset's `szDecimals` differs per market — genuine
+per-asset calibration kept in storage, tunable without redeploying, not a hard-coded guess. The
+verified scales for a **WETH(18) / USDC(6)** pool are `szScaleWad = 1e8`, `pxScaleWad = 1e20`,
+**proven** in [`contracts/test/HedgerCalibration.t.sol`](contracts/test/HedgerCalibration.t.sol)
+— a 5-WETH short at $3000 encodes to exactly `sz = 5e8`, `limitPx ≈ 3000e8`. The byte framing is
+unit-tested exactly in `contracts/test/CoreWriterLib.t.sol` against a `MockCoreWriter` mirroring
+the precompile. (The fork-test placeholders `szScaleWad=1, pxScaleWad=1e18` only make the bytes
+non-zero for capture — they are **not** mainnet-correct; see the deploy runbook.)
 
 ---
 
@@ -171,6 +176,65 @@ without redeploying — not a hard-coded guess. The byte framing is unit-tested 
 - Fixed system addresses are constants and match the vendored libs: CoreWriter `0x33…33`,
   Reactive service `0x…fffFfF` (= `AbstractReactive.SERVICE_ADDR`), dynamic-fee `0x800000`
   (= `LPFeeLibrary.DYNAMIC_FEE_FLAG`).
+
+---
+
+## ⑤ Testing methodology — the techniques UHI teaches, applied here
+
+UHI's *"Testing your first hook"* lesson teaches three core approaches — **unit tests**,
+**fuzzing** (with `bound()` and `vm.assume()`), and **forking inside tests**. Lambda's suite
+uses **all of them**, and then goes further with invariant suites and live cross-chain forks.
+Each is real and checkable in this repo:
+
+| Technique UHI teaches | Where Lambda applies it |
+|---|---|
+| **Unit tests** (`test_…`, happy + sad paths) | every suite — e.g. `LambdaHedger.t.sol` (auth, nonce monotonicity, open/grow/shrink/close, sub-lot no-op) |
+| **Fuzz with `bound()`** (clamp into a safe range) | `DirectionalFee.t.sol`, `FundingInvariant.t.sol` (fee params; share/funding amounts) |
+| **Fuzz with `vm.assume()`** (reject invalid inputs) | `DirectionalFee.t.sol` (`drift != 0`; `-drift` representable) |
+| **Forking inside tests** (`vm.createSelectFork`) | `contracts/test/fork/*` — legs ①+③ on a Unichain Sepolia fork, leg ② on a HyperEVM **mainnet** fork |
+| **`Deployers` helper + `HookMiner`** | hook tests + deploy scripts mine the permission-bit address into the deployed contract |
+| **Gas report / verbosity** (`--gas-report`, `-vv…`) | available on demand; `beforeSwap` is `view`, so quoting/swaps stay cheap |
+
+Beyond the curriculum, Lambda adds **2 invariant suites** (Funding solvency, fee monotonicity,
+each with 256-run × thousands-of-call fuzzing) and **live-fork integration across two real
+chains in a single `forge test` run** — a step past the single-chain unit test the lesson
+covers. Totals: **136 tests / 18 suites** — 129 unit-and-invariant pass offline, 7 fork tests
+replay all three legs against live chain state (all 7 pass with RPCs set; they self-skip
+without).
+
+Run the UHI-style commands directly:
+
+```bash
+forge test                                        # full suite (129 pass, 7 fork self-skip)
+forge test --mc DirectionalFee                    # one fuzzed contract (bound() + vm.assume())
+forge test --mc HedgerCalibration -vvv            # the mainnet CoreWriter wire-scale proof
+forge test --mt test_fork_endToEndHedgeLoop -vvv  # the live cross-chain loop, with traces
+forge test --gas-report                           # per-function gas
+```
+
+---
+
+## ⑥ What being on testnet leaves unexercised (and how Lambda covers it)
+
+Because Reactive's testnet can't reach HyperEVM (998) and a real perp needs real margin, a few
+**mainnet-only behaviours are not live on testnet**. Lambda is explicit about this — none are
+faked; each is either fork-proven now or scoped as audited-mainnet hardening:
+
+| Not live on testnet | Why it can't be | How Lambda covers it today |
+|---|---|---|
+| The real CoreWriter **fill** on HyperCore | the order only fills on Hyperliquid's validators, which a fork can't run | the real `LambdaHedger` fires the **byte-exact** order on a HyperEVM-mainnet fork (asserted), and the precompile was probed live on-chain; the economic fill is proven on the mainnet deploy |
+| **On-chain funding return** | bridging L1 funding back to LPs is an operational leg | `Funding.notifyFunding` is the authorized deposit point; automating the bridge + keeper is the headline post-mainnet roadmap item |
+| **Position reconciliation** after partial fills *(audit item C)* | needs the HyperCore position precompile, which is mainnet-only | tracked as mainnet-hardening (would adopt `hyper-evm-lib`'s `PrecompileLib` there) |
+| **Tick/lot price rounding** *(audit item B)* | depends on the live matching engine's per-asset `szDecimals` | documented; the wire-scale calibration is proven in `HedgerCalibration.t.sol` |
+| **Perp margin** *(audit item D)* | the hedger's HyperCore account must hold USDC | pre-funded out-of-band on mainnet (≥ ~$10), documented in the deploy runbook |
+
+This boundary is a deliberate, **research-backed scoping choice**, not a gap. The design
+composes peer-reviewed work — Milionis (2022) gives the `σ²/8` loss the hedge recaptures,
+Chitra & Diamandis (2025) prove Hyperliquid-class venues are *easy to delta-hedge*, and Hane
+(2026) sets the liquidation-safe `h = 0.65`. Everything that can be proven without a live venue
+is proven here (byte-exact orders, exact delta, fuzzed fee/funding invariants, the live
+cross-chain loop); the parts that genuinely require a live venue are the ones — and the only
+ones — deferred to the audited mainnet deploy.
 
 ---
 
