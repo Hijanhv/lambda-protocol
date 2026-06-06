@@ -482,7 +482,7 @@ A frictionless way to verify the loop end-to-end yourself — no setup beyond a 
      0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b \
      --rpc-url https://sepolia.unichain.org
    ```
-   The returned tuple `(nonce, lastApplied, targetSize, sqrtPriceX96)` is the exact hedge Lambda computed — delivered cross-chain by Reactive, with no off-chain bot.
+   The returned tuple `(lastNonce, count, targetSize, sqrtPriceX96)` is the exact hedge Lambda computed — e.g. `(3, 1, 39.7e18, …)` = the last hook nonce applied, the number of hedges received, and `targetSize = 0.65 × delta` — delivered cross-chain by Reactive, with no off-chain bot.
 
 **Want the math?** [The math of the hook](#the-math-of-the-hook) walks the delta formula, the `h = 0.65` rationale (per Hane, [arXiv:2603.19716](https://arxiv.org/abs/2603.19716)), and the directional fee.
 **Want to run the tests?** `forge test` from the repo root — **129 unit/invariant tests pass**, ~1.5 s. To replay all three legs against their real chains on forks (7 green, no gas — see [`FORK_TESTING.md`](./FORK_TESTING.md)):
