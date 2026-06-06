@@ -132,7 +132,7 @@ funding on chain as a reusable v4 yield primitive.
    trusted. Authorization is the Reactive callback proxy allowlist plus a strictly increasing
    per pool nonce that is re checked on the destination, so replays and out of order callbacks
    are dropped on both legs.
-6. **Test rigor.** 135 Foundry tests, warning free build, run in CI on every push: 128 unit
+6. **Test rigor.** 136 Foundry tests, warning free build, run in CI on every push: 129 unit
    and invariant tests including 12 fuzz tests and 2 invariant suites, plus 7 live fork tests
    that replay all three legs against their real chains' state (legs one and three on a
    Unichain Sepolia fork against the live contracts, leg two on a HyperEVM mainnet fork). A

@@ -54,7 +54,7 @@ export default function Landing() {
 const TICKER = [
   "Hedge loop live on Unichain Sepolia",
   "Cross-chain callback verified end-to-end, no off-chain bot",
-  "135 passing Foundry tests · warning-free build",
+  "136 passing Foundry tests · warning-free build",
   "A real short on Hyperliquid via the CoreWriter precompile",
   "Built on Uniswap v4 + Reactive Network",
 ];
@@ -121,7 +121,7 @@ function Hero() {
             {[
               ["3", "chains, one loop"],
               ["h = 0.65", "hedge ratio"],
-              ["135", "tests passing"],
+              ["136", "tests passing"],
             ].map(([v, k]) => (
               <div key={k} className="bg-card px-2 py-4 text-center">
                 <dt className="font-display text-[20px] font-semibold tabular-nums tracking-tight text-ink">{v}</dt>
@@ -447,7 +447,7 @@ const PARTNERS: PartnerSpec[] = [
   { name: "Hyperliquid", role: "the perp venue" },
   { name: "Aave V3", role: "reserve yield" },
   { name: "Solady", role: "gas-optimized primitives" },
-  { name: "Foundry", role: "build + 135 tests" },
+  { name: "Foundry", role: "build + 136 tests" },
 ];
 
 function Partners() {
