@@ -123,6 +123,24 @@ hedger.configureMarket(poolId, assetIndex, szScaleWad, pxScaleWad, slippageBps, 
 hedger.applyHedge(...)   # owner/relayer call → real CoreWriter perp on Hyperliquid testnet
 ```
 
+> ⚠️ **Calibration scales — use the verified values, not the fork-test placeholders.** Hyperliquid's
+> CoreWriter wants `limitPx` and `sz` as **10⁸ × the human value** (per its "Interacting with
+> HyperCore" docs). The fork test uses `szScaleWad=1, pxScaleWad=1e18`, which only make the order
+> bytes *non-zero* for byte-capture — they would mis-size a real order by ~10⁸×. For a real
+> **WETH(18-dec) / USDC(6-dec)** market the correct scales are:
+>
+> | param | value | why |
+> |---|---|---|
+> | `szScaleWad` | `1e8` | `sz = sizeWad·scale/1e18 = human·1e8` |
+> | `pxScaleWad` | `1e20` | `midPriceWad = human·1e6` for an 18/6 raw ratio ⇒ `limitPx = human·1e8` |
+>
+> These are **proven** in [`contracts/test/HedgerCalibration.t.sol`](contracts/test/HedgerCalibration.t.sol)
+> (short 5 WETH @ $3000 → `sz=5e8`, `limitPx≈3000e8`). If the pool's `token0`/`token1` ordering or
+> decimals differ, re-derive: `szScaleWad` makes `sz = human·1e8`, and `pxScaleWad` makes
+> `limitPx = human·1e8` from the pool's `midPriceWad`. **Note (open item B):** the hedger does not
+> yet round `limitPx`/`sz` to the asset's tick/lot, so pick an asset whose tick admits the computed
+> integers, or add rounding before a production deploy.
+
 ---
 
 ## 4 · Leg ③ — Reactive Lasna (the brain) — wires ① → ②
