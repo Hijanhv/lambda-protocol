@@ -138,6 +138,22 @@ export default function Docs() {
               </li>
             </ul>
 
+            <h3>Why it isn&apos;t paid-live yet</h3>
+            <p>
+              The perp leg is fork-proven against real HyperEVM mainnet state <em>for free</em>, and we deliberately
+              haven&apos;t paid to make it live on testnet either. A HyperEVM <em>testnet</em> order isn&apos;t actually
+              free: every faucet (Chainstack, gas.zip, QuickNode) gates on a real Hyperliquid <strong>mainnet</strong>{" "}
+              deposit, so a &quot;testnet&quot; perp costs ~$5–8 of real money — and what it buys is a fill on toy
+              liquidity with mock USDC, a strictly weaker artifact than the byte-for-byte fork proof already in the
+              suite. The one thing it would add — that HyperCore <em>accepts</em> the order — is exactly what a mainnet
+              fill proves for real, on real liquidity earning real funding.
+            </p>
+            <Callout>
+              So the money is saved for the one place it proves something new: the <strong>audited mainnet deploy</strong>{" "}
+              (~$40–55, gated on a security review). Paying ~$8 for a toy-liquidity testnet fill in between would be real
+              money for a weaker copy of the mainnet result.
+            </Callout>
+
             <p>
               Full deploy runbook in{" "}
               <a
