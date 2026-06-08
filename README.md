@@ -59,7 +59,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [Judge runbook (5-minute clickthrough)](#judge-runbook-5-minute-clickthrough)
 - [Why the perp leg isn't paid-live yet](#why-the-perp-leg-isnt-paid-live-yet)
 - [Path to mainnet](#path-to-mainnet)
-- [Deploying the frontend (Vercel)](#deploying-the-frontend-vercel)
+- [Run it locally](#run-it-locally)
 - [Built with](#built-with)
 - [Glossary for non-experts](#glossary-for-non-experts)
 - [References](#references)
@@ -471,7 +471,7 @@ It is simply not *deployed* on testnet because of the routing gap above. On main
 
 A frictionless way to verify the loop end-to-end yourself — no setup beyond a browser and a wallet:
 
-1. **Open the live frontend** at `https://lambda-protocol.vercel.app/` (or run locally — see [Deploying the frontend](#deploying-the-frontend-vercel)).
+1. **Open the live frontend** at `https://lambda-protocol.vercel.app/` (or run locally — see [Run it locally](#run-it-locally)).
 2. **Connect a wallet on Unichain Sepolia (chain id 1301).** Need testnet ETH? The [Unichain Sepolia faucet](https://www.alchemy.com/faucets/unichain-sepolia) drips in ~30 s.
 3. **Approve** both test tokens (tWETH + tUSDC), then **deposit** some tWETH into the Hook. The dashboard quotes the matching liquidity automatically from the live `poolLiquidity / currentDelta` reading.
 4. **Watch the Pipeline rail** advance: `Connect → Deposit → Hedge live → Funding`. If the deposit moves delta past the band `τ`, the hook fires `HedgeRequested`, `LambdaReactive` on Lasna catches it, and `LambdaHedgeReceiver` records `targetSize = 0.65 × delta` — surfaced live in the "The hedge" panel within seconds.
@@ -538,6 +538,56 @@ Lambda is submitted on **testnet**, where the live pieces run against real infra
 **Gating before mainnet:** a full security review + invariant-fuzzing pass, and resolution of the transitive frontend audit advisories (see [Security](#security)). Lambda moves real value across chains, so these are not skipped.
 
 
+## Run it locally
+
+Everything here runs on your machine — no testnet, no gas, no keys.
+
+**Prerequisites:** [Foundry](https://book.getfoundry.sh) (`forge` + `cast`). For the dashboard, Node 18+.
+
+**1 · Clone with submodules** — the contracts vendor `v4-core`, `reactive-lib`, and `solady`:
+
+```bash
+git clone --recurse-submodules https://github.com/Hijanhv/lambda-protocol.git
+cd lambda-protocol
+# already cloned without --recurse-submodules? fetch the libs:
+git submodule update --init --recursive
+```
+
+**2 · Build + test the hook** — the suite deploys `LambdaHook` to a local test environment (mining its permission-bit address with `HookMiner`) and exercises all three legs:
+
+```bash
+forge build --sizes      # warning-free; LambdaHook is 14,393 B (< the 24,576 B deploy limit)
+forge test               # 129 unit/invariant tests pass (the 7 fork tests self-skip offline)
+```
+
+Targeted runs (the techniques from UHI's hook-testing lesson):
+
+```bash
+forge test --mc LambdaHedgerTest                  # one contract
+forge test --mt test_applyHedge_opensShort -vvv   # one test, with call traces
+forge test --gas-report                           # per-function gas
+```
+
+**3 · Replay the loop against real chain state** — forks the live chains onto your laptop (still no gas, no keys); all 7 pass:
+
+```bash
+export UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org   # legs ① + ③
+export HYPEREVM_RPC=https://rpc.hyperliquid.xyz/evm        # leg ②
+forge test --match-path 'contracts/test/fork/*' -vvv
+```
+
+**4 · Run the dashboard locally** — reads the live testnet contracts, no wallet needed:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local     # pre-filled with the live testnet addresses
+npm run dev                     # → http://localhost:3000
+```
+
+> **Why there's no single-chain "anvil" command for the full loop:** Lambda spans three networks (Unichain → Reactive → HyperEVM), and Reactive + Hyperliquid are their own chains that can't be cloned onto one local node. That's exactly why step 3 *forks the real chains* — it runs the actual deployed contracts against real on-chain state, locally and for free. See [`FORK_TESTING.md`](./FORK_TESTING.md).
+
+---
 
 
 
