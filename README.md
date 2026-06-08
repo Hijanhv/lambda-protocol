@@ -52,6 +52,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [What makes our execution different](#what-makes-our-execution-different)
 - [What Lambda is, in one place](#what-lambda-is-in-one-place)
 - [Partner integrations (where they live in code)](#partner-integrations-where-they-live-in-code)
+- [Hook design: `IHooks` directly, not `BaseHook`](#hook-design-ihooks-directly-not-basehook)
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
@@ -347,6 +348,21 @@ Lambda integrates three partner technologies. Each is a real, in-code integratio
 | **Hyperliquid** | The hedger frames a real perp order and fires it through the **CoreWriter precompile** (`0x3333…3333`, `sendRawAction`) on HyperEVM — the live precompile was verified on-chain. Order bytes are framed by Lambda's own `CoreWriterLib`, which follows Hyperliquid's CoreWriter action spec (not the official SDK). | [`contracts/src/LambdaHedger.sol`](./contracts/src/LambdaHedger.sol), [`contracts/src/libraries/CoreWriterLib.sol`](./contracts/src/libraries/CoreWriterLib.sol) |
 
 > **On mainnet vs. testnet.** Everything above is written and tested. Two legs run live on testnet today (the Uniswap v4 hook on Unichain Sepolia and the Reactive callback on Lasna). The Hyperliquid hedge is fully coded and unit-tested but **not deployed on testnet** for one external reason only: Reactive's testnet (Lasna) does not route callbacks to HyperEVM testnet — HyperEVM is a Reactive destination on **mainnet (999)** only. On mainnet the same loop closes with a one-line config change (`DESTINATION_CHAIN_ID=999`), targeting the real `LambdaHedger` instead of the testnet receiver. Exact steps, verified mainnet addresses, and funding requirements are in [Path to mainnet](#path-to-mainnet). No partner integration here is theoretical — each is in the code above.
+
+---
+
+## Hook design: `IHooks` directly, not `BaseHook`
+
+Uniswap's docs require a hook to implement the **`IHooks`** interface and *recommend* the optional **`BaseHook`** base contract (from `v4-periphery`) for convenience. `LambdaHook` implements `IHooks` **directly** — a deliberate choice with concrete advantages:
+
+| Advantage of implementing `IHooks` directly | Why it matters for Lambda |
+|---|---|
+| **No `v4-periphery` dependency** | `BaseHook` lives in `v4-periphery`; Lambda doesn't vendor it. Direct `IHooks` needs only `v4-core` — a smaller dependency/trust/version surface (and `BaseHook` has changed across periphery versions). |
+| **Smaller bytecode** | `BaseHook` adds inherited wrappers + default-revert stubs for *all* callbacks. Lambda ships only the 4 it uses → a smaller contract (14,393 B; the headroom under the 24,576 B limit is real estate kept). |
+| **Slightly less gas** | No extra virtual-dispatch layer (`BaseHook` routes `beforeSwap` → internal `_beforeSwap`); Lambda calls its logic directly — meaningful since this runs on every swap. |
+| **Full structural control** | The hook is a vault that also implements `IUnlockCallback` with custom accounting. `BaseHook`'s opinions (its constructor, naming, callback shape) fit a *simple* hook; a vault hook is cleaner without fighting them. |
+
+The two things `BaseHook` would have handled for free — restricting callbacks to the `PoolManager` and validating the permission bits — Lambda reimplements explicitly and tests: an `onlyPoolManager` guard on **every** callback (`contracts/src/LambdaHook.sol`) and `Hooks.validateHookPermissions(this, getHookPermissions())` in the constructor, which reverts on any mismatch. Both are proven in the suite and in [`VERIFICATION.md`](./VERIFICATION.md). So the advantages above are real, and the cost (reimplementing that safety) is already paid.
 
 ---
 
