@@ -53,6 +53,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 - [What Lambda is, in one place](#what-lambda-is-in-one-place)
 - [Partner integrations (where they live in code)](#partner-integrations-where-they-live-in-code)
 - [Hook design: `IHooks` directly, not `BaseHook`](#hook-design-ihooks-directly-not-basehook)
+- [How it's tested](#how-its-tested)
 - [Our sponsors — and why this work deserves their support](#our-sponsors--and-why-this-work-deserves-their-support)
 - [Security](#security)
 - [Status & roadmap](#status--roadmap)
@@ -363,6 +364,20 @@ Uniswap's docs require a hook to implement the **`IHooks`** interface and *recom
 | **Full structural control** | The hook is a vault that also implements `IUnlockCallback` with custom accounting. `BaseHook`'s opinions (its constructor, naming, callback shape) fit a *simple* hook; a vault hook is cleaner without fighting them. |
 
 The two things `BaseHook` would have handled for free — restricting callbacks to the `PoolManager` and validating the permission bits — Lambda reimplements explicitly and tests: an `onlyPoolManager` guard on **every** callback (`contracts/src/LambdaHook.sol`) and `Hooks.validateHookPermissions(this, getHookPermissions())` in the constructor, which reverts on any mismatch. Both are proven in the suite and in [`VERIFICATION.md`](./VERIFICATION.md). So the advantages above are real, and the cost (reimplementing that safety) is already paid.
+
+---
+
+## How it's tested
+
+Lambda's hook isn't tested in a vacuum — it runs on **Uniswap's own v4 test harness** (the same utilities Uniswap ships to test v4 itself), and its math is checked **against Uniswap's own implementation**:
+
+- **Uniswap's official test harness.** The hook tests inherit `Deployers` (`v4-core/test/utils/Deployers.sol`) and call `deployFreshManagerAndRouters()` to spin up a **real `PoolManager`** plus Uniswap's own `PoolSwapTest` / `PoolModifyLiquidityTest` routers, then `initPool` with the hook attached — so swaps and liquidity moves run through Uniswap's real machinery, not a mock. (`contracts/test/LambdaHook.t.sol`, `contracts/test/FundingIntegration.t.sol`, fork `LambdaForkE2E.t.sol`.)
+- **Delta math verified against Uniswap's own library.** `contracts/test/DeltaMath.t.sol` asserts our `lpDelta` equals **`SqrtPriceMath.getAmount0Delta(...)` bit-for-bit** across the whole tick range — `assertEq(got, expected, "must match Uniswap getAmount0Delta")` — and fuzzes it. The hedge is sized by the exact curve Uniswap itself uses.
+- **Real permission-bit address mining.** The deploy path mines the hook address with **`HookMiner`** (`contracts/script/HookMiner.sol`, exercised in `contracts/test/HookMiner.t.sol`), exactly as v4 requires on a real network.
+- **Every technique UHI's hook-testing lesson teaches** — unit tests (happy + sad paths), fuzzing with both `bound()` and `vm.assume()`, and forking inside tests — **plus** 2 invariant suites and live forks of all three legs across two real chains.
+- **Totals: 136 tests / 18 suites** — 129 unit-and-invariant pass offline; 7 fork tests replay the legs against live chain state — warning-free build, CI on every push.
+
+Full methodology and the honest list of what testnet can't exercise are in [`VERIFICATION.md`](./VERIFICATION.md) (§⑤–⑥); the fork setup is in [`FORK_TESTING.md`](./FORK_TESTING.md).
 
 ---
 
