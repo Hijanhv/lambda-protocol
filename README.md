@@ -537,44 +537,11 @@ Lambda is submitted on **testnet**, where the live pieces run against real infra
 
 **Gating before mainnet:** a full security review + invariant-fuzzing pass, and resolution of the transitive frontend audit advisories (see [Security](#security)). Lambda moves real value across chains, so these are not skipped.
 
----
 
-## Deploying the frontend (Vercel)
 
-The dashboard at [`frontend/`](./frontend) is a Next.js 14 App-Router app (shadcn/ui, wagmi v2, viem) with no server-side state — a clean fit for Vercel's static + edge runtime. All env vars are `NEXT_PUBLIC_*`, so the deployed bundle is fully reproducible from this repo + the addresses below. It's demo-hardened: on-chain reads populate **without a connected wallet**, a **wrong-network guard** prompts a one-click switch to the hook's chain, and every action shows **inline transaction status** with an explorer link.
 
-**One-time setup**
 
-1. **Import the repo** at [vercel.com/new](https://vercel.com/new) and pick this repository.
-2. **Set Root Directory = `frontend`** in *Project Settings → General*. Vercel will auto-detect Next.js from there.
-3. **Add the environment variables** below in *Project Settings → Environment Variables* (all `NEXT_PUBLIC_*`, all public — they're baked into the client bundle):
 
-   ```bash
-   NEXT_PUBLIC_CHAIN_ID=1301
-   NEXT_PUBLIC_RPC_URL=https://sepolia.unichain.org
-   NEXT_PUBLIC_HOOK_ADDRESS=0x23C3da7CF53862Fd38640100D4FB764bE2d2cac0
-   NEXT_PUBLIC_FUNDING_ADDRESS=0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1
-   NEXT_PUBLIC_POOL_ID=0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b
-   NEXT_PUBLIC_TOKEN0=0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79
-   NEXT_PUBLIC_TOKEN1=0xca3cB1b81a4332247B6ce62b89cd37d8Bc61767b
-   NEXT_PUBLIC_TOKEN0_SYMBOL=tWETH
-   NEXT_PUBLIC_TOKEN1_SYMBOL=tUSDC
-   NEXT_PUBLIC_TOKEN0_DECIMALS=18
-   NEXT_PUBLIC_TOKEN1_DECIMALS=6
-   ```
-
-4. **Deploy.** Vercel runs `npm install && next build` and serves the prerendered output. The committed `frontend/vercel.json` pins the framework + build settings to remove guesswork.
-
-**Run it locally**
-
-```bash
-cd frontend
-npm install
-cp .env.example .env.local              # then fill in the addresses above
-npm run dev                             # → http://localhost:3000
-```
-
----
 
 ## Built with
 
