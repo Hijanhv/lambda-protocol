@@ -1,6 +1,11 @@
 
 Project ID number: HK-UHI9-0872
 
+## Demo Resources
+[![Slides](https://img.shields.io/badge/Slides-View%20Presentation-blue)](https://drive.google.com/file/d/1l70RBB-kpkhAd9cIEGwsQ03ellFhz-2s/view?usp=sharing)
+
+[![Pitch](https://img.shields.io/badge/Pitch-Watch%20Video-red)](https://youtu.be/aZqSBNNoL8c?si=xtt-LHoV-IFt-UYC)
+
 
 <p align="center">
   <img src="assets/lambda-banner.svg" alt="Lambda — Yield-Protected Liquidity for Uniswap v4" width="100%">
