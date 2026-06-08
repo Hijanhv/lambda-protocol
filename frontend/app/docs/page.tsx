@@ -106,6 +106,32 @@ export default function Docs() {
             </Step>
           </section>
 
+          <section id="integrations">
+            <h2>Partner integrations — where they live in code</h2>
+            <p>
+              Each partner is a real, in-code integration, not a plan — every claim below maps to specific files you can
+              open in the repo.
+            </p>
+            <Integration name="Uniswap v4" role="the hook" files={["LambdaHook.sol", "DeltaMath.sol", "DirectionalFee.sol"]}>
+              The hook <em>is</em> a v4 hook: <code>beforeAddLiquidity</code> / <code>beforeRemoveLiquidity</code> gate the
+              vault, <code>afterSwap</code> tracks exact delta, and <code>beforeSwap</code> returns the Nezlobin
+              directional-fee override on a dynamic-fee pool. Delta math is cross-checked against v4&apos;s own{" "}
+              <code>getAmount0Delta</code>.
+            </Integration>
+            <Integration name="Reactive Network" role="the brain" files={["LambdaReactive.sol"]}>
+              A Reactive Smart Contract (<code>AbstractReactive</code>) subscribes to the hook&apos;s{" "}
+              <code>HedgeRequested</code> event on Unichain and fires a cross-chain callback (<code>AbstractCallback</code>)
+              to the hedger — no off-chain bot, with nonce-ordered replay protection on both legs.{" "}
+              <strong>Verified live</strong> on Reactive Lasna → Unichain Sepolia.
+            </Integration>
+            <Integration name="Hyperliquid" role="the hedge" files={["LambdaHedger.sol", "CoreWriterLib.sol"]}>
+              The hedger frames a real perp order and fires it through the <strong>CoreWriter precompile</strong>{" "}
+              (<code>0x3333…3333</code>, <code>sendRawAction</code>) on HyperEVM — the live precompile was verified
+              on-chain. Order bytes are framed by Lambda&apos;s own <code>CoreWriterLib</code>, which follows
+              Hyperliquid&apos;s CoreWriter action spec (not the official SDK).
+            </Integration>
+          </section>
+
           <section id="mainnet">
             <h2>Mainnet readiness: a configuration, not a rewrite</h2>
             <p>
@@ -267,6 +293,7 @@ function Toc() {
     ["problem", "The problem"],
     ["solution", "The solution"],
     ["architecture", "Architecture"],
+    ["integrations", "Partner integrations"],
     ["mainnet", "Mainnet readiness"],
     ["math", "The math"],
     ["security", "Security"],
@@ -304,6 +331,40 @@ function Callout({ children }: { children: React.ReactNode }) {
     <Card className="my-5 border-l-4 border-l-brand bg-brand/[0.05]">
       <CardContent className="py-4 pl-5 pr-4">
         <p className="prose-doc !mb-0 font-medium text-ink">{children}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Integration({
+  name,
+  role,
+  files,
+  children,
+}: {
+  name: string;
+  role: string;
+  files: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="my-4">
+      <CardContent className="p-5">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span className="font-display text-[17px] font-semibold text-ink">{name}</span>
+          <span className="font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-brand">{role}</span>
+        </div>
+        <p className="prose-doc !mb-0 mt-1.5">{children}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {files.map((f) => (
+            <code
+              key={f}
+              className="rounded border border-edge bg-secondary px-1.5 py-0.5 font-mono text-[11.5px] text-ink-soft"
+            >
+              {f}
+            </code>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
