@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Original, code-drawn crypto/yield motifs that drift behind the landing page.
- * Pure SVG + CSS — no images, no JS. Low-opacity, pointer-events-none, fixed for
+ * Pure SVG + CSS, no images, no JS. Low-opacity, pointer-events-none, fixed for
  * a gentle parallax feel, and frozen under prefers-reduced-motion.
  */
 export function BackgroundFX() {

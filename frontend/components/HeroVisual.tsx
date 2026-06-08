@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * Hero product-preview collage: floating, overlapping cards that show Lambda's
- * real loop — the LP position + delta band, the auto-hedge on Hyperliquid with a
+ * real loop: the LP position + delta band, the auto-hedge on Hyperliquid with a
  * funding sparkline, and the cross-chain route with a traveling pulse. Numbers
  * are illustrative (marked "preview"). Pure SVG + CSS, no client JS.
  */
@@ -16,7 +16,7 @@ export function HeroVisual() {
         style={{ background: "radial-gradient(closest-side, rgba(181,39,111,0.20), transparent)" }}
       />
 
-      {/* ── Card A — LP position + delta band ── */}
+      {/* Card A: LP position + delta band */}
       <Card className="absolute left-0 top-4 z-10 w-[252px] animate-floaty p-4 shadow-lift [animation-duration:7s]">
         <div className="flex items-center justify-between">
           <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
@@ -35,7 +35,7 @@ export function HeroVisual() {
         <div className="mt-2 font-sans text-[10.5px] text-faint">tracked on-chain · exact, not approximate</div>
       </Card>
 
-      {/* ── Card B — auto-hedge + funding sparkline ── */}
+      {/* Card B: auto-hedge + funding sparkline */}
       <Card className="absolute right-0 top-[60px] z-20 w-[262px] animate-floaty p-4 shadow-lift [animation-duration:9s] [animation-delay:0.6s]">
         <div className="flex items-center justify-between">
           <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
@@ -81,7 +81,7 @@ export function HeroVisual() {
         </div>
       </Card>
 
-      {/* ── Card C — cross-chain route ── */}
+      {/* Card C: cross-chain route */}
       <Card className="absolute bottom-2 left-[46px] z-10 w-[404px] animate-floaty p-4 shadow-lift [animation-duration:8s] [animation-delay:0.3s]">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] font-semibold text-brand">HedgeRequested</span>

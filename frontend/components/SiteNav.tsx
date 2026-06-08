@@ -20,7 +20,7 @@ interface Props {
 }
 
 /**
- * Shared site navigation — sticky, hairline-bordered, with active-link
+ * Shared site navigation: sticky, hairline-bordered, with active-link
  * highlighting from the route and a mobile drawer via shadcn Sheet.
  */
 export function SiteNav({ sub, links, rightSlot }: Props) {

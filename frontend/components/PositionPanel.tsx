@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 
 /**
  * Deposit and withdraw. The hook's deposit takes a liquidity amount `L`, but people think in
- * token amounts — so we quote `L` from a {currency0} amount using the fact that the position's
+ * token amounts, so we quote `L` from a {currency0} amount using the fact that the position's
  * delta is exactly linear in liquidity: `L = amount0 · poolLiquidity / currentDelta`. Both
  * values are read live from the hook, so the quote is exact. Before the pool has any liquidity
  * (nothing to quote against) we fall back to treating the input as a raw liquidity figure.
@@ -45,7 +45,7 @@ export function PositionPanel() {
   const canQuote = !!poolLiquidity && poolLiquidity > 0n && !!liveDelta && liveDelta > 0n;
   const aboveRange = !!poolLiquidity && poolLiquidity > 0n && (!liveDelta || liveDelta === 0n);
   const liquidity = canQuote ? (amount0 * poolLiquidity!) / liveDelta! : amount0;
-  const tooBig = liquidity > maxUint128; // deposit() takes uint128 — guard the encode
+  const tooBig = liquidity > maxUint128; // deposit() takes uint128; guard the encode
 
   const approve = (token: `0x${string}`) =>
     writeContract({

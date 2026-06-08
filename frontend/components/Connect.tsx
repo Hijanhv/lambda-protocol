@@ -15,13 +15,13 @@ import {
 
 /**
  * Wallet picker. wagmi discovers each installed browser wallet separately
- * (EIP-6963), so we list one option per wallet — MetaMask, Uniswap Wallet, etc.
- * — instead of blindly grabbing connectors[0]. Built on shadcn DropdownMenu so we
+ * (EIP-6963), so we list one option per wallet (MetaMask, Uniswap Wallet, etc.)
+ * instead of blindly grabbing connectors[0]. Built on shadcn DropdownMenu so we
  * inherit keyboard nav, focus management, and click-away handling from Radix.
  *
  * SSR note: wagmi reports `isConnected: false` during render-on-server (no
  * wallet there). If a wallet auto-reconnects on the client, the markup flips
- * from plain "Connect Wallet" to the address-pill variant — which has spans
+ * from plain "Connect Wallet" to the address-pill variant, which has spans
  * inside the button and triggers a React hydration mismatch. We gate on a
  * `mounted` flag so SSR + first client render always agree, then flip on
  * mount.

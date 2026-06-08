@@ -107,9 +107,9 @@ export default function Docs() {
           </section>
 
           <section id="integrations">
-            <h2>Partner integrations — where they live in code</h2>
+            <h2>Partner integrations: where they live in code</h2>
             <p>
-              Each partner is a real, in-code integration, not a plan — every claim below maps to specific files you can
+              Each partner is a real, in-code integration, not a plan. Every claim below maps to specific files you can
               open in the repo.
             </p>
             <Integration name="Uniswap v4" role="the hook" files={["LambdaHook.sol", "DeltaMath.sol", "DirectionalFee.sol"]}>
@@ -121,12 +121,12 @@ export default function Docs() {
             <Integration name="Reactive Network" role="the brain" files={["LambdaReactive.sol"]}>
               A Reactive Smart Contract (<code>AbstractReactive</code>) subscribes to the hook&apos;s{" "}
               <code>HedgeRequested</code> event on Unichain and fires a cross-chain callback (<code>AbstractCallback</code>)
-              to the hedger — no off-chain bot, with nonce-ordered replay protection on both legs.{" "}
+              to the hedger, with no off-chain bot and nonce-ordered replay protection on both legs.{" "}
               <strong>Verified live</strong> on Reactive Lasna → Unichain Sepolia.
             </Integration>
             <Integration name="Hyperliquid" role="the hedge" files={["LambdaHedger.sol", "CoreWriterLib.sol"]}>
               The hedger frames a real perp order and fires it through the <strong>CoreWriter precompile</strong>{" "}
-              (<code>0x3333…3333</code>, <code>sendRawAction</code>) on HyperEVM — the live precompile was verified
+              (<code>0x3333…3333</code>, <code>sendRawAction</code>) on HyperEVM. The live precompile was verified
               on-chain. Order bytes are framed by Lambda&apos;s own <code>CoreWriterLib</code>, which follows
               Hyperliquid&apos;s CoreWriter action spec (not the official SDK).
             </Integration>
@@ -137,12 +137,12 @@ export default function Docs() {
             <p>
               Lambda is submitted on <strong>testnet</strong>, where the live pieces run against real infrastructure: a
               real v4 hook on Unichain Sepolia and real Reactive automation on Lasna. The Hyperliquid hedge leg is
-              proven against <strong>real HyperEVM mainnet state on a fork</strong> — the real <code>LambdaHedger</code>{" "}
-              fires a correct CoreWriter order, asserted byte-for-byte — and the CoreWriter precompile itself was probed
+              proven against <strong>real HyperEVM mainnet state on a fork</strong>: the real <code>LambdaHedger</code>{" "}
+              fires a correct CoreWriter order, asserted byte-for-byte, and the CoreWriter precompile itself was probed
               live on-chain. The one limitation is external: Reactive&apos;s Lasna routes callbacks to Unichain / Base /
               Ethereum Sepolia <em>but not</em> to HyperEVM testnet; HyperEVM is a Reactive destination only on{" "}
               <strong>mainnet</strong> (chain id 999). So on testnet the cross-chain callback lands on the receiver
-              stand-in described in Step ③ — an approach the <strong>Reactive Network team confirmed directly</strong>,
+              stand-in described in Step ③, an approach the <strong>Reactive Network team confirmed directly</strong>,
               noting a setup proven on a supported testnet carries over to HyperEVM mainnet unchanged.
             </p>
 
@@ -169,14 +169,14 @@ export default function Docs() {
               The perp leg is fork-proven against real HyperEVM mainnet state <em>for free</em>, and we deliberately
               haven&apos;t paid to make it live on testnet either. A HyperEVM <em>testnet</em> order isn&apos;t actually
               free: every faucet (Chainstack, gas.zip, QuickNode) gates on a real Hyperliquid <strong>mainnet</strong>{" "}
-              deposit, so a &quot;testnet&quot; perp costs ~$5–8 of real money — and what it buys is a fill on toy
+              deposit, so a &quot;testnet&quot; perp costs ~$5-8 of real money, and what it buys is a fill on toy
               liquidity with mock USDC, a strictly weaker artifact than the byte-for-byte fork proof already in the
-              suite. The one thing it would add — that HyperCore <em>accepts</em> the order — is exactly what a mainnet
+              suite. The one thing it would add (that HyperCore <em>accepts</em> the order) is exactly what a mainnet
               fill proves for real, on real liquidity earning real funding.
             </p>
             <Callout>
               So the money is saved for the one place it proves something new: the <strong>audited mainnet deploy</strong>{" "}
-              (~$40–55, gated on a security review). Paying ~$8 for a toy-liquidity testnet fill in between would be real
+              (~$40-55, gated on a security review). Paying ~$8 for a toy-liquidity testnet fill in between would be real
               money for a weaker copy of the mainnet result.
             </Callout>
 
@@ -219,7 +219,7 @@ export default function Docs() {
             <h3>4. Why the hedge ratio is 0.65, not 1.0</h3>
             <p>A full hedge cancels the most risk, but a short can be <strong>liquidated</strong> if price spikes against it. Hane (2026) finds the sweet spot:</p>
             <Formula>{`h = 1.00  →  ~19% liquidation risk over 90 days
-h = 0.65  →  ~1.4% risk, still removes 93–97% of impermanent loss`}</Formula>
+h = 0.65  →  ~1.4% risk, still removes 93-97% of impermanent loss`}</Formula>
             <p>Lambda ships <code>h = 0.65</code>: give up a sliver of hedging to make the position dramatically safer.</p>
 
             <h3>5. The directional fee: defending the pool on-chain</h3>

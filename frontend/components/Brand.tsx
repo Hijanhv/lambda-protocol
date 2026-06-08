@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-/** The λ seal — a pine-green tile with a cream lambda. */
+/** The λ seal: a pine-green tile with a cream lambda. */
 export function Seal({ size = 36 }: { size?: number }) {
   return (
     <span

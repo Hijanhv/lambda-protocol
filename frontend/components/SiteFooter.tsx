@@ -3,7 +3,7 @@ import { Seal } from "@/components/Brand";
 
 /**
  * Editorial multi-column footer matching the landing's bordered rhythm.
- * Server component — pure markup.
+ * Server component: pure markup.
  */
 export function SiteFooter() {
   return (

@@ -31,8 +31,8 @@ export function HedgePanel() {
     [`Live LP delta (${currency0.symbol})`, fmt(delta as bigint, dec)],
     ["Hedged delta (last signal)", fmt(state?.hedgedDelta, dec)],
     ["Short target on Hyperliquid (h · Δ)", fmt(shortTarget, dec), "text-brand"],
-    ["Hedge signals sent (nonce)", state ? String(state.hedgeNonce) : "—"],
-    ["Hedge ratio h", state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "—", "text-gold"],
+    ["Hedge signals sent (nonce)", state ? String(state.hedgeNonce) : "…"],
+    ["Hedge ratio h", state ? `${(Number(state.hedgeRatioWad) / 1e16).toFixed(0)}%` : "…", "text-gold"],
     ["Directional fee, buy / sell", `${feePctFromPips(feeBuy as bigint)} / ${feePctFromPips(feeSell as bigint)}`],
   ];
 

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 /**
- * Lambda landing — built on shadcn/ui (Button, Card, Badge, Separator, Sheet)
+ * Lambda landing, built on shadcn/ui (Button, Card, Badge, Separator, Sheet)
  * themed to Lambda's cream/ink/pink palette. Editorial feel kept via serif
  * display type, full-width section rules, a status ticker and a partners
  * marquee. Structure is carried by standalone Cards (no nested frame), so
@@ -194,9 +194,9 @@ function Idea() {
             <CardContent>
               <Ledger
                 rows={[
-                  ["Trading fees", "+5–12% / yr", "text-ink"],
+                  ["Trading fees", "+5-12% / yr", "text-ink"],
                   ["LVR drag", "−11% / yr", "text-rose"],
-                  ["Funding income", "—", "text-faint"],
+                  ["Funding income", "none", "text-faint"],
                 ]}
                 foot={["Net", "often negative", "text-rose"]}
               />
@@ -211,11 +211,11 @@ function Idea() {
             <CardContent>
               <Ledger
                 rows={[
-                  ["Trading fees", "+5–12% / yr", "text-ink"],
+                  ["Trading fees", "+5-12% / yr", "text-ink"],
                   ["LVR, captured back", "+7% / yr", "text-brand"],
-                  ["Funding income", "+10–15% / yr", "text-brand"],
+                  ["Funding income", "+10-15% / yr", "text-brand"],
                 ]}
-                foot={["Net target, near-zero price risk", "≈ 18–30% / yr", "text-brand"]}
+                foot={["Net target, near-zero price risk", "≈ 18-30% / yr", "text-brand"]}
               />
             </CardContent>
           </Card>
@@ -317,7 +317,7 @@ function HowItWorks() {
         <Card className="mt-6 bg-secondary/40">
           <CardContent className="p-5">
             <p className="font-sans text-[12.5px] leading-relaxed text-muted">
-              On testnet, Reactive&apos;s Lasna can&apos;t route callbacks to HyperEVM, so legs ①–② run live and the
+              On testnet, Reactive&apos;s Lasna can&apos;t route callbacks to HyperEVM, so legs ① and ② run live and the
               Hyperliquid leg is proven separately against real HyperEVM mainnet state on a fork (the real hedger fires a
               correct CoreWriter order, asserted byte-for-byte). On mainnet they become one loop, a one-line config change
               the Reactive Network team confirmed carries over unchanged.{" "}

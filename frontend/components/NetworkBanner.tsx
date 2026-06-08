@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 /**
  * True when a wallet is connected but on a different chain than the hook lives on.
  * Reads still work (they use the fixed RPC transport, not the wallet), but any write
- * would go to the wrong chain — so action buttons gate on this and the banner prompts
+ * would go to the wrong chain, so action buttons gate on this and the banner prompts
  * a switch.
  */
 export function useWrongNetwork() {
@@ -29,7 +29,7 @@ export function NetworkBanner() {
         <div className="text-[13.5px] leading-relaxed text-ink-soft">
           <span className="font-semibold text-rose">Wrong network.</span> Your wallet is on a
           different chain. Switch to <span className="font-semibold text-ink">{hookChain.name}</span>{" "}
-          to deposit, claim, or withdraw — the dashboard readings below are already live.
+          to deposit, claim, or withdraw; the dashboard readings below are already live.
         </div>
         <Button
           size="sm"
