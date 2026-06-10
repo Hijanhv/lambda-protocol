@@ -470,7 +470,8 @@ Lambda is **deployed and running** on **Unichain Sepolia** (1301) + **Reactive L
 | `Funding` | Unichain Sepolia | `0x9e9bCdC6B6596fE31e9A013e760E6B3dB89293F1` |
 | `LambdaReactive` | Reactive Lasna | `0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79` |
 | `LambdaHedgeReceiver` | Unichain Sepolia | `0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C` |
-| tWETH / tUSDC (test pair) | Unichain Sepolia | `0x8f9D…9f79` / `0xca3c…767b` |
+| tWETH (test token) | Unichain Sepolia | `0x8f9D95aa23eb0D15FB1F17af3E5913296d519f79` |
+| tUSDC (test token) | Unichain Sepolia | `0xca3cB1b81a4332247B6ce62b89cd37d8Bc61767b` |
 | poolId | — | `0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b` |
 
 **Verified end-to-end:** a deposit + swap fire `HedgeRequested` on Unichain Sepolia; `LambdaReactive` (subscribed on Reactive Lasna) catches the event and routes a callback **back across chains, with no off-chain bot**, and the destination contract records the exact hedge the protocol computed (`targetSize = 0.65 × delta`). Anyone can verify the delivered state:
