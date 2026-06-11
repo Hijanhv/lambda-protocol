@@ -101,8 +101,8 @@ export default function Docs() {
               the resulting short earns flows back to LPs. <strong>On testnet</strong>, Reactive&apos;s Lasna can&apos;t
               route callbacks to HyperEVM, so the callback lands on a <code>LambdaHedgeReceiver</code> stand-in instead,
               with the <em>same</em> authorization and monotonic-nonce rules as the real hedger; only the CoreWriter
-              order itself is omitted. Promotion to mainnet is a one-line config change (see{" "}
-              <a href="#mainnet" className="text-brand underline-offset-2 hover:underline">Mainnet readiness</a>).
+              order itself is omitted. Promotion to mainnet follows the checklist in{" "}
+              <a href="#mainnet" className="text-brand underline-offset-2 hover:underline">Mainnet readiness</a>.
             </Step>
           </section>
 
@@ -147,9 +147,10 @@ export default function Docs() {
             </p>
 
             <Callout>
-              Promotion to mainnet is a <strong>one-line configuration change</strong>:{" "}
-              <code>DESTINATION_CHAIN_ID=999</code>. The Reactive leg then targets the real <code>LambdaHedger</code> on
-              HyperEVM instead of the testnet receiver, same contracts, same code.
+              Promotion to mainnet is a <strong>documented checklist, not a rewrite</strong>. The Reactive leg points at HyperEVM
+              mainnet (<code>DESTINATION_CHAIN_ID=999</code>); the pool is configured with <code>invertedPair=true</code> for
+              USDC/WETH (USDC sorts below WETH), the calibrated price scales (<code>szScaleWad=1e8</code>,{" "}
+              <code>pxScaleWad=1e20</code>), and the hedger is seeded via <code>fundMargin()</code>. Same contracts, same code.
             </Callout>
 
             <p>The mainnet rails Lambda will use are already live and were probed directly on-chain:</p>
