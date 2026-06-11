@@ -33,6 +33,10 @@ Project ID number: HK-UHI9-0872
 </p>
 ---
 
+> ✅ **Live on Unichain Sepolia + Reactive Lasna right now** — verify the cross-chain hedge yourself in 30 seconds: `cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C "hedge(bytes32)((uint64,uint64,uint256,uint160))" 0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b --rpc-url https://sepolia.unichain.org`
+
+---
+
 ## The 30-second version
 
 If you put money into a normal Uniswap pool, you slowly lose value to professional traders. It's not a bug or a hack — it's built into how automated market makers work, and it's been measured: for an ETH pool it's roughly **11% a year**, bleeding away in the background.
@@ -48,6 +52,7 @@ That's the whole idea. The rest of this README explains it properly — first in
 ## Table of contents
 
 - [Verification at a glance](#verification-at-a-glance)
+- [Key Numbers](#key-numbers)
 - [The problem: why liquidity providers lose money](#the-problem-why-liquidity-providers-lose-money)
 - [The solution: the loss is also an income stream](#the-solution-the-loss-is-also-an-income-stream)
 - [How Lambda works (architecture)](#how-lambda-works-architecture)
@@ -84,6 +89,21 @@ Everything here is checkable from this repo — nothing is taken on faith:
 - **CI on every push.** GitHub Actions runs `forge build --sizes` + the full suite on each push and PR ([`.github/workflows/test.yml`](./.github/workflows/test.yml)).
 - **Mainnet is a config flip, vendor-confirmed.** The only un-routable hop is Reactive → HyperEVM *testnet*; the Reactive Network team confirmed a setup proven on a supported testnet carries to HyperEVM mainnet unchanged — promotion is `DESTINATION_CHAIN_ID=999`, no code change ([Path to mainnet](#path-to-mainnet)).
 - **Demo-ready dashboard.** A Next.js app with live on-chain reads (no wallet needed), a wrong-network guard with one-click switch, and inline transaction status — live at [`lambda-protocol.vercel.app`](https://lambda-protocol.vercel.app).
+
+---
+
+## Key Numbers
+
+| Metric | Value |
+|---|---|
+| Foundry tests passing | **136** (129 unit/invariant + 7 live-fork) |
+| Test suites | **18** |
+| Hedge ratio (`h`) | **0.65** (Hane, 2026 — research-backed) |
+| Liquidation risk at `h = 0.65` | **~1.4%** over 90 days (vs ~19% at full hedge) |
+| LVR variance removed | **~88–97%** (scales with square of residual delta) |
+| Chains integrated | **3** — Unichain, Reactive Network, HyperEVM/Hyperliquid |
+| Contracts live on testnet | **4** — `LambdaHook`, `Funding`, `LambdaReactive`, `LambdaHedgeReceiver` |
+| Status | ✅ **Live on testnet, verified on-chain** |
 
 ---
 
@@ -268,6 +288,20 @@ For an ETH/USDC position at the default `h = 0.65`, the pieces add up roughly li
 | **Net target, price risk near zero** | often negative | **≈ +8% (conservative) → +30% (optimistic)** |
 
 The LVR and the funding income are *the same dollars with the sign flipped* — the funding row is **how** the LVR drag is recaptured, not a second source on top of it (that's the whole LVR ⇋ funding identity). These are modeled figures based on historical volatility and funding rates, not a guarantee — funding rates vary, and markets do what they want. The point is the *structure*: a position designed to earn whether the market goes up, down, or sideways. The full model — every assumption, the downside when funding turns negative, and code-backed numbers reproduced from the same `DeltaMath` the contracts use — is in **[CALIBRATION.md](CALIBRATION.md)** (`forge test --match-contract Calibration -vv`).
+
+### Revenue Model
+
+Lambda takes a configurable **protocol fee on funding income** before distributing the remainder to LPs via `funding.notifyFunding`. `Funding.sol` currently distributes 100% of notified funding to LPs (no fee parameter exists in the contract yet); the protocol fee is a planned addition, configurable at deploy time with a **proposed default of 10%**.
+
+**Worked example — $10M TVL at 10% annualized funding rate:**
+
+| Item | Amount |
+|---|---|
+| Total funding income routed to `Funding` per year | $1,000,000 |
+| Protocol fee (10%) retained before LP distribution | **$100,000 / yr** |
+| Distributed to LPs (90%) | $900,000 / yr |
+
+At $10M TVL this represents a **$100K/yr protocol revenue run-rate**, scaling linearly with TVL and funding-rate conditions. The underlying funding math — same formulas the contracts use — is reproducible via `forge test --match-contract Calibration -vv`.
 
 ---
 
