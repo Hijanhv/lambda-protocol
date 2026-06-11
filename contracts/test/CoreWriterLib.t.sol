@@ -72,4 +72,41 @@ contract CoreWriterLibTest is Test {
         assertEq(MockCoreWriter(CORE_WRITER).calls(), 1, "one action sent");
         assertEq(MockCoreWriter(CORE_WRITER).lastAction(), CoreWriterLib.encodeLimitOrder(o), "exact bytes forwarded");
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // usdClassTransfer (action 7)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function test_usdClassTransfer_encode_hasCorrectHeader() public pure {
+        CoreWriterLib.UsdClassTransfer memory t = CoreWriterLib.UsdClassTransfer({ntl: 5_000_000, toPerp: true});
+        bytes memory data = CoreWriterLib.encodeUsdClassTransfer(t);
+        assertEq(uint8(data[0]), CoreWriterLib.ENCODING_VERSION, "version byte");
+        assertEq(uint8(data[1]), 0, "action hi");
+        assertEq(uint8(data[2]), 0, "action mid");
+        assertEq(uint8(data[3]), uint8(CoreWriterLib.ACTION_USD_CLASS_TRANSFER), "action lo == 7");
+        // Header (4 bytes) + 2-word ABI tuple (ntl: uint64, toPerp: bool)
+        assertEq(data.length, 4 + 2 * 32, "header + 2 abi words");
+    }
+
+    function test_usdClassTransfer_encode_roundTrip() public pure {
+        CoreWriterLib.UsdClassTransfer memory t = CoreWriterLib.UsdClassTransfer({ntl: 12_345_678, toPerp: false});
+        bytes memory data = CoreWriterLib.encodeUsdClassTransfer(t);
+        bytes memory body = new bytes(data.length - 4);
+        for (uint256 i = 0; i < body.length; i++) body[i] = data[i + 4];
+        (uint64 ntl, bool toPerp) = abi.decode(body, (uint64, bool));
+        assertEq(ntl, t.ntl, "ntl round-trips");
+        assertEq(toPerp, t.toPerp, "toPerp round-trips");
+    }
+
+    function test_usdClassTransfer_send_forwardsToPrecompile() public {
+        vm.etch(CORE_WRITER, address(new MockCoreWriter()).code);
+        CoreWriterLib.UsdClassTransfer memory t = CoreWriterLib.UsdClassTransfer({ntl: 1_000_000, toPerp: true});
+        CoreWriterLib.sendUsdClassTransfer(t);
+        assertEq(MockCoreWriter(CORE_WRITER).calls(), 1, "one action sent");
+        assertEq(
+            MockCoreWriter(CORE_WRITER).lastAction(),
+            CoreWriterLib.encodeUsdClassTransfer(t),
+            "exact bytes forwarded"
+        );
+    }
 }

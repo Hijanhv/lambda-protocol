@@ -47,7 +47,7 @@ contract FundingIntegrationTest is Test, Deployers {
             currency0, currency1, IHooks(hookAddr), LPFeeLibrary.DYNAMIC_FEE_FLAG, TICK_SPACING, SQRT_PRICE_1_1
         );
         pid = PoolId.unwrap(id);
-        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0);
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0, false);
 
         // Wire the funding ledger to the hook; pay funding in token1 (the USDC-like leg).
         funding = new Funding(address(this));

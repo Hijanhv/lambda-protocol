@@ -57,7 +57,7 @@ contract HedgerCalibrationTest is Test {
     function setUp() public {
         // callbackSender = owner = this test ⇒ authorized to drive applyHedge + configure.
         hedger = new LambdaHedger(address(this), address(this));
-        hedger.configureMarket(POOL, ASSET, SZ_SCALE_WAD, PX_SCALE_WAD, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
+        hedger.configureMarket(POOL, ASSET, SZ_SCALE_WAD, PX_SCALE_WAD, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
         vm.etch(CORE_WRITER, address(new MockCoreWriter()).code);
     }
 
@@ -85,10 +85,20 @@ contract HedgerCalibrationTest is Test {
         // Size: exactly 5 × 10^8, the Hyperliquid wire unit for 5 contracts.
         assertEq(sz, uint64(5 * 1e8), "sz must be human size x 1e8");
 
-        // Price: mid biased down for a taker sell, in 10^8 wire units (~3000e8 minus slippage).
-        uint64 expectedPx = uint64(FullMath.mulDiv(preSlipPx, MAX_BPS - SLIPPAGE_BPS, MAX_BPS));
-        assertEq(limitPx, expectedPx, "limitPx must match the 1e8-scaled, slippage-biased mid");
+        // Price: mid biased down for a taker sell, in 10^8 wire units (~3000e8 minus slippage),
+        // then rounded to 5 significant figures as required by Hyperliquid's CoreWriter rules.
+        uint256 rawBiasedPx = FullMath.mulDiv(preSlipPx, MAX_BPS - SLIPPAGE_BPS, MAX_BPS);
+        // Rounding to 5 sig figs shifts the value by at most one tick (~1e7 at this magnitude),
+        // so a 0.1% tolerance comfortably covers the rounding while still catching scale bugs.
+        assertApproxEqRel(uint256(limitPx), rawBiasedPx, 1e15, "limitPx ~ slippage-biased mid (0.1%)");
         assertApproxEqRel(uint256(limitPx), uint256(3000) * 1e8, 1e16, "limitPx ~ 3000e8 +/- 1%");
+        // Hyperliquid rejects prices with > 5 significant figures; verify the rounding was applied.
+        uint256 p = uint256(limitPx);
+        while (p % 10 == 0 && p > 0) p /= 10;
+        uint256 sigFigs;
+        uint256 tmp2 = p;
+        while (tmp2 > 0) { tmp2 /= 10; sigFigs++; }
+        assertLe(sigFigs, 5, "limitPx must have at most 5 significant figures");
 
         // Framing sanity: a fresh short is a non-reduce-only taker sell on the configured asset.
         assertEq(asset, ASSET, "asset index");

@@ -40,11 +40,12 @@ contract LambdaHedger is AbstractCallback, Ownable {
     struct Market {
         bool configured;
         uint32 asset; // Hyperliquid L1 perp asset index (e.g. ETH-PERP)
-        uint256 szScaleWad; // token0 WAD amount → L1 size units (multiply, /1e18)
+        uint256 szScaleWad; // volatile-asset WAD amount → L1 size units (multiply, /1e18)
         uint256 pxScaleWad; // Uniswap mid (WAD) → L1 price units (multiply, /1e18)
+        uint8 szDecimals; // Hyperliquid szDecimals for this market (affects price precision rule)
         uint16 slippageBps; // taker price allowance, basis points
         uint8 tif; // CoreWriter time-in-force (see CoreWriterLib)
-        uint256 shortSize; // current short, token0 WAD units
+        uint256 shortSize; // current short, volatile-asset WAD units
         uint64 lastNonce; // highest hook nonce applied
     }
 
@@ -82,6 +83,15 @@ contract LambdaHedger is AbstractCallback, Ownable {
     /// @notice Cron-driven funding checkpoint (per-LP accrual lives in Funding.sol).
     event FundingCheckpoint(address indexed rvmId, uint256 timestamp);
 
+    /// @notice Owner corrected the recorded short size from real HyperCore position state.
+    event PositionReconciled(bytes32 indexed poolId, uint256 prevSize, uint256 actualSize);
+
+    /// @notice Owner moved USDC from the contract's spot balance into its perp margin account.
+    event MarginFunded(uint64 ntl);
+
+    /// @notice Owner withdrew USDC from the contract's perp margin account to spot.
+    event MarginWithdrawn(uint64 ntl);
+
     // ─────────────────────────────────────────────────────────────────────────
     // Errors
     // ─────────────────────────────────────────────────────────────────────────
@@ -89,6 +99,7 @@ contract LambdaHedger is AbstractCallback, Ownable {
     error MarketNotConfigured();
     error StaleNonce();
     error InvalidParams();
+    error PriceOverflow();
 
     // ─────────────────────────────────────────────────────────────────────────
     // Construction
@@ -105,11 +116,15 @@ contract LambdaHedger is AbstractCallback, Ownable {
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice Calibrate (or recalibrate) the perp market backing a pool's hedge.
+    /// @param szDecimals  Hyperliquid szDecimals for this market (from asset metadata).
+    ///                    Used to enforce the L1 price precision rule: limitPx must have
+    ///                    at most 5 significant figures.
     function configureMarket(
         bytes32 poolId,
         uint32 asset,
         uint256 szScaleWad,
         uint256 pxScaleWad,
+        uint8 szDecimals,
         uint16 slippageBps,
         uint8 tif
     ) external onlyOwner {
@@ -119,6 +134,7 @@ contract LambdaHedger is AbstractCallback, Ownable {
         m.asset = asset;
         m.szScaleWad = szScaleWad;
         m.pxScaleWad = pxScaleWad;
+        m.szDecimals = szDecimals;
         m.slippageBps = slippageBps;
         m.tif = tif;
         emit MarketConfigured(poolId, asset, szScaleWad, pxScaleWad, slippageBps, tif);
@@ -200,6 +216,36 @@ contract LambdaHedger is AbstractCallback, Ownable {
         emit FundingCheckpoint(rvmId, block.timestamp);
     }
 
+    /// @notice Correct the recorded short size from the real HyperCore position state.
+    ///         Because CoreWriter order results are delivered asynchronously (no EVM revert
+    ///         on failure), the contract's `shortSize` can drift from reality after partial
+    ///         fills, missed fills, or silent rejections. The owner reads the real position
+    ///         from the HyperCore position precompile off-chain and calls this to reconcile.
+    /// @param poolId      Pool whose hedge book to correct.
+    /// @param actualSize  True short size held on Hyperliquid, in volatile-asset WAD units.
+    function reconcile(bytes32 poolId, uint256 actualSize) external onlyOwner {
+        Market storage m = _markets[poolId];
+        if (!m.configured) revert MarketNotConfigured();
+        uint256 prev = m.shortSize;
+        m.shortSize = actualSize;
+        emit PositionReconciled(poolId, prev, actualSize);
+    }
+
+    /// @notice Move `ntl` USDC (in Hyperliquid native units) from this contract's spot
+    ///         balance into its Core perp margin account. Must be called after bridging USDC
+    ///         to HyperEVM — pre-funding the spot balance is not enough to open perps.
+    function fundMargin(uint64 ntl) external onlyOwner {
+        CoreWriterLib.sendUsdClassTransfer(CoreWriterLib.UsdClassTransfer({ntl: ntl, toPerp: true}));
+        emit MarginFunded(ntl);
+    }
+
+    /// @notice Move `ntl` USDC from this contract's perp margin account back to spot.
+    ///         Use to recover margin after closing positions or winding down.
+    function withdrawMargin(uint64 ntl) external onlyOwner {
+        CoreWriterLib.sendUsdClassTransfer(CoreWriterLib.UsdClassTransfer({ntl: ntl, toPerp: false}));
+        emit MarginWithdrawn(ntl);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Pricing helpers
     // ─────────────────────────────────────────────────────────────────────────
@@ -211,8 +257,11 @@ contract LambdaHedger is AbstractCallback, Ownable {
         return FullMath.mulDiv(p, 1e18, FixedPoint96.Q96);
     }
 
-    /// @dev Convert the mid to an L1 limit price and bias it for a taker fill: a sell (growing
-    ///      the short) prices below mid, a buy (reducing) prices above, by `slippageBps`.
+    /// @dev Convert the mid to an L1 limit price, bias it for a taker fill, then round to
+    ///      5 significant figures as required by Hyperliquid's CoreWriter price rules.
+    ///      Sells (growing the short) price below mid; buys (reducing) price above mid.
+    ///      Rounding direction is conservative: sells round down (accepts lower price),
+    ///      buys round up (accepts higher price), so fills remain at least as likely.
     function _limitPrice(uint160 sqrtPriceX96, uint256 pxScaleWad, uint16 slippageBps, bool isBuy)
         internal
         pure
@@ -222,13 +271,36 @@ contract LambdaHedger is AbstractCallback, Ownable {
         uint256 biased = isBuy
             ? FullMath.mulDiv(px, MAX_BPS + slippageBps, MAX_BPS)
             : FullMath.mulDiv(px, MAX_BPS - slippageBps, MAX_BPS);
-        return _toUint64(biased);
+        // Hyperliquid rejects prices with > 5 significant figures — round before submitting.
+        return _roundToFiveSigFigs(biased, isBuy);
+    }
+
+    /// @dev Round `x` to 5 significant figures. Rounds down when !roundUp (sells),
+    ///      up when roundUp (buys), matching taker-fill conservatism.
+    ///      Reverts if the result exceeds uint64 max (price out of range for this market).
+    function _roundToFiveSigFigs(uint256 x, bool roundUp) internal pure returns (uint64) {
+        if (x == 0) revert PriceOverflow();
+        uint256 div = 1;
+        uint256 tmp = x;
+        // Find the divisor that reduces x to at most 5 significant digits.
+        while (tmp >= 100_000) {
+            tmp /= 10;
+            div *= 10;
+        }
+        // Multiply before divide is intentional: (x/div)*div is a floor-to-multiple pattern,
+        // not a precision loss — the division is the rounding step, multiply restores scale.
+        // forge-lint: disable-next-line(divide-before-multiply)
+        uint256 floored = (x / div) * div;
+        if (roundUp && floored < x) floored += div;
+        if (floored > type(uint64).max) revert PriceOverflow();
+        // forge-lint: disable-next-line(unsafe-typecast)
+        return uint64(floored);
     }
 
     function _toUint64(uint256 x) internal pure returns (uint64) {
-        // Saturating cast: the ternary bounds `x` before the narrowing, so this is safe.
+        if (x > type(uint64).max) revert PriceOverflow();
         // forge-lint: disable-next-line(unsafe-typecast)
-        return x > type(uint64).max ? type(uint64).max : uint64(x);
+        return uint64(x);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

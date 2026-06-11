@@ -48,7 +48,10 @@ contract DeployUnichain is LambdaConfig {
         uint160 sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(79228162514264337593543950336))); // 1:1
         IPoolManager(poolManager()).initialize(key, sqrtPriceX96);
 
-        hook.configurePool(key, tickLower(), tickUpper(), tau(), hedgeRatioWad());
+        // invertedPair=true when deploying a USDC/WETH pool where USDC (token0) is the stable
+        // and WETH (token1) is the volatile asset. Set the env var to override.
+        bool invertedPair = vm.envOr("INVERTED_PAIR", false);
+        hook.configurePool(key, tickLower(), tickUpper(), tau(), hedgeRatioWad(), invertedPair);
 
         // Fund LPs in token1 (the numéraire leg, e.g. USDC).
         funding.registerPool(PoolId.unwrap(key.toId()), Currency.unwrap(c1));

@@ -39,7 +39,8 @@ contract LambdaHedgerTest is Test {
         // callbackSender = this test, so it is the authorized caller; owner = this test too.
         hedger = new LambdaHedger(address(this), address(this));
         // szScaleWad = 1 -> sz(L1 lots) = sizeWad / 1e18; pxScaleWad = 1e18 -> px ~ mid.
-        hedger.configureMarket(POOL, ASSET, 1, 1e18, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
+        // szDecimals = 0 for this test market (integer lots).
+        hedger.configureMarket(POOL, ASSET, 1, 1e18, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
 
         sqrtP11 = TickMath.getSqrtPriceAtTick(0); // price 1.0
     }
@@ -181,14 +182,105 @@ contract LambdaHedgerTest is Test {
     function test_configureMarket_onlyOwner() public {
         vm.prank(address(0xBEEF));
         vm.expectRevert();
-        hedger.configureMarket(POOL, ASSET, 1, 1e18, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
+        hedger.configureMarket(POOL, ASSET, 1, 1e18, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
     }
 
     function test_configureMarket_rejectsBadParams() public {
         vm.expectRevert(LambdaHedger.InvalidParams.selector);
-        hedger.configureMarket(POOL, ASSET, 0, 1e18, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC); // szScale 0
+        hedger.configureMarket(POOL, ASSET, 0, 1e18, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC); // szScale 0
         vm.expectRevert(LambdaHedger.InvalidParams.selector);
-        hedger.configureMarket(POOL, ASSET, 1, 1e18, 10_001, CoreWriterLib.TIF_IOC); // slippage > 100%
+        hedger.configureMarket(POOL, ASSET, 1, 1e18, 0, 10_001, CoreWriterLib.TIF_IOC); // slippage > 100%
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bug 3 regression: price sig figs
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @dev Verify that limitPx never has more than 5 significant figures.
+    ///      Uses a pxScaleWad that produces a deliberately "ugly" price.
+    function test_limitPrice_hasAtMostFiveSigFigs() public {
+        // pxScaleWad = 3e18 → at 1:1 sqrtPrice, mid = 1e18, px = 3e18 (just 1 sig fig — already fine).
+        // Use a scale that yields a multi-digit raw price: 3_141_592e12 WAD scale → px ≈ 3.14e18.
+        bytes32 pool2 = keccak256("FIVE_SIG_FIG_POOL");
+        hedger.configureMarket(pool2, ASSET, 1, 3_141_592_000_000_000_000, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
+        hedger.applyHedge(RVM, pool2, 1, 100e18, sqrtP11);
+
+        (,, uint64 px,,,,) = _lastOrder();
+        // Count significant figures: divide out trailing zeros, count remaining digits.
+        uint256 p = uint256(px);
+        while (p % 10 == 0 && p > 0) p /= 10;
+        uint256 sigFigs = 0;
+        uint256 tmp = p;
+        while (tmp > 0) { tmp /= 10; sigFigs++; }
+        assertLe(sigFigs, 5, "limitPx must have at most 5 significant figures");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bug 4 regression: position reconciliation
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function test_reconcile_correctsShortSize() public {
+        hedger.applyHedge(RVM, POOL, 1, 100e18, sqrtP11);
+        assertEq(hedger.shortSize(POOL), 100e18, "precondition");
+
+        // Simulate a partial fill: actual size on HyperCore is only 60e18.
+        vm.expectEmit(true, false, false, true, address(hedger));
+        emit LambdaHedger.PositionReconciled(POOL, 100e18, 60e18);
+        hedger.reconcile(POOL, 60e18);
+
+        assertEq(hedger.shortSize(POOL), 60e18, "shortSize corrected");
+    }
+
+    function test_reconcile_revertsForUnconfiguredMarket() public {
+        vm.expectRevert(LambdaHedger.MarketNotConfigured.selector);
+        hedger.reconcile(keccak256("UNCONFIGURED"), 0);
+    }
+
+    function test_reconcile_onlyOwner() public {
+        vm.prank(address(0xBADBAD));
+        vm.expectRevert();
+        hedger.reconcile(POOL, 0);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bug 5 regression: margin transfer
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function test_fundMargin_sendsCorrectAction() public {
+        vm.expectEmit(false, false, false, true, address(hedger));
+        emit LambdaHedger.MarginFunded(5_000_000); // 5 USDC in 1e6 units
+        hedger.fundMargin(5_000_000);
+
+        bytes memory sent = MockCoreWriter(CORE_WRITER).lastAction();
+        // Header: version=1, action=7
+        assertEq(uint8(sent[0]), 1, "version byte");
+        assertEq(uint8(sent[1]), 0, "action hi");
+        assertEq(uint8(sent[2]), 0, "action mid");
+        assertEq(uint8(sent[3]), 7, "action lo == 7 (usdClassTransfer)");
+        // Decode body: (uint64 ntl, bool toPerp)
+        bytes memory body = new bytes(sent.length - 4);
+        for (uint256 i = 0; i < body.length; i++) body[i] = sent[i + 4];
+        (uint64 ntl, bool toPerp) = abi.decode(body, (uint64, bool));
+        assertEq(ntl, 5_000_000, "ntl");
+        assertTrue(toPerp, "toPerp=true for fundMargin");
+    }
+
+    function test_withdrawMargin_sendsCorrectAction() public {
+        hedger.withdrawMargin(2_000_000);
+        bytes memory sent = MockCoreWriter(CORE_WRITER).lastAction();
+        bytes memory body = new bytes(sent.length - 4);
+        for (uint256 i = 0; i < body.length; i++) body[i] = sent[i + 4];
+        (, bool toPerp) = abi.decode(body, (uint64, bool));
+        assertFalse(toPerp, "toPerp=false for withdrawMargin");
+    }
+
+    function test_marginFunctions_onlyOwner() public {
+        vm.prank(address(0xBADBAD));
+        vm.expectRevert();
+        hedger.fundMargin(1);
+        vm.prank(address(0xBADBAD));
+        vm.expectRevert();
+        hedger.withdrawMargin(1);
     }
 
     function test_checkpointFunding_emitsAndIsGated() public {

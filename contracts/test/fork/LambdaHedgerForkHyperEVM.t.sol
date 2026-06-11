@@ -71,7 +71,7 @@ contract LambdaHedgerForkHyperEVM is Test {
         // callbackSender = this test ⇒ authorized to drive applyHedge; owner = this test.
         hedger = new LambdaHedger(address(this), address(this));
         // szScaleWad = 1 ⇒ sz(L1 lots) = sizeWad/1e18; pxScaleWad = 1e18 ⇒ px ≈ mid.
-        hedger.configureMarket(POOL, ASSET, 1, 1e18, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
+        hedger.configureMarket(POOL, ASSET, 1, 1e18, 0, SLIPPAGE_BPS, CoreWriterLib.TIF_IOC);
 
         sqrtP11 = TickMath.getSqrtPriceAtTick(0);
     }

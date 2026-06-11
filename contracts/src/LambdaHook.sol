@@ -68,14 +68,17 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     /// @notice Per-pool vault + hedge state.
     struct PoolState {
         bool initialized; // configurePool has run for this pool
+        bool invertedPair; // true when token1 is the volatile asset (e.g. USDC/WETH mainnet)
         int24 tickLower; // managed position range (multiples of tickSpacing)
         int24 tickUpper;
         uint128 liquidity; // total managed liquidity owned by the vault
         uint256 totalShares; // LP shares outstanding against `liquidity`
         uint256 hedgeRatioWad; // h ∈ (0, 1e18]; default 0.65e18
-        uint256 tau; // re-hedge band in token0 units (see DeltaMath.tauOptimal)
+        uint256 tau; // re-hedge band in volatile-asset units (see DeltaMath.tauOptimal)
         uint256 hedgedDelta; // raw LP delta at the most recent HedgeRequested
         uint64 hedgeNonce; // strictly increasing per-pool signal counter
+        uint256 pendingFees0; // trading fees (token0) held here, not yet distributed to LPs
+        uint256 pendingFees1; // trading fees (token1) held here, not yet distributed to LPs
     }
 
     /// @notice Per-pool directional-fee state (Nezlobin LVR defense; see {DirectionalFee}).
@@ -162,6 +165,13 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         PoolId indexed id, address indexed from, uint128 liquidity, uint256 shares, uint256 amount0, uint256 amount1
     );
 
+    /// @notice Trading fees collected from a position modification, held in this contract
+    ///         pending pro-rata distribution via {collectFees}.
+    event FeesAccrued(PoolId indexed id, uint256 fees0, uint256 fees1);
+
+    /// @notice Accumulated fees swept to `recipient` by the owner.
+    event FeesCollected(PoolId indexed id, address indexed recipient, uint256 fees0, uint256 fees1);
+
     /// @notice The cross-chain hedge trigger. Consumed in `nonce` order by the Reactive SC.
     /// @param id          Pool whose hedge must change.
     /// @param nonce       Strictly increasing per-pool counter (replay protection).
@@ -194,6 +204,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     error NotDynamicFee();
     error InvalidFeeParams();
     error HookNotImplemented();
+    error NoPendingFees();
 
     // ─────────────────────────────────────────────────────────────────────────
     // Construction
@@ -253,12 +264,18 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     /// @param key            The pool to manage (must be a dynamic-fee pool).
     /// @param tickLower      Lower bound of the vault's single position.
     /// @param tickUpper      Upper bound of the vault's single position.
-    /// @param tau            Initial re-hedge band in token0 units (see {DeltaMath.tauOptimal}).
+    /// @param tau            Initial re-hedge band in volatile-asset units (see {DeltaMath.tauOptimal}).
     /// @param hedgeRatioWad  Hedge ratio h in WAD; 0 selects {DEFAULT_HEDGE_RATIO}.
-    function configurePool(PoolKey calldata key, int24 tickLower, int24 tickUpper, uint256 tau, uint256 hedgeRatioWad)
-        external
-        onlyOwner
-    {
+    /// @param invertedPair   Set true when token1 is the volatile asset (e.g. USDC/WETH on mainnet
+    ///                       where USDC sorts below WETH). Delta is then computed in token1 units.
+    function configurePool(
+        PoolKey calldata key,
+        int24 tickLower,
+        int24 tickUpper,
+        uint256 tau,
+        uint256 hedgeRatioWad,
+        bool invertedPair
+    ) external onlyOwner {
         PoolId id = key.toId();
         PoolState storage ps = _pools[id];
         if (ps.initialized) revert PoolAlreadyConfigured();
@@ -270,6 +287,7 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         if (hedgeRatioWad > DeltaMath.WAD) revert InvalidHedgeRatio();
 
         ps.initialized = true;
+        ps.invertedPair = invertedPair;
         ps.tickLower = tickLower;
         ps.tickUpper = tickUpper;
         ps.tau = tau;
@@ -329,6 +347,34 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         f.emaWeightBps = emaWeightBps;
 
         emit FeeParamsUpdated(id, baseFeePips, minFeePips, maxSurchargePips, sensitivityPipsPerTick, emaWeightBps);
+    }
+
+    /// @notice Sweep accumulated trading fees (held in this contract) to `recipient`, from
+    ///         which the operator can route them to {Funding} for pro-rata LP distribution.
+    ///         Fees accrue here because the vault owns a single shared position — v4 credits
+    ///         the full accrued fee to whoever touches the position next; without this split
+    ///         a withdrawer would claim 100% of uncollected fees regardless of their share.
+    function collectFees(PoolKey calldata key, address recipient) external onlyOwner {
+        PoolId id = key.toId();
+        PoolState storage ps = _pools[id];
+        if (!ps.initialized) revert PoolNotConfigured();
+        uint256 f0 = ps.pendingFees0;
+        uint256 f1 = ps.pendingFees1;
+        if (f0 == 0 && f1 == 0) revert NoPendingFees();
+        ps.pendingFees0 = 0;
+        ps.pendingFees1 = 0;
+        if (f0 > 0) _transferOut(key.currency0, recipient, f0);
+        if (f1 > 0) _transferOut(key.currency1, recipient, f1);
+        emit FeesCollected(id, recipient, f0, f1);
+    }
+
+    /// @dev Transfer `amount` of `currency` from this contract's balance to `to`.
+    function _transferOut(Currency currency, address to, uint256 amount) internal {
+        if (currency.isAddressZero()) {
+            SafeTransferLib.safeTransferETH(to, amount);
+        } else {
+            SafeTransferLib.safeTransfer(Currency.unwrap(currency), to, amount);
+        }
     }
 
     /// @notice Retune the re-hedge band and hedge ratio without touching the range.
@@ -468,8 +514,12 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
 
         int256 signed = cb.action == Action.DEPOSIT ? int256(uint256(cb.liquidity)) : -int256(uint256(cb.liquidity));
 
-        PoolState storage ps = _pools[cb.key.toId()];
-        (BalanceDelta delta,) = poolManager.modifyLiquidity(
+        PoolId pid = cb.key.toId();
+        PoolState storage ps = _pools[pid];
+        // Capture both the net caller delta AND the fee component separately so we can
+        // route fees to the hook for pro-rata distribution rather than to the individual
+        // depositor/withdrawer (who otherwise claims 100% of pooled uncollected fees).
+        (BalanceDelta delta, BalanceDelta feesAccrued) = poolManager.modifyLiquidity(
             cb.key,
             IPoolManager.ModifyLiquidityParams({
                 tickLower: ps.tickLower, tickUpper: ps.tickUpper, liquidityDelta: signed, salt: bytes32(0)
@@ -477,23 +527,49 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
             ""
         );
 
+        // Fee components are always non-negative from modifyLiquidity.
+        uint256 fees0 = feesAccrued.amount0() > 0 ? uint256(uint128(feesAccrued.amount0())) : 0;
+        uint256 fees1 = feesAccrued.amount1() > 0 ? uint256(uint128(feesAccrued.amount1())) : 0;
+
         if (cb.action == Action.DEPOSIT) {
-            // Negative delta == amounts the vault owes the pool.
-            uint256 owed0 = uint256(uint128(-delta.amount0()));
-            uint256 owed1 = uint256(uint128(-delta.amount1()));
+            // principalDelta = callerDelta − feesAccrued. The depositor pays only their
+            // principal; fees accrued on the existing position belong to current shareholders.
+            // Use int128 subtraction to handle the edge case where large fees flip callerDelta
+            // positive (would overflow uint128 in the original one-liner).
+            int128 p0 = delta.amount0() - feesAccrued.amount0();
+            int128 p1 = delta.amount1() - feesAccrued.amount1();
+            // forge-lint: disable-next-line(unsafe-typecast)
+            uint256 owed0 = p0 < 0 ? uint256(uint128(-p0)) : 0;
+            // forge-lint: disable-next-line(unsafe-typecast)
+            uint256 owed1 = p1 < 0 ? uint256(uint128(-p1)) : 0;
             if (owed0 > cb.amount0Limit || owed1 > cb.amount1Limit) revert Slippage();
             _settle(cb.key.currency0, cb.payer, owed0);
             _settle(cb.key.currency1, cb.payer, owed1);
+            if (fees0 > 0) _take(cb.key.currency0, address(this), fees0);
+            if (fees1 > 0) _take(cb.key.currency1, address(this), fees1);
+            _accumFees(ps, pid, fees0, fees1);
             return abi.encode(owed0, owed1);
         } else {
-            // Positive delta == amounts the pool owes the vault (principal + accrued fees).
-            uint256 got0 = uint256(uint128(delta.amount0()));
-            uint256 got1 = uint256(uint128(delta.amount1()));
+            // principalDelta = callerDelta − feesAccrued. Recipient gets only their proportional
+            // principal back; fees stay in the hook for pro-rata distribution via {collectFees}.
+            uint256 got0 = delta.amount0() > 0 ? uint256(uint128(delta.amount0())) - fees0 : 0;
+            uint256 got1 = delta.amount1() > 0 ? uint256(uint128(delta.amount1())) - fees1 : 0;
             if (got0 < cb.amount0Limit || got1 < cb.amount1Limit) revert Slippage();
             _take(cb.key.currency0, cb.recipient, got0);
             _take(cb.key.currency1, cb.recipient, got1);
+            if (fees0 > 0) _take(cb.key.currency0, address(this), fees0);
+            if (fees1 > 0) _take(cb.key.currency1, address(this), fees1);
+            _accumFees(ps, pid, fees0, fees1);
             return abi.encode(got0, got1);
         }
+    }
+
+    /// @dev Add to pending fee counters and emit once if either amount is nonzero.
+    function _accumFees(PoolState storage ps, PoolId id, uint256 f0, uint256 f1) internal {
+        if (f0 == 0 && f1 == 0) return;
+        ps.pendingFees0 += f0;
+        ps.pendingFees1 += f1;
+        emit FeesAccrued(id, f0, f1);
     }
 
     /// @dev Pay `amount` of `currency` into the PoolManager on behalf of `payer`.
@@ -522,12 +598,11 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
     ///      τ from the last hedged level, emit a fresh {HedgeRequested} and reset the band.
     function _syncHedge(PoolState storage ps, PoolId id) internal {
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(id);
-        uint256 live = DeltaMath.lpDelta(
-            ps.liquidity,
-            sqrtPriceX96,
-            TickMath.getSqrtPriceAtTick(ps.tickLower),
-            TickMath.getSqrtPriceAtTick(ps.tickUpper)
-        );
+        uint160 sqrtPaX96 = TickMath.getSqrtPriceAtTick(ps.tickLower);
+        uint160 sqrtPbX96 = TickMath.getSqrtPriceAtTick(ps.tickUpper);
+        uint256 live = ps.invertedPair
+            ? DeltaMath.lpDelta1(ps.liquidity, sqrtPriceX96, sqrtPaX96, sqrtPbX96)
+            : DeltaMath.lpDelta(ps.liquidity, sqrtPriceX96, sqrtPaX96, sqrtPbX96);
 
         if (DeltaMath.shouldRehedge(ps.hedgedDelta, live, ps.tau)) {
             ps.hedgedDelta = live;
@@ -684,18 +759,18 @@ contract LambdaHook is IHooks, IUnlockCallback, Ownable, ReentrancyGuard {
         return _shares[key.toId()][account];
     }
 
-    /// @notice The position's delta at the current price, in token0 units. This is the
-    ///         quantity a full hedge would short; the live short target is `h ·` this.
+    /// @notice The position's delta at the current price, in the volatile asset's units.
+    ///         For a normal pair (invertedPair=false) this is token0; for an inverted pair
+    ///         (e.g. USDC/WETH where WETH is token1) this is token1.
     function currentDelta(PoolKey calldata key) external view returns (uint256) {
         PoolId id = key.toId();
         PoolState storage ps = _pools[id];
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(id);
-        return DeltaMath.lpDelta(
-            ps.liquidity,
-            sqrtPriceX96,
-            TickMath.getSqrtPriceAtTick(ps.tickLower),
-            TickMath.getSqrtPriceAtTick(ps.tickUpper)
-        );
+        uint160 sqrtPaX96 = TickMath.getSqrtPriceAtTick(ps.tickLower);
+        uint160 sqrtPbX96 = TickMath.getSqrtPriceAtTick(ps.tickUpper);
+        return ps.invertedPair
+            ? DeltaMath.lpDelta1(ps.liquidity, sqrtPriceX96, sqrtPaX96, sqrtPbX96)
+            : DeltaMath.lpDelta(ps.liquidity, sqrtPriceX96, sqrtPaX96, sqrtPbX96);
     }
 
     /// @notice Directional-fee state (params + live reference tick) for a pool.

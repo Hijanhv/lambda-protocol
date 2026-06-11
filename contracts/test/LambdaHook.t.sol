@@ -71,7 +71,7 @@ contract LambdaHookTest is Test, Deployers {
     // ─────────────────────────────────────────────────────────────────────────
 
     function _configure(uint256 tau) internal {
-        hook.configurePool(key, TICK_LOWER, TICK_UPPER, tau, 0); // 0 ⇒ default h = 0.65
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, tau, 0, false); // 0 ⇒ default h = 0.65
     }
 
     /// @dev The position's delta at the current pool price, computed independently of the hook.
@@ -283,7 +283,7 @@ contract LambdaHookTest is Test, Deployers {
     function test_configurePool_onlyOwner() public {
         vm.prank(address(0xBEEF));
         vm.expectRevert();
-        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0);
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0, false);
     }
 
     function test_configurePool_rejectsDoubleConfigure() public {
@@ -294,12 +294,67 @@ contract LambdaHookTest is Test, Deployers {
 
     function test_configurePool_rejectsUnalignedTicks() public {
         vm.expectRevert(LambdaHook.InvalidRange.selector);
-        hook.configurePool(key, -601, 600, TAU, 0); // -601 not a multiple of tickSpacing
+        hook.configurePool(key, -601, 600, TAU, 0, false); // -601 not a multiple of tickSpacing
     }
 
     function test_configurePool_rejectsHedgeRatioAboveOne() public {
         vm.expectRevert(LambdaHook.InvalidHedgeRatio.selector);
-        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 1e18 + 1);
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 1e18 + 1, false);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bug 1 regression: fee theft prevented
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @dev Deposits, drives swaps to accrue trading fees on the position, then withdraws.
+    ///      Asserts the recipient receives only their principal (not principal + pool fees)
+    ///      and that the accumulated fees are recorded on the hook for pro-rata distribution.
+    function test_withdraw_feesStayInHookNotRecipient() public {
+        _configure(TAU);
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+
+        // Generate trading fees by making swaps that cross the position.
+        swap(key, true, -5e18, "");
+        swap(key, false, 5e18, "");
+        swap(key, true, -2e18, "");
+
+        // Record balances before withdraw.
+        uint256 bal0Before = MockERC20(Currency.unwrap(currency0)).balanceOf(address(this));
+        uint256 bal1Before = MockERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        (uint256 out0, uint256 out1) = hook.withdraw(key, DEPOSIT_LIQ, 0, 0, address(this));
+
+        uint256 received0 = MockERC20(Currency.unwrap(currency0)).balanceOf(address(this)) - bal0Before;
+        uint256 received1 = MockERC20(Currency.unwrap(currency1)).balanceOf(address(this)) - bal1Before;
+
+        // Recipient received exactly the reported amounts.
+        assertEq(received0, out0, "reported and actual token0 match");
+        assertEq(received1, out1, "reported and actual token1 match");
+
+        // Fees stayed in the hook: pendingFees > 0 on at least one side.
+        LambdaHook.PoolState memory ps = hook.poolState(key);
+        assertTrue(ps.pendingFees0 > 0 || ps.pendingFees1 > 0, "trading fees accrued in hook");
+
+        // Total received + fees in hook must not exceed what the pool actually returned
+        // (i.e. no double-counting or theft).
+        assertLe(received0 + ps.pendingFees0, DEPOSIT_LIQ * 2, "no token0 created from thin air");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bug 2 regression: invertedPair flag
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function test_configurePool_invertedPair_stored() public {
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0, true);
+        assertTrue(hook.poolState(key).invertedPair, "invertedPair persisted");
+    }
+
+    function test_currentDelta_invertedPair_nonzeroAfterDeposit() public {
+        hook.configurePool(key, TICK_LOWER, TICK_UPPER, TAU, 0, true);
+        hook.deposit(key, DEPOSIT_LIQ, type(uint256).max, type(uint256).max, address(this));
+        // With invertedPair=true, delta is in token1 units; at a 1:1 price the position
+        // holds both tokens, so the token1 delta should be > 0.
+        assertGt(hook.currentDelta(key), 0, "token1 delta non-zero for inverted pair");
     }
 
     function test_setHedgeParams_updatesBandAndRatio() public {
@@ -338,7 +393,7 @@ contract LambdaHookTest is Test, Deployers {
         });
         manager.initialize(sk, SQRT_PRICE_1_1);
         vm.expectRevert(LambdaHook.NotDynamicFee.selector);
-        hook.configurePool(sk, TICK_LOWER, TICK_UPPER, TAU, 0);
+        hook.configurePool(sk, TICK_LOWER, TICK_UPPER, TAU, 0, false);
     }
 
     function test_fee_isDirectionalAfterDrift() public {

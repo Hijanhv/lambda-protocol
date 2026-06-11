@@ -51,4 +51,34 @@ library CoreWriterLib {
     function sendLimitOrder(LimitOrder memory o) internal {
         ICoreWriter(CORE_WRITER).sendRawAction(encodeLimitOrder(o));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Action 7 — usdClassTransfer (spot ↔ perp margin)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @notice Action id for moving USDC between the contract's spot balance and its
+    ///         Core perp margin account. Pre-funding the contract's spot balance is not
+    ///         enough to open perps — the contract itself must send this action to credit
+    ///         its margin account. No EOA can do this on behalf of a contract.
+    uint24 internal constant ACTION_USD_CLASS_TRANSFER = 7;
+
+    /// @notice Parameters for a usdClassTransfer action.
+    struct UsdClassTransfer {
+        uint64 ntl; // amount in USDC notional units (Hyperliquid native scale)
+        bool toPerp; // true = spot → perp margin; false = perp margin → spot
+    }
+
+    /// @notice Frame a usdClassTransfer action: version byte, 3-byte action id, ABI-encoded tuple.
+    function encodeUsdClassTransfer(UsdClassTransfer memory t) internal pure returns (bytes memory) {
+        return abi.encodePacked(
+            ENCODING_VERSION,
+            bytes3(ACTION_USD_CLASS_TRANSFER),
+            abi.encode(t.ntl, t.toPerp)
+        );
+    }
+
+    /// @notice Build and submit a usdClassTransfer to the CoreWriter precompile in one call.
+    function sendUsdClassTransfer(UsdClassTransfer memory t) internal {
+        ICoreWriter(CORE_WRITER).sendRawAction(encodeUsdClassTransfer(t));
+    }
 }

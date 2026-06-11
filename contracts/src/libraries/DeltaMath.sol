@@ -68,6 +68,29 @@ library DeltaMath {
         return FullMath.mulDiv(numerator1, numerator2, sqrtB) / sqrtA;
     }
 
+    /// @notice Token1 (volatile asset) inventory of a concentrated-liquidity position,
+    ///         for pools where token1 is the volatile asset (e.g. USDC/WETH on mainnet where
+    ///         USDC sorts below WETH). Mirrors `SqrtPriceMath.getAmount1Delta` rounding down.
+    /// @param liquidity      Position liquidity `L`.
+    /// @param sqrtPriceX96   Current price as a Q64.96 sqrt price.
+    /// @param sqrtPriceAX96  Lower bound of the range as a Q64.96 sqrt price.
+    /// @param sqrtPriceBX96  Upper bound of the range as a Q64.96 sqrt price.
+    /// @return delta1        Amount of token1 held (token1's native units).
+    function lpDelta1(uint128 liquidity, uint160 sqrtPriceX96, uint160 sqrtPriceAX96, uint160 sqrtPriceBX96)
+        internal
+        pure
+        returns (uint256 delta1)
+    {
+        if (sqrtPriceAX96 == 0 || sqrtPriceAX96 > sqrtPriceBX96) revert InvalidRange();
+
+        // Below range: position is entirely token0, no token1 held.
+        if (sqrtPriceX96 <= sqrtPriceAX96) return 0;
+        // Above range: position is entirely token1, valued at the upper edge.
+        uint160 s = sqrtPriceX96 > sqrtPriceBX96 ? sqrtPriceBX96 : sqrtPriceX96;
+        // L * (sqrtP − sqrtPa) / Q96 — identical to SqrtPriceMath.getAmount1Delta(a, s, L, false)
+        return FullMath.mulDiv(uint256(liquidity), uint256(s) - uint256(sqrtPriceAX96), FixedPoint96.Q96);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Hedge sizing & drift
     // ─────────────────────────────────────────────────────────────────────────
