@@ -1,13 +1,13 @@
-# Technical verification — Lambda Protocol
+# Technical verification: Lambda Protocol
 
 This document records a direct cross-check of Lambda's three partner integrations against
-each chain's **authoritative source** — the vendored libraries that actually compile into the
+each chain's **authoritative source**: the vendored libraries that actually compile into the
 contracts (`lib/v4-core`, `lib/reactive-lib`) and the official Hyperliquid CoreWriter docs.
 The intent is that a judge can confirm the integrations are real and correct without taking
 anything on faith.
 
-**Status at time of writing:** `forge build` clean (no warnings), **136 tests across 18
-suites** (incl. invariant fuzzing) — 129 unit/invariant passing offline, plus 7 fork tests
+**Status at time of writing:** `forge build` clean (no warnings), **142 tests across 16
+suites** (incl. invariant fuzzing), 135 unit/invariant passing offline, plus 7 fork tests
 that exercise all three legs against their real chains' state: legs ① + ③ on a Unichain
 Sepolia fork and leg ② (the real `LambdaHedger` firing a CoreWriter short) on a HyperEVM
 mainnet fork. The fork tests self-skip when no RPC is set. `LambdaHook` 14,393 bytes
@@ -15,7 +15,7 @@ mainnet fork. The fork tests self-skip when no RPC is set. `LambdaHook` 14,393 b
 
 ---
 
-## ① Uniswap v4 — the hook
+## ① Uniswap v4: the hook
 
 ### Hook permission bits are mined into the deployed address
 
@@ -42,13 +42,13 @@ mask (14 bits)= 0x3FFF
 ```
 
 `BEFORE_SWAP_RETURNS_DELTA` / `AFTER_SWAP_RETURNS_DELTA` are **off**, and the hook returns
-`ZERO_DELTA` / `int128(0)` — v4 reverts if a hook returns a non-zero delta without those
+`ZERO_DELTA` / `int128(0)`; v4 reverts if a hook returns a non-zero delta without those
 flags, so the no-delta design is enforced, not just intended.
 
 ### The directional fee actually takes effect
 
 `beforeSwap` returns `fee | LPFeeLibrary.OVERRIDE_FEE_FLAG`. v4 only honours that override on a
-**dynamic-fee pool** — `lib/v4-core/src/libraries/Hooks.sol`:
+**dynamic-fee pool** (`lib/v4-core/src/libraries/Hooks.sol`):
 
 ```solidity
 if (key.fee.isDynamicFee()) lpFeeOverride = result.parseFee();   // else the override is ignored
@@ -63,7 +63,7 @@ if (!LPFeeLibrary.isDynamicFee(key.fee)) revert NotDynamicFee();
 Constants don't collide: `DYNAMIC_FEE_FLAG = 0x800000`, `OVERRIDE_FEE_FLAG = 0x400000`, and the
 directional fee maxes at ~23,000 pips (base 3000 + surcharge cap 20000) ≪ `MAX_LP_FEE` (1e6).
 
-`beforeSwap` is `view`, so a router/quoter simulation never reverts on a state write — the hook
+`beforeSwap` is `view`, so a router/quoter simulation never reverts on a state write. The hook
 is cleanly **router-quotable**, and `previewFee(key, zeroForOne)` returns the exact fee a swap
 would pay off-chain.
 
@@ -81,7 +81,7 @@ This is cross-checked against v4's function in `contracts/test/DeltaMath.t.sol` 
 
 ---
 
-## ② Reactive Network — the cross-chain brain
+## ② Reactive Network: the cross-chain brain
 
 Checked against `lib/reactive-lib/src/{interfaces,abstract-base}`.
 
@@ -105,25 +105,24 @@ uint160 sqrtPriceX96, uint256 timestamp)`. In the ReactVM:
 **Auth is layered.** The cross-chain payload carries an `address(0)` RVM-id placeholder the
 relayer fills in; it is **not trusted**. Authorization is (a) the callback-proxy ACL
 (`authorizedSenderOnly`) and (b) a strictly-increasing per-pool nonce re-checked on the
-destination — replays and out-of-order callbacks are dropped on both legs.
+destination; replays and out-of-order callbacks are dropped on both legs.
 
-### Mainnet readiness — confirmed by Reactive Network
+### Mainnet readiness, confirmed by Reactive Network
 
 HyperEVM testnet (998) is not a supported Reactive callback destination; only mainnet (999)
 is. Per Reactive Network's team, the supported path is to prove callbacks on any other
-supported testnet — which Lambda does on Unichain Sepolia, end-to-end. Their guidance:
-*"if the setup works, it'll definitely also work once deployed on HyperEVM mainnet."* Going
-live is therefore a configuration change only — `DESTINATION_CHAIN_ID 1301 → 999` and the
-HyperEVM callback proxy — with **no contract code change**.
+supported testnet, which Lambda does on Unichain Sepolia, end-to-end. Their guidance:
+*"if the setup works, it'll definitely also work once deployed on HyperEVM mainnet."* Promotion
+to mainnet follows a documented checklist: point the Reactive leg at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`), set `invertedPair=true` for a USDC/WETH pool, use the calibrated price scales (`szScaleWad=1e8`, `pxScaleWad=1e20`), and call `fundMargin()` to seed perp margin. No contract rewrite.
 
 ---
 
-## ③ Hyperliquid — the perp hedge (CoreWriter)
+## ③ Hyperliquid: the perp hedge (CoreWriter)
 
 Checked against the official CoreWriter spec
 ([docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/hyperevm/interacting-with-hypercore)).
 
-**Precompile:** `ICoreWriter(0x3333…3333).sendRawAction(bytes)` — verified live on-chain on
+**Precompile:** `ICoreWriter(0x3333…3333).sendRawAction(bytes)`, verified live on-chain on
 HyperEVM (not a mock).
 
 **Raw-action header:** 1 version byte + 3 action-id bytes (big-endian) + ABI-encoded args.
@@ -134,7 +133,7 @@ abi.encodePacked(ENCODING_VERSION /*0x01*/, bytes3(ACTION_LIMIT_ORDER /*1*/), ab
 // → 0x01 000001 <abi tuple>
 ```
 
-**Limit-order fields (action ID 1)** — spec vs. `CoreWriterLib.LimitOrder`:
+**Limit-order fields (action ID 1)**, spec vs. `CoreWriterLib.LimitOrder`:
 
 | # | Spec field | Spec type | Lambda field | Type | Match |
 |---|---|---|---|---|---|
@@ -150,14 +149,14 @@ abi.encodePacked(ENCODING_VERSION /*0x01*/, bytes3(ACTION_LIMIT_ORDER /*1*/), ab
 
 **Scaling.** Hyperliquid wants `limitPx` and `sz` as **`10^8 × the human value`**. Lambda
 **externalizes** this to the owner-set per-market `pxScaleWad` / `szScaleWad` in
-`LambdaHedger.configureMarket`, because the asset's `szDecimals` differs per market — genuine
+`LambdaHedger.configureMarket`, because the asset's `szDecimals` differs per market. Genuine
 per-asset calibration kept in storage, tunable without redeploying, not a hard-coded guess. The
 verified scales for a **WETH(18) / USDC(6)** pool are `szScaleWad = 1e8`, `pxScaleWad = 1e20`,
 **proven** in [`contracts/test/HedgerCalibration.t.sol`](contracts/test/HedgerCalibration.t.sol)
-— a 5-WETH short at $3000 encodes to exactly `sz = 5e8`, `limitPx ≈ 3000e8`. The byte framing is
+A 5-WETH short at $3000 encodes to exactly `sz = 5e8`, `limitPx ≈ 3000e8`. The byte framing is
 unit-tested exactly in `contracts/test/CoreWriterLib.t.sol` against a `MockCoreWriter` mirroring
 the precompile. (The fork-test placeholders `szScaleWad=1, pxScaleWad=1e18` only make the bytes
-non-zero for capture — they are **not** mainnet-correct; see the deploy runbook.)
+non-zero for capture; they are **not** mainnet-correct. See the deploy runbook.)
 
 ---
 
@@ -167,7 +166,7 @@ non-zero for capture — they are **not** mainnet-correct; see the deploy runboo
   AFTER_SWAP`, initializes the pool with `DYNAMIC_FEE` (`0x800000`), and its computed
   `HedgeRequested` topic equals `LambdaReactive.HEDGE_TOPIC0`.
 - `DeployReactive` is fully env-driven: promoting the loop to mainnet is `DESTINATION_CHAIN_ID=999`
-  + `HEDGER` = the real `LambdaHedger` — **same script, no rewrite**.
+  + `HEDGER` = the real `LambdaHedger`. **Same script, no rewrite.**
 - The reason leg ③ runs against a `LambdaHedgeReceiver` on testnet rather than the real hedger is
   purely external: Reactive's testnet does not list HyperEVM testnet (998) as a destination. This
   was **confirmed directly with the Reactive Network team**, who advised proving the callback on a
@@ -179,33 +178,33 @@ non-zero for capture — they are **not** mainnet-correct; see the deploy runboo
 
 ---
 
-## ⑤ Testing methodology — the techniques UHI teaches, applied here
+## ⑤ Testing methodology: the techniques UHI teaches, applied here
 
-UHI's *"Testing your first hook"* lesson teaches three core approaches — **unit tests**,
+UHI's *"Testing your first hook"* lesson teaches three core approaches: **unit tests**,
 **fuzzing** (with `bound()` and `vm.assume()`), and **forking inside tests**. Lambda's suite
 uses **all of them**, and then goes further with invariant suites and live cross-chain forks.
 Each is real and checkable in this repo:
 
 | Technique UHI teaches | Where Lambda applies it |
 |---|---|
-| **Unit tests** (`test_…`, happy + sad paths) | every suite — e.g. `LambdaHedger.t.sol` (auth, nonce monotonicity, open/grow/shrink/close, sub-lot no-op) |
+| **Unit tests** (`test_…`, happy + sad paths) | every suite, e.g. `LambdaHedger.t.sol` (auth, nonce monotonicity, open/grow/shrink/close, sub-lot no-op) |
 | **Fuzz with `bound()`** (clamp into a safe range) | `DirectionalFee.t.sol`, `FundingInvariant.t.sol` (fee params; share/funding amounts) |
 | **Fuzz with `vm.assume()`** (reject invalid inputs) | `DirectionalFee.t.sol` (`drift != 0`; `-drift` representable) |
-| **Forking inside tests** (`vm.createSelectFork`) | `contracts/test/fork/*` — legs ①+③ on a Unichain Sepolia fork, leg ② on a HyperEVM **mainnet** fork |
+| **Forking inside tests** (`vm.createSelectFork`) | `contracts/test/fork/*`: legs ①+③ on a Unichain Sepolia fork, leg ② on a HyperEVM **mainnet** fork |
 | **`Deployers` helper + `HookMiner`** | hook tests + deploy scripts mine the permission-bit address into the deployed contract |
 | **Gas report / verbosity** (`--gas-report`, `-vv…`) | available on demand; `beforeSwap` is `view`, so quoting/swaps stay cheap |
 
 Beyond the curriculum, Lambda adds **2 invariant suites** (Funding solvency, fee monotonicity,
 each with 256-run × thousands-of-call fuzzing) and **live-fork integration across two real
-chains in a single `forge test` run** — a step past the single-chain unit test the lesson
-covers. Totals: **136 tests / 18 suites** — 129 unit-and-invariant pass offline, 7 fork tests
+chains in a single `forge test` run, a step past the single-chain unit test the lesson
+covers. Totals: **142 tests / 16 suites**, 135 unit-and-invariant pass offline, 7 fork tests
 replay all three legs against live chain state (all 7 pass with RPCs set; they self-skip
 without).
 
 Run the UHI-style commands directly:
 
 ```bash
-forge test                                        # full suite (129 pass, 7 fork self-skip)
+forge test                                        # full suite (135 pass, 7 fork self-skip)
 forge test --mc DirectionalFee                    # one fuzzed contract (bound() + vm.assume())
 forge test --mc HedgerCalibration -vvv            # the mainnet CoreWriter wire-scale proof
 forge test --mt test_fork_endToEndHedgeLoop -vvv  # the live cross-chain loop, with traces
@@ -217,7 +216,7 @@ forge test --gas-report                           # per-function gas
 ## ⑥ What being on testnet leaves unexercised (and how Lambda covers it)
 
 Because Reactive's testnet can't reach HyperEVM (998) and a real perp needs real margin, a few
-**mainnet-only behaviours are not live on testnet**. Lambda is explicit about this — none are
+**mainnet-only behaviours are not live on testnet**. Lambda is explicit about this. None are
 faked; each is either fork-proven now or scoped as audited-mainnet hardening:
 
 | Not live on testnet | Why it can't be | How Lambda covers it today |
@@ -229,12 +228,12 @@ faked; each is either fork-proven now or scoped as audited-mainnet hardening:
 | **Perp margin** *(audit item D)* | the hedger's HyperCore account must hold USDC | pre-funded out-of-band on mainnet (≥ ~$10), documented in the deploy runbook |
 
 This boundary is a deliberate, **research-backed scoping choice**, not a gap. The design
-composes peer-reviewed work — Milionis (2022) gives the `σ²/8` loss the hedge recaptures,
+composes peer-reviewed work. Milionis (2022) gives the `σ²/8` loss the hedge recaptures,
 Chitra & Diamandis (2025) prove Hyperliquid-class venues are *easy to delta-hedge*, and Hane
 (2026) sets the liquidation-safe `h = 0.65`. Everything that can be proven without a live venue
 is proven here (byte-exact orders, exact delta, fuzzed fee/funding invariants, the live
-cross-chain loop); the parts that genuinely require a live venue are the ones — and the only
-ones — deferred to the audited mainnet deploy.
+cross-chain loop); the parts that genuinely require a live venue are the ones, and the only
+ones, deferred to the audited mainnet deploy.
 
 ---
 
@@ -244,7 +243,7 @@ ones — deferred to the audited mainnet deploy.
 forge build --sizes      # clean, no warnings; LambdaHook < 24,576 bytes
 forge test               # full unit/invariant suite (fork tests self-skip offline)
 
-# Run the loop against the LIVE contracts on a local fork — no gas, no faucet
+# Run the loop against the LIVE contracts on a local fork (no gas, no faucet)
 # (see FORK_TESTING.md): real swap → live hook emits HedgeRequested → reactive
 # routes → live receiver records it.
 export UNICHAIN_SEPOLIA_RPC=https://sepolia.unichain.org

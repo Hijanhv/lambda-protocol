@@ -1,4 +1,4 @@
-# Lambda — UHI9 submission text
+# Lambda: UHI9 submission text
 
 Form ready text describing exactly what is built and verifiable in this repo. Numbers that
 are research based projections are labelled as such. Nothing here claims a feature that is
@@ -44,7 +44,7 @@ was caught on Lasna and the callback was delivered and recorded on the destinati
 bot in the loop. Anyone can read the delivered hedge with a single `cast call`. On mainnet
 the same callback targets the real `LambdaHedger` on HyperEVM. HyperEVM is a Reactive
 destination on mainnet (999) only, which the Reactive Network team confirmed directly, so
-promotion is a one line config change (`DESTINATION_CHAIN_ID=999`) with no code change.
+promotion to mainnet follows a documented checklist: point the Reactive leg at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`), set `invertedPair=true` for a USDC/WETH pool, use the calibrated price scales (`szScaleWad=1e8`, `pxScaleWad=1e20`), and call `fundMargin()` to seed perp margin. No contract rewrite.
 
 **Uniswap v4.** `LambdaHook` is a first class v4 hook that doubles as the LP vault. It gates
 both liquidity paths so the vault is the pool's only LP, which makes the tracked delta exact;
@@ -127,12 +127,12 @@ funding on chain as a reusable v4 yield primitive.
    callbacks to HyperEVM testnet, only to mainnet, which the Reactive team confirmed. So we
    proved the hedger against real HyperEVM mainnet state on a Foundry fork: the real
    `LambdaHedger` fires a correct CoreWriter short, checked byte for byte. Promotion to a live
-   mainnet loop is a one line config change.
+   mainnet loop follows a documented checklist: point the Reactive leg at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`), use the calibrated price scales (`szScaleWad=1e8`, `pxScaleWad=1e20`), and call `fundMargin()` to seed perp margin. No contract rewrite.
 5. **Authentication on both legs.** The cross chain payload carries a placeholder that is not
    trusted. Authorization is the Reactive callback proxy allowlist plus a strictly increasing
    per pool nonce that is re checked on the destination, so replays and out of order callbacks
    are dropped on both legs.
-6. **Test rigor.** 136 Foundry tests, warning free build, run in CI on every push: 129 unit
+6. **Test rigor.** 142 Foundry tests, warning free build, run in CI on every push: 135 unit
    and invariant tests including 12 fuzz tests and 2 invariant suites, plus 7 live fork tests
    that replay all three legs against their real chains' state (legs one and three on a
    Unichain Sepolia fork against the live contracts, leg two on a HyperEVM mainnet fork). A
@@ -144,7 +144,7 @@ funding on chain as a reusable v4 yield primitive.
 Legs one and three are live on Unichain Sepolia and Reactive Lasna and verified on chain end
 to end. Leg two, the Hyperliquid perp, is fully written, unit tested, and fork proven against
 real HyperEVM mainnet state. It is not on testnet for one external reason only: Reactive's
-testnet does not route to HyperEVM testnet. Mainnet is a config flip, not a rewrite.
+testnet does not route to HyperEVM testnet. Promotion to mainnet follows a documented checklist: point the Reactive leg at HyperEVM mainnet (`DESTINATION_CHAIN_ID=999`), set `invertedPair=true` for a USDC/WETH pool, use the calibrated price scales (`szScaleWad=1e8`, `pxScaleWad=1e20`), and call `fundMargin()` to seed perp margin. No contract rewrite.
 
 ## Team
 

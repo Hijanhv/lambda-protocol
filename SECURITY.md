@@ -43,7 +43,7 @@ We'd rather name these than paper over them:
   the testnet submission.
 
 These are bounded, documented, and out of the critical path for the testnet demo
-(the hedger is implemented and unit-tested but not deployed — see the README).
+(the hedger is implemented and unit-tested but not deployed; see the README).
 
 ## Reporting a vulnerability
 

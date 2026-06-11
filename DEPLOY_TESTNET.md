@@ -1,21 +1,21 @@
-# Lambda — Testnet Deploy Runbook (UHI9 build week)
+# Lambda: Testnet Deploy Runbook (UHI9 build week)
 
 Copy-paste, in order. This is the **testnet** path (free) for build week; the mainnet
-addresses for Demo Day are noted at the bottom. Three legs, deployed in order — each later
+addresses for Demo Day are noted at the bottom. Three legs, deployed in order; each later
 leg needs an address the earlier one prints.
 
 > ⚠️ **Testnet topology constraint (confirmed 2026-05-25 via dev.reactive.network/origins-and-destinations):**
 > Reactive **Lasna** can deliver callbacks to Ethereum Sepolia, Base Sepolia, **Unichain Sepolia**,
-> and Lasna itself — but **NOT to HyperEVM testnet (998)**. HyperEVM is a Reactive destination only
+> and Lasna itself, but **NOT to HyperEVM testnet (998)**. HyperEVM is a Reactive destination only
 > on **mainnet (999)**. So the *fully auto-wired* loop (Unichain → Reactive → real CoreWriter perp)
-> is **mainnet-only**. On testnet you prove the two halves separately — see "Testnet topology" below.
+> is **mainnet-only**. On testnet you prove the two halves separately. See "Testnet topology" below.
 >
 > Confirmed: HyperEVM testnet RPC `https://rpc.hyperliquid-testnet.xyz/evm`; Unichain Sepolia (1301)
 > is a Lasna origin **and** destination, callback proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4`.
 
 ---
 
-## Testnet topology — how to demo the cross-chain hedge without mainnet
+## Testnet topology: how to demo the cross-chain hedge without mainnet
 
 Because Lasna can't reach HyperEVM 998, prove the differentiator in **two halves** on testnet:
 
@@ -32,18 +32,18 @@ destination, so `DESTINATION_CHAIN_ID=999` makes the whole loop automatic. Same 
 
 ---
 
-## 0 · Common — deployer key + faucets
+## 0 · Common: deployer key + faucets
 
 > 💰 **Fund THIS address on every chain** (UHI9 Deploy account, also the contract OWNER):
 > **`0x35d8E75295366e6A12B988084096d89233dF4e9C`**
 > Same address on Sepolia, Unichain Sepolia, Reactive Lasna, and HyperEVM testnet.
 
-**Signing — pick one.** The encrypted keystore keeps the raw key out of your shell history/env:
+**Signing (pick one).** The encrypted keystore keeps the raw key out of your shell history/env:
 
 ```bash
 export DEPLOYER=0x35d8E75295366e6A12B988084096d89233dF4e9C
 
-# Option A (recommended): keystore — import once, then use --account on every script
+# Option A (recommended): keystore; import once, then use --account on every script
 cast wallet import uhi9 --interactive          # paste key once, set a password
 #   → forge script ... --account uhi9 --sender "$DEPLOYER" --broadcast
 
@@ -65,7 +65,7 @@ Faucets (all free):
 
 ---
 
-## 1 · Test tokens (Unichain Sepolia) — gives the hook a pool to manage
+## 1 · Test tokens (Unichain Sepolia): gives the hook a pool to manage
 
 ```bash
 export UNICHAIN_RPC=https://sepolia.unichain.org
@@ -79,7 +79,7 @@ Save those two addresses.
 
 ---
 
-## 2 · Leg ① — Unichain Sepolia (the hook)
+## 2 · Leg ①: Unichain Sepolia (the hook)
 
 ```bash
 export POOL_MANAGER=0x00b036b58a818b1bc34d502d3fe730db729e62ac   # Uniswap v4 PoolManager, Unichain Sepolia (verified, docs)
@@ -101,11 +101,11 @@ Save **LambdaHook**, **Funding**, **poolId**, and the **HedgeRequested topic0**.
 
 ---
 
-## 3 · Leg ② — HyperEVM testnet (the hedger)
+## 3 · Leg ②: HyperEVM testnet (the hedger)
 
 On testnet this leg runs **standalone** (Reactive Lasna can't reach 998, so it's triggered
-directly — see "Testnet topology" above). `CALLBACK_SENDER` is the address allowed to call
-`applyHedge` — for the testnet demo, your owner/relayer EOA (on mainnet it's the `0x9299…FC4`
+directly (see "Testnet topology" above). `CALLBACK_SENDER` is the address allowed to call
+`applyHedge`. For the testnet demo, use your owner/relayer EOA (on mainnet it's the `0x9299…FC4`
 Reactive proxy).
 
 ```bash
@@ -123,10 +123,10 @@ hedger.configureMarket(poolId, assetIndex, szScaleWad, pxScaleWad, slippageBps, 
 hedger.applyHedge(...)   # owner/relayer call → real CoreWriter perp on Hyperliquid testnet
 ```
 
-> ⚠️ **Calibration scales — use the verified values, not the fork-test placeholders.** Hyperliquid's
+> ⚠️ **Calibration scales: use the verified values, not the fork-test placeholders.** Hyperliquid's
 > CoreWriter wants `limitPx` and `sz` as **10⁸ × the human value** (per its "Interacting with
 > HyperCore" docs). The fork test uses `szScaleWad=1, pxScaleWad=1e18`, which only make the order
-> bytes *non-zero* for byte-capture — they would mis-size a real order by ~10⁸×. For a real
+> bytes *non-zero* for byte-capture; they would mis-size a real order by ~10⁸×. For a real
 > **WETH(18-dec) / USDC(6-dec)** market the correct scales are:
 >
 > | param | value | why |
@@ -143,14 +143,14 @@ hedger.applyHedge(...)   # owner/relayer call → real CoreWriter perp on Hyperl
 
 ---
 
-## 4 · Leg ③ — Reactive Lasna (the brain) — wires ① → ②
+## 4 · Leg ③: Reactive Lasna (the brain), wires ① → ②
 
-On testnet the destination is **Unichain Sepolia (1301)**, not HyperEVM — Lasna can't reach 998
+On testnet the destination is **Unichain Sepolia (1301)**, not HyperEVM; Lasna can't reach 998
 (see "Testnet topology"). This proves the automatic cross-chain trigger; the destination-side
 receiver on Unichain Sepolia is `LambdaHedgeReceiver` (records the hedge + emits an event with the
 same auth/nonce rules as the real hedger, minus the CoreWriter order). The real CoreWriter call is
 shown separately on 998 in leg ②. On mainnet, set `DESTINATION_CHAIN_ID=999` and use the real
-`LambdaHedger` as `HEDGER` — no code change.
+`LambdaHedger` as `HEDGER`. No code change.
 
 First deploy the receiver on Unichain Sepolia (its `CALLBACK_SENDER` is the Lasna→Unichain-Sepolia proxy):
 ```bash
@@ -164,7 +164,7 @@ Then deploy the Reactive contract on Lasna.
 
 > ⚠️ **`forge script` can NOT deploy `LambdaReactive`.** Its constructor calls Reactive's
 > `subscribe` precompile (at `0x64`), which reverts in forge's local execution/simulation
-> (the precompile only exists on real Reactive nodes). `--skip-simulation` doesn't help —
+> (the precompile only exists on real Reactive nodes). `--skip-simulation` doesn't help;
 > forge still runs the constructor locally to collect the tx. **Deploy with `cast send --create`
 > instead**, so the constructor runs only on-chain:
 
@@ -192,9 +192,9 @@ cast send <LambdaReactive> --value 2ether --rpc-url "$REACTIVE_RPC" --account uh
 ## 5 · Post-deploy wiring (owner txs)
 
 - Fund `LambdaReactive` with **lREACT** for callback gas (Reactive requirement).
-- `funding.setFunder(operator, true)` — authorize the funding bridge/operator.
+- `funding.setFunder(operator, true)`: authorize the funding bridge/operator.
 - (Insurance, optional) `vault.setCoverer(hedgerOrOperator)`; for yield, deploy `AaveV3Venue`
-  and `vault.setVenue(venue)`. **Note:** Aave V3 is **not** on Unichain — leave the reserve
+  and `vault.setVenue(venue)`. **Note:** Aave V3 is **not** on Unichain; leave the reserve
   idle on Unichain Sepolia, or run the venue on Base. (See ideation `verified_addresses…md §7`.)
 
 ---
@@ -255,7 +255,7 @@ on HyperEVM 998 (leg ②).
 | Reactive system contract | `0x0000000000000000000000000000000000fffFfF` | Reactive (Lasna / Mainnet) |
 | CREATE2 deployer (hook miner target) | `0x4e59b44847b379578588920cA78FbF26c0B4956C` | all |
 
-## Mainnet values for Demo Day (Jun 7–9 deploy)
+## Mainnet values for Demo Day (Jun 7-9 deploy)
 
 | Leg | Chain | RPC | Key address |
 |---|---|---|---|
@@ -263,5 +263,5 @@ on HyperEVM 998 (leg ②).
 | ② | HyperEVM Mainnet (999) | https://rpc.hyperliquid.xyz/evm | callback proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4` (verified) |
 | ③ | Reactive Mainnet (1597) | https://mainnet-rpc.rnk.dev | system contract `0x…fffFfF` |
 
-Mainnet funding ≈ $40–55 (Unichain ETH + ~5 HYPE + ~10 USDC margin + ~5 REACT). The hedger
-needs **≥ $10 USDC margin** to open a real perp for the demo — judges will check hyperevmscan.
+Mainnet funding approx. $40-55 (Unichain ETH + ~5 HYPE + ~10 USDC margin + ~5 REACT). The hedger
+needs **≥ $10 USDC margin** to open a real perp for the demo; judges will check hyperevmscan.

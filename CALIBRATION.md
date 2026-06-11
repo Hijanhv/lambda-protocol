@@ -9,7 +9,7 @@ cannot drift apart.
 
 ## The model
 
-A Lambda LP holds two positions at once — the Uniswap v4 position and a perp short — plus a
+A Lambda LP holds two positions at once: the Uniswap v4 position and a perp short, plus a
 directional fee on the pool. Annualized, the net return decomposes as:
 
 ```
@@ -20,19 +20,19 @@ R_LP  =  trading_fees  +  funding_income  −  LVR  −  gamma_slippage  −  re
 |---|---|---|
 | `trading_fees` | volume × effective fee (the **directional fee** raises the fee on toxic flow) | + |
 | `funding_income` | short notional × funding rate = `h · |Δ|·P · funding_rate` | ±* |
-| `LVR` | `σ²/8` per year (Milionis et al.) — the pool always bears this | − |
-| `gamma_slippage` | `≤ |Γ|·τ²/8` per re-hedge interval — the cost of hedging discretely | − |
+| `LVR` | `σ²/8` per year (Milionis et al.), the pool always bears this | − |
+| `gamma_slippage` | `≤ |Γ|·τ²/8` per re-hedge interval, the cost of hedging discretely | − |
 | `rehedge_costs` | `C` per re-hedge, frequency minimized by the optimal band `τ*` | − |
 
 \* Funding is **usually positive** for an ETH perp short (longs pay shorts in neutral/bull
-regimes) but can turn negative in sustained bear markets — see the downside section.
+regimes) but can turn negative in sustained bear markets. See the downside section.
 
 ## Assumptions (stated, not hidden)
 
 | Input | Value used | Basis |
 |---|---|---|
-| ETH realized vol `σ` | 4–5% / day (≈ 76–95% annual) | ETH historical realized vol band |
-| ETH perp funding | 8–15% / yr | historical Hyperliquid/large-venue ETH funding |
+| ETH realized vol `σ` | 4-5% / day (approx. 76-95% annual) | ETH historical realized vol band |
+| ETH perp funding | 8-15% / yr | historical Hyperliquid/large-venue ETH funding |
 | Base pool fee | 0.30% (`base = 3000` pips) | standard ETH/USDC tier; directional fee floats around it |
 | Hedge ratio `h` | 0.65 | Hane et al. (2026), liquidation-risk-optimal |
 | Re-hedge band `τ` | `τ* ≈ (3σ²LC/P)^{1/3}` | spec §1.4 / `DeltaMath.tauOptimal` |
@@ -48,7 +48,7 @@ residual gamma slippage / interval                       ≈ 1.6e-7 ETH   (negli
 funding offset at h=0.65 (4%/day regime)                 ≈ 4.7% / yr of the 7.3% LVR
 ```
 
-So the README's "~11%/yr LVR" corresponds to ETH at roughly **5%/day** vol — squarely inside
+So the README's "~11%/yr LVR" corresponds to ETH at roughly **5%/day** vol, squarely inside
 the historical band, not a cherry-pick. The residual tracking error of discrete hedging is
 seven orders of magnitude below position size, which is why a `τ`-banded hedge is viable.
 
@@ -62,10 +62,10 @@ LVR               −11%       (σ²/8 at ~5%/day)
 funding income    +12%       (short collects funding; ≈ the LVR identity, historically a bit above)
 gamma + costs     −0.5%      (τ-banded; bounded by |Γ|τ²/8)
 ─────────────────────────
-net               ≈ +8.5%/yr  with price risk ~0 (93–97% of IL neutralized)
+net               ≈ +8.5%/yr  with price risk ~0 (93-97% of IL neutralized)
 ```
 
-The README's **18–30%/yr** is the *optimistic* end (higher fees + higher funding); this worked
+The README's **18-30%/yr** is the *optimistic* end (higher fees + higher funding); this worked
 case is the conservative middle. Both are **modeled, not promised**.
 
 ## Downside & why it's still defensible
@@ -76,7 +76,7 @@ Lambda is built so this is bounded, not catastrophic:
 1. **The directional fee is funding-independent.** It recaptures LVR at the pool regardless of
    the perp market, so the on-chain defense keeps working when funding flips.
 2. **`h = 0.65`, not 1.0.** Only 65% of delta is exposed to funding, so a negative-funding
-   drag is capped — and the same ratio keeps liquidation probability near 1.4% over 90 days.
+   drag is capped, and the same ratio keeps liquidation probability near 1.4% over 90 days.
 3. **The insurance reserve** (`InsuranceVault`) backstops liquidation gaps, earning Aave yield
    while idle so backers are paid to stand behind the tail.
 4. **`h` and `τ` are governance-tunable**, so a persistently adverse regime can be dialed down
@@ -85,4 +85,4 @@ Lambda is built so this is bounded, not catastrophic:
 Honest summary: Lambda is **strongly positive when funding is positive** (the historical norm
 for ETH), **roughly fees-minus-residual when funding is mildly negative**, and **protected
 against liquidation tails** by design. The structure earns across up, down, and sideways
-markets — it is not a bet that funding is always positive.
+markets. It is not a bet that funding is always positive.
