@@ -94,7 +94,7 @@ function Hero() {
         <div className="text-center lg:text-left">
           <Badge variant="brand" className="animate-rise">
             <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulseSoft" />
-            Uniswap Hookathon · UHI9
+            Uniswap Hookathon · UHI9 · HK-UHI9-0872
           </Badge>
 
           <h1 className="mt-6 animate-rise font-display text-[40px] font-semibold leading-[1.04] tracking-tightest text-ink [animation-delay:60ms] md:text-[60px] lg:text-[64px]">
