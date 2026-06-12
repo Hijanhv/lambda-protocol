@@ -31,7 +31,7 @@ Project ID number: HK-UHI9-0872
   The first Uniswap v4 hook that hedges every LP position on a real perpetual market <b>automatically and cross-chain</b>: Unichain → Hyperliquid, driven by Reactive Smart Contracts with <b>no off-chain bot in the loop</b>.<br>
   <sub><i>Lambda the hook catches λ before it leaves.</i></sub>
 </p>
----
+
 
 > ✅ **Live on Unichain Sepolia + Reactive Lasna right now.** Verify the cross-chain hedge yourself in 30 seconds: `cast call 0x36C7AA315e4Cd8aB7E8CADfbD5B10A3Fb03c2E0C "hedge(bytes32)((uint64,uint64,uint256,uint160))" 0x92fcee81621f08f93eb2e42cbb5e42d969459a5e41cda459b329cbbd0ec4373b --rpc-url https://sepolia.unichain.org`
 
