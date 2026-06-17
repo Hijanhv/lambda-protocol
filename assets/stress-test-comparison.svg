@@ -1,217 +1,217 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 770" width="1100" height="770" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
 
   <!-- Background -->
-  <rect width="1100" height="770" fill="#0d1117"/>
+  <rect width="1100" height="770" fill="#ffffff"/>
 
   <!-- Title -->
-  <text x="550" y="36" fill="#e6edf3" font-size="16" font-weight="700" text-anchor="middle">Protecting LP Capital Under Real Market Stress</text>
-  <text x="550" y="55" fill="#6e7681" font-size="11.5" text-anchor="middle">Two approaches that break — and one that holds</text>
-  <line x1="30" y1="66" x2="1070" y2="66" stroke="#21262d" stroke-width="1"/>
+  <text x="550" y="36" fill="#1f2328" font-size="16" font-weight="700" text-anchor="middle">Protecting LP Capital Under Real Market Stress</text>
+  <text x="550" y="55" fill="#57606a" font-size="11.5" text-anchor="middle">Two approaches that break — and one that holds</text>
+  <line x1="30" y1="66" x2="1070" y2="66" stroke="#d0d7de" stroke-width="1"/>
 
 
   <!-- ============================================================ -->
   <!-- CARD 1: ALGEBRAIC ELIMINATION                                -->
   <!-- ============================================================ -->
-  <rect x="16" y="74" width="346" height="662" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <rect x="16" y="74" width="346" height="662" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
   <rect x="16" y="74" width="346" height="4" rx="2" fill="#8b5cf6"/>
 
-  <text x="189" y="104" fill="#c4b5fd" font-size="13" font-weight="700" text-anchor="middle">Approach 1</text>
-  <text x="189" y="120" fill="#9ca3af" font-size="10.5" text-anchor="middle">Algebraic Balance-Sheet Restructuring</text>
-  <line x1="30" y1="130" x2="348" y2="130" stroke="#21262d" stroke-width="1"/>
+  <text x="189" y="104" fill="#6e40c9" font-size="13" font-weight="700" text-anchor="middle">Approach 1</text>
+  <text x="189" y="120" fill="#57606a" font-size="10.5" text-anchor="middle">Algebraic Balance-Sheet Restructuring</text>
+  <line x1="30" y1="130" x2="348" y2="130" stroke="#d0d7de" stroke-width="1"/>
 
   <!-- Core idea -->
-  <rect x="26" y="138" width="326" height="70" rx="5" fill="#1c2128"/>
-  <text x="42" y="157" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
-  <text x="42" y="174" fill="#c9d1d9" font-size="11">Borrow from a lending protocol at leverage</text>
-  <text x="42" y="190" fill="#c9d1d9" font-size="11">L = 2. At that exact ratio, the LP payoff</text>
-  <text x="42" y="202" fill="#8b949e" font-size="10" font-family="monospace">linearises in price → IL term = 0</text>
+  <rect x="26" y="138" width="326" height="70" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="42" y="157" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
+  <text x="42" y="174" fill="#1f2328" font-size="11">Borrow from a lending protocol at leverage</text>
+  <text x="42" y="190" fill="#1f2328" font-size="11">L = 2. At that exact ratio, the LP payoff</text>
+  <text x="42" y="202" fill="#57606a" font-size="10" font-family="monospace">linearises in price → IL term = 0</text>
 
   <!-- Normal conditions -->
-  <text x="42" y="228" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
-  <text x="42" y="246" fill="#3fb950" font-size="13">✓</text>
-  <text x="60" y="246" fill="#8b949e" font-size="10.5">Leverage held at L = 2</text>
-  <text x="42" y="262" fill="#3fb950" font-size="13">✓</text>
-  <text x="60" y="262" fill="#8b949e" font-size="10.5">Oracle feeding accurate prices</text>
-  <text x="42" y="278" fill="#3fb950" font-size="13">✓</text>
-  <text x="60" y="278" fill="#8b949e" font-size="10.5">Lending protocol fully solvent</text>
+  <text x="42" y="228" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
+  <text x="42" y="246" fill="#1a7f37" font-size="13">✓</text>
+  <text x="60" y="246" fill="#57606a" font-size="10.5">Leverage held at L = 2</text>
+  <text x="42" y="262" fill="#1a7f37" font-size="13">✓</text>
+  <text x="60" y="262" fill="#57606a" font-size="10.5">Oracle feeding accurate prices</text>
+  <text x="42" y="278" fill="#1a7f37" font-size="13">✓</text>
+  <text x="60" y="278" fill="#57606a" font-size="10.5">Lending protocol fully solvent</text>
 
   <!-- Stress banner -->
-  <rect x="26" y="292" width="326" height="26" rx="4" fill="#271116"/>
-  <text x="42" y="309" fill="#f85149" font-size="10" font-weight="600">⚡  UNDER MARKET STRESS</text>
+  <rect x="26" y="292" width="326" height="26" rx="4" fill="#fff0ef"/>
+  <text x="42" y="309" fill="#cf222e" font-size="10" font-weight="600">⚡  UNDER MARKET STRESS</text>
 
   <!-- Failure 1 -->
-  <rect x="26" y="324" width="326" height="46" rx="5" fill="#1a1116" stroke="#3d2020" stroke-width="1"/>
-  <text x="42" y="344" fill="#e6edf3" font-size="11">Price spikes sharply</text>
-  <text x="42" y="360" fill="#7a5050" font-size="10">Leverage drifts from L = 2 → IL immediately reappears</text>
-  <text x="189" y="380" fill="#3d2020" font-size="14" text-anchor="middle">↓</text>
+  <rect x="26" y="324" width="326" height="46" rx="5" fill="#fff8f8" stroke="#ffcecb" stroke-width="1"/>
+  <text x="42" y="344" fill="#1f2328" font-size="11">Price spikes sharply</text>
+  <text x="42" y="360" fill="#cf222e" font-size="10">Leverage drifts from L = 2 → IL immediately reappears</text>
+  <text x="189" y="380" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 2 -->
-  <rect x="26" y="386" width="326" height="46" rx="5" fill="#1c1416" stroke="#4a2828" stroke-width="1"/>
-  <text x="42" y="406" fill="#e6edf3" font-size="11">Rebalancing transaction required</text>
-  <text x="42" y="422" fill="#7a5050" font-size="10">High gas + slippage during the very spike that caused drift</text>
-  <text x="189" y="442" fill="#3d2020" font-size="14" text-anchor="middle">↓</text>
+  <rect x="26" y="386" width="326" height="46" rx="5" fill="#fff5f5" stroke="#ffb8b5" stroke-width="1"/>
+  <text x="42" y="406" fill="#1f2328" font-size="11">Rebalancing transaction required</text>
+  <text x="42" y="422" fill="#cf222e" font-size="10">High gas + slippage during the very spike that caused drift</text>
+  <text x="189" y="442" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 3 -->
-  <rect x="26" y="448" width="326" height="56" rx="5" fill="#1e1618" stroke="#5a3030" stroke-width="1"/>
-  <text x="44" y="466" fill="#ffa198" font-size="12">⚠</text>
-  <text x="62" y="466" fill="#ffa198" font-size="11" font-weight="600">Two external dependencies must hold:</text>
-  <text x="44" y="484" fill="#e6edf3" font-size="10.5">1.  Oracle must be fresh and accurate</text>
-  <text x="44" y="498" fill="#e6edf3" font-size="10.5">2.  Lending protocol must remain solvent</text>
-  <text x="189" y="516" fill="#3d2020" font-size="14" text-anchor="middle">↓</text>
+  <rect x="26" y="448" width="326" height="56" rx="5" fill="#fff0ef" stroke="#ffb8b5" stroke-width="1"/>
+  <text x="44" y="466" fill="#9a3412" font-size="12">⚠</text>
+  <text x="62" y="466" fill="#9a3412" font-size="11" font-weight="600">Two external dependencies must hold:</text>
+  <text x="44" y="484" fill="#1f2328" font-size="10.5">1.  Oracle must be fresh and accurate</text>
+  <text x="44" y="498" fill="#1f2328" font-size="10.5">2.  Lending protocol must remain solvent</text>
+  <text x="189" y="516" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 4 terminal -->
-  <rect x="26" y="522" width="326" height="44" rx="5" fill="#211014" stroke="#6e1a2a" stroke-width="1"/>
-  <text x="44" y="541" fill="#f85149" font-size="12">✕</text>
-  <text x="62" y="541" fill="#ffa198" font-size="11" font-weight="600">Any single dependency fails →</text>
-  <text x="44" y="557" fill="#8a4040" font-size="10.5">IL returns immediately + liquidation risk activates</text>
+  <rect x="26" y="522" width="326" height="44" rx="5" fill="#ffebe9" stroke="#ff8182" stroke-width="1"/>
+  <text x="44" y="541" fill="#cf222e" font-size="12">✕</text>
+  <text x="62" y="541" fill="#cf222e" font-size="11" font-weight="600">Any single dependency fails →</text>
+  <text x="44" y="557" fill="#82071e" font-size="10.5">IL returns immediately + liquidation risk activates</text>
 
   <!-- Insight -->
-  <rect x="26" y="578" width="326" height="40" rx="5" fill="#14141e" stroke="#2a2a40" stroke-width="1"/>
-  <text x="42" y="595" fill="#5a6070" font-size="10">The IL was never cancelled — it was offset by</text>
-  <text x="42" y="609" fill="#5a6070" font-size="10">borrowed yield. Remove the loan and IL returns.</text>
+  <rect x="26" y="578" width="326" height="40" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="42" y="595" fill="#57606a" font-size="10">The IL was never cancelled — it was offset by</text>
+  <text x="42" y="609" fill="#57606a" font-size="10">borrowed yield. Remove the loan and IL returns.</text>
 
   <!-- Result badge -->
-  <rect x="26" y="630" width="326" height="44" rx="6" fill="#21101a" stroke="#6e1a2a" stroke-width="1.5"/>
-  <text x="189" y="648" fill="#f85149" font-size="11" font-weight="700" text-anchor="middle">✕  BREAKS UNDER STRESS</text>
-  <text x="189" y="664" fill="#6e3040" font-size="10" text-anchor="middle">Multiple external failure points</text>
+  <rect x="26" y="630" width="326" height="44" rx="6" fill="#ffebe9" stroke="#ff8182" stroke-width="1.5"/>
+  <text x="189" y="648" fill="#cf222e" font-size="11" font-weight="700" text-anchor="middle">✕  BREAKS UNDER STRESS</text>
+  <text x="189" y="664" fill="#82071e" font-size="10" text-anchor="middle">Multiple external failure points</text>
 
 
   <!-- ============================================================ -->
   <!-- CARD 2: TRANCHE REDISTRIBUTION                              -->
   <!-- ============================================================ -->
-  <rect x="378" y="74" width="346" height="662" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-  <rect x="378" y="74" width="346" height="4" rx="2" fill="#f59e0b"/>
+  <rect x="378" y="74" width="346" height="662" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+  <rect x="378" y="74" width="346" height="4" rx="2" fill="#d97706"/>
 
-  <text x="551" y="104" fill="#fcd34d" font-size="13" font-weight="700" text-anchor="middle">Approach 2</text>
-  <text x="551" y="120" fill="#9ca3af" font-size="10.5" text-anchor="middle">Tranche Subordination and IL Redistribution</text>
-  <line x1="392" y1="130" x2="710" y2="130" stroke="#21262d" stroke-width="1"/>
+  <text x="551" y="104" fill="#92400e" font-size="13" font-weight="700" text-anchor="middle">Approach 2</text>
+  <text x="551" y="120" fill="#57606a" font-size="10.5" text-anchor="middle">Tranche Subordination and IL Redistribution</text>
+  <line x1="392" y1="130" x2="710" y2="130" stroke="#d0d7de" stroke-width="1"/>
 
   <!-- Core idea -->
-  <rect x="388" y="138" width="326" height="70" rx="5" fill="#1c2128"/>
-  <text x="404" y="157" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
-  <text x="404" y="174" fill="#c9d1d9" font-size="11">Split LP capital into senior (protected,</text>
-  <text x="404" y="190" fill="#c9d1d9" font-size="11">fixed yield) and junior (absorbs IL first,</text>
-  <text x="404" y="202" fill="#8b949e" font-size="10">earns leveraged fees). IL moves — it does not cancel.</text>
+  <rect x="388" y="138" width="326" height="70" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="404" y="157" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
+  <text x="404" y="174" fill="#1f2328" font-size="11">Split LP capital into senior (protected,</text>
+  <text x="404" y="190" fill="#1f2328" font-size="11">fixed yield) and junior (absorbs IL first,</text>
+  <text x="404" y="202" fill="#57606a" font-size="10">earns leveraged fees). IL moves — it does not cancel.</text>
 
   <!-- Normal conditions -->
-  <text x="404" y="228" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
-  <text x="404" y="246" fill="#3fb950" font-size="13">✓</text>
-  <text x="422" y="246" fill="#8b949e" font-size="10.5">Junior reserve absorbs IL first</text>
-  <text x="404" y="262" fill="#3fb950" font-size="13">✓</text>
-  <text x="422" y="262" fill="#8b949e" font-size="10.5">Senior LPs earn fixed, smooth yield</text>
-  <text x="404" y="278" fill="#3fb950" font-size="13">✓</text>
-  <text x="422" y="278" fill="#8b949e" font-size="10.5">Coverage ratio above required floor</text>
+  <text x="404" y="228" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
+  <text x="404" y="246" fill="#1a7f37" font-size="13">✓</text>
+  <text x="422" y="246" fill="#57606a" font-size="10.5">Junior reserve absorbs IL first</text>
+  <text x="404" y="262" fill="#1a7f37" font-size="13">✓</text>
+  <text x="422" y="262" fill="#57606a" font-size="10.5">Senior LPs earn fixed, smooth yield</text>
+  <text x="404" y="278" fill="#1a7f37" font-size="13">✓</text>
+  <text x="422" y="278" fill="#57606a" font-size="10.5">Coverage ratio above required floor</text>
 
   <!-- Stress banner -->
-  <rect x="388" y="292" width="326" height="26" rx="4" fill="#27200a"/>
-  <text x="404" y="309" fill="#f59e0b" font-size="10" font-weight="600">⚡  UNDER SUSTAINED VOLATILITY</text>
+  <rect x="388" y="292" width="326" height="26" rx="4" fill="#fffbeb"/>
+  <text x="404" y="309" fill="#92400e" font-size="10" font-weight="600">⚡  UNDER SUSTAINED VOLATILITY</text>
 
   <!-- Failure 1 -->
-  <rect x="388" y="324" width="326" height="46" rx="5" fill="#1a1710" stroke="#3d3010" stroke-width="1"/>
-  <text x="404" y="344" fill="#e6edf3" font-size="11">Sustained volatility drives large IL</text>
-  <text x="404" y="360" fill="#7a7040" font-size="10">Junior reserve absorbs losses dollar-for-dollar</text>
-  <text x="551" y="380" fill="#3d3010" font-size="14" text-anchor="middle">↓</text>
+  <rect x="388" y="324" width="326" height="46" rx="5" fill="#fffdf5" stroke="#fde68a" stroke-width="1"/>
+  <text x="404" y="344" fill="#1f2328" font-size="11">Sustained volatility drives large IL</text>
+  <text x="404" y="360" fill="#92400e" font-size="10">Junior reserve absorbs losses dollar-for-dollar</text>
+  <text x="551" y="380" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 2 -->
-  <rect x="388" y="386" width="326" height="46" rx="5" fill="#1c1910" stroke="#4a3a10" stroke-width="1"/>
-  <text x="404" y="406" fill="#e6edf3" font-size="11">Junior APY deteriorates as losses mount</text>
-  <text x="404" y="422" fill="#7a7040" font-size="10">Junior LPs exit → coverage ratio falls</text>
-  <text x="551" y="442" fill="#3d3010" font-size="14" text-anchor="middle">↓</text>
+  <rect x="388" y="386" width="326" height="46" rx="5" fill="#fff9ec" stroke="#fcd34d" stroke-width="1"/>
+  <text x="404" y="406" fill="#1f2328" font-size="11">Junior APY deteriorates as losses mount</text>
+  <text x="404" y="422" fill="#92400e" font-size="10">Junior LPs exit → coverage ratio falls</text>
+  <text x="551" y="442" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 3 -->
-  <rect x="388" y="448" width="326" height="56" rx="5" fill="#1e1b12" stroke="#5a4218" stroke-width="1"/>
-  <text x="406" y="466" fill="#fcd34d" font-size="12">⚠</text>
-  <text x="424" y="466" fill="#fcd34d" font-size="11" font-weight="600">Coverage floor invariant triggers:</text>
-  <text x="406" y="484" fill="#e6edf3" font-size="10.5">New senior deposits blocked entirely</text>
-  <text x="406" y="498" fill="#7a7040" font-size="10">Access closes when protection is needed most</text>
-  <text x="551" y="516" fill="#3d3010" font-size="14" text-anchor="middle">↓</text>
+  <rect x="388" y="448" width="326" height="56" rx="5" fill="#fff8e1" stroke="#fcd34d" stroke-width="1"/>
+  <text x="406" y="466" fill="#78350f" font-size="12">⚠</text>
+  <text x="424" y="466" fill="#78350f" font-size="11" font-weight="600">Coverage floor invariant triggers:</text>
+  <text x="406" y="484" fill="#1f2328" font-size="10.5">New senior deposits blocked entirely</text>
+  <text x="406" y="498" fill="#92400e" font-size="10">Access closes when protection is needed most</text>
+  <text x="551" y="516" fill="#d0d7de" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Failure 4 terminal -->
-  <rect x="388" y="522" width="326" height="44" rx="5" fill="#211b10" stroke="#6e4a18" stroke-width="1"/>
-  <text x="406" y="541" fill="#f59e0b" font-size="12">✕</text>
-  <text x="424" y="541" fill="#fcd34d" font-size="11" font-weight="600">Junior reserve fully depleted →</text>
-  <text x="406" y="557" fill="#8a6a30" font-size="10.5">Senior principal consumed — both tranches lose</text>
+  <rect x="388" y="522" width="326" height="44" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="406" y="541" fill="#b45309" font-size="12">✕</text>
+  <text x="424" y="541" fill="#92400e" font-size="11" font-weight="600">Junior reserve fully depleted →</text>
+  <text x="406" y="557" fill="#78350f" font-size="10.5">Senior principal consumed — both tranches lose</text>
 
   <!-- Insight -->
-  <rect x="388" y="578" width="326" height="40" rx="5" fill="#14141e" stroke="#2a2a40" stroke-width="1"/>
-  <text x="404" y="595" fill="#5a6070" font-size="10">Total IL is unchanged. The structure is zero-sum:</text>
-  <text x="404" y="609" fill="#5a6070" font-size="10">every dollar protected for seniors is charged to juniors.</text>
+  <rect x="388" y="578" width="326" height="40" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="404" y="595" fill="#57606a" font-size="10">Total IL is unchanged. The structure is zero-sum:</text>
+  <text x="404" y="609" fill="#57606a" font-size="10">every dollar protected for seniors is charged to juniors.</text>
 
   <!-- Result badge -->
-  <rect x="388" y="630" width="326" height="44" rx="6" fill="#21190a" stroke="#6e4a10" stroke-width="1.5"/>
-  <text x="551" y="648" fill="#f59e0b" font-size="11" font-weight="700" text-anchor="middle">✕  BREAKS UNDER STRESS</text>
-  <text x="551" y="664" fill="#6e5030" font-size="10" text-anchor="middle">Protection weakens exactly when volatility is highest</text>
+  <rect x="388" y="630" width="326" height="44" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="551" y="648" fill="#92400e" font-size="11" font-weight="700" text-anchor="middle">✕  BREAKS UNDER STRESS</text>
+  <text x="551" y="664" fill="#78350f" font-size="10" text-anchor="middle">Protection weakens exactly when volatility is highest</text>
 
 
   <!-- ============================================================ -->
   <!-- CARD 3: LAMBDA                                               -->
   <!-- ============================================================ -->
-  <rect x="740" y="74" width="346" height="662" rx="8" fill="#0d1f14" stroke="#0e4428" stroke-width="1.5"/>
-  <rect x="740" y="74" width="346" height="4" rx="2" fill="#3fb950"/>
+  <rect x="740" y="74" width="346" height="662" rx="8" fill="#f0fff4" stroke="#2da44e" stroke-width="1.5"/>
+  <rect x="740" y="74" width="346" height="4" rx="2" fill="#1a7f37"/>
 
-  <text x="913" y="104" fill="#56d364" font-size="13" font-weight="700" text-anchor="middle">Lambda</text>
-  <text x="913" y="120" fill="#9ca3af" font-size="10.5" text-anchor="middle">LVR ⇋ Funding Identity: Cancel at Source</text>
-  <line x1="754" y1="130" x2="1072" y2="130" stroke="#0e4428" stroke-width="1"/>
+  <text x="913" y="104" fill="#1a7f37" font-size="13" font-weight="700" text-anchor="middle">Lambda</text>
+  <text x="913" y="120" fill="#57606a" font-size="10.5" text-anchor="middle">LVR ⇋ Funding Identity: Cancel at Source</text>
+  <line x1="754" y1="130" x2="1072" y2="130" stroke="#2da44e" stroke-width="1"/>
 
   <!-- Core idea -->
-  <rect x="750" y="138" width="326" height="70" rx="5" fill="#0d2218"/>
-  <text x="766" y="157" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
-  <text x="766" y="174" fill="#c9d1d9" font-size="11">The dollars an LP loses to arbitrageurs and</text>
-  <text x="766" y="190" fill="#c9d1d9" font-size="11">the funding a short perp collects are the same</text>
-  <text x="766" y="202" fill="#8b949e" font-size="10" font-family="monospace">quantity, opposite sign → hold both: IL = 0</text>
+  <rect x="750" y="138" width="326" height="70" rx="5" fill="#ffffff" stroke="#2da44e" stroke-width="1"/>
+  <text x="766" y="157" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">THE IDEA</text>
+  <text x="766" y="174" fill="#1f2328" font-size="11">The dollars an LP loses to arbitrageurs and</text>
+  <text x="766" y="190" fill="#1f2328" font-size="11">the funding a short perp collects are the same</text>
+  <text x="766" y="202" fill="#57606a" font-size="10" font-family="monospace">quantity, opposite sign → hold both: IL = 0</text>
 
   <!-- Normal conditions -->
-  <text x="766" y="228" fill="#6e7681" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
-  <text x="766" y="246" fill="#3fb950" font-size="13">✓</text>
-  <text x="784" y="246" fill="#8b949e" font-size="10.5">Short perp collects funding ≈ LVR lost</text>
-  <text x="766" y="262" fill="#3fb950" font-size="13">✓</text>
-  <text x="784" y="262" fill="#8b949e" font-size="10.5">No lending protocol, no oracle dependency</text>
-  <text x="766" y="278" fill="#3fb950" font-size="13">✓</text>
-  <text x="784" y="278" fill="#8b949e" font-size="10.5">No junior counterparty required</text>
+  <text x="766" y="228" fill="#57606a" font-size="9.5" font-weight="600" letter-spacing="0.8">NORMAL CONDITIONS</text>
+  <text x="766" y="246" fill="#1a7f37" font-size="13">✓</text>
+  <text x="784" y="246" fill="#57606a" font-size="10.5">Short perp collects funding ≈ LVR lost</text>
+  <text x="766" y="262" fill="#1a7f37" font-size="13">✓</text>
+  <text x="784" y="262" fill="#57606a" font-size="10.5">No lending protocol, no oracle dependency</text>
+  <text x="766" y="278" fill="#1a7f37" font-size="13">✓</text>
+  <text x="784" y="278" fill="#57606a" font-size="10.5">No junior counterparty required</text>
 
   <!-- Stress banner — green -->
-  <rect x="750" y="292" width="326" height="26" rx="4" fill="#0a2e18"/>
-  <text x="766" y="309" fill="#3fb950" font-size="10" font-weight="600">⚡  UNDER MARKET STRESS</text>
+  <rect x="750" y="292" width="326" height="26" rx="4" fill="#dcffe4"/>
+  <text x="766" y="309" fill="#1a7f37" font-size="10" font-weight="600">⚡  UNDER MARKET STRESS</text>
 
   <!-- Stable step 1 -->
-  <rect x="750" y="324" width="326" height="46" rx="5" fill="#0d2218" stroke="#0a3a20" stroke-width="1"/>
-  <text x="766" y="344" fill="#e6edf3" font-size="11">Volatility (σ²) increases sharply</text>
-  <text x="766" y="360" fill="#4a8e60" font-size="10">LVR loss rate rises — it scales with σ²</text>
-  <text x="913" y="380" fill="#1a4a28" font-size="14" text-anchor="middle">↓</text>
+  <rect x="750" y="324" width="326" height="46" rx="5" fill="#f0fff4" stroke="#abf2bc" stroke-width="1"/>
+  <text x="766" y="344" fill="#1f2328" font-size="11">Volatility (σ²) increases sharply</text>
+  <text x="766" y="360" fill="#1a7f37" font-size="10">LVR loss rate rises — it scales with σ²</text>
+  <text x="913" y="380" fill="#abf2bc" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Stable step 2 -->
-  <rect x="750" y="386" width="326" height="46" rx="5" fill="#0d2418" stroke="#0a3a20" stroke-width="1"/>
-  <text x="766" y="406" fill="#e6edf3" font-size="11">Perpetual funding rate also rises</text>
-  <text x="766" y="422" fill="#4a8e60" font-size="10">Driven by the same σ² — both sides scale together</text>
-  <text x="913" y="442" fill="#1a4a28" font-size="14" text-anchor="middle">↓</text>
+  <rect x="750" y="386" width="326" height="46" rx="5" fill="#edfcf2" stroke="#abf2bc" stroke-width="1"/>
+  <text x="766" y="406" fill="#1f2328" font-size="11">Perpetual funding rate also rises</text>
+  <text x="766" y="422" fill="#1a7f37" font-size="10">Driven by the same σ² — both sides scale together</text>
+  <text x="913" y="442" fill="#abf2bc" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Stable step 3 -->
-  <rect x="750" y="448" width="326" height="56" rx="5" fill="#0e2a1a" stroke="#0d4828" stroke-width="1"/>
-  <text x="768" y="466" fill="#56d364" font-size="13">✓</text>
-  <text x="786" y="466" fill="#56d364" font-size="11" font-weight="600">Cancellation holds at any volatility level</text>
-  <text x="768" y="484" fill="#c9d1d9" font-size="10.5">No oracle to go stale. No protocol to fail.</text>
-  <text x="768" y="498" fill="#c9d1d9" font-size="10.5">No junior reserve to deplete.</text>
-  <text x="913" y="516" fill="#1a4a28" font-size="14" text-anchor="middle">↓</text>
+  <rect x="750" y="448" width="326" height="56" rx="5" fill="#dcffe4" stroke="#2da44e" stroke-width="1"/>
+  <text x="768" y="466" fill="#1a7f37" font-size="13">✓</text>
+  <text x="786" y="466" fill="#1a7f37" font-size="11" font-weight="600">Cancellation holds at any volatility level</text>
+  <text x="768" y="484" fill="#1f2328" font-size="10.5">No oracle to go stale. No protocol to fail.</text>
+  <text x="768" y="498" fill="#1f2328" font-size="10.5">No junior reserve to deplete.</text>
+  <text x="913" y="516" fill="#abf2bc" font-size="14" text-anchor="middle">↓</text>
 
   <!-- Stable step 4 -->
-  <rect x="750" y="522" width="326" height="44" rx="5" fill="#0e2e1e" stroke="#1a5530" stroke-width="1"/>
-  <text x="768" y="541" fill="#3fb950" font-size="13">✓</text>
-  <text x="786" y="541" fill="#56d364" font-size="11" font-weight="600">More stress = more funding income</text>
-  <text x="768" y="557" fill="#4a8e60" font-size="10.5">Protection scales with the loss — automatically</text>
+  <rect x="750" y="522" width="326" height="44" rx="5" fill="#d4f5dc" stroke="#2da44e" stroke-width="1"/>
+  <text x="768" y="541" fill="#1a7f37" font-size="13">✓</text>
+  <text x="786" y="541" fill="#1a7f37" font-size="11" font-weight="600">More stress = more funding income</text>
+  <text x="768" y="557" fill="#1f2328" font-size="10.5">Protection scales with the loss — automatically</text>
 
   <!-- Insight -->
-  <rect x="750" y="578" width="326" height="40" rx="5" fill="#0a1e12" stroke="#1a3a22" stroke-width="1"/>
-  <text x="766" y="595" fill="#4a7a58" font-size="10">LVR and funding share the same mathematical root.</text>
-  <text x="766" y="609" fill="#4a7a58" font-size="10">Cancellation is structural — not constructed or borrowed.</text>
+  <rect x="750" y="578" width="326" height="40" rx="5" fill="#ffffff" stroke="#2da44e" stroke-width="1"/>
+  <text x="766" y="595" fill="#57606a" font-size="10">LVR and funding share the same mathematical root.</text>
+  <text x="766" y="609" fill="#57606a" font-size="10">Cancellation is structural — not constructed or borrowed.</text>
 
   <!-- Result badge -->
-  <rect x="750" y="630" width="326" height="44" rx="6" fill="#0d2e18" stroke="#1a6030" stroke-width="1.5"/>
-  <text x="913" y="648" fill="#3fb950" font-size="11" font-weight="700" text-anchor="middle">✓  HOLDS UNDER STRESS</text>
-  <text x="913" y="664" fill="#2a6a3a" font-size="10" text-anchor="middle">Structural cancellation — no external dependencies</text>
+  <rect x="750" y="630" width="326" height="44" rx="6" fill="#dcffe4" stroke="#2da44e" stroke-width="1.5"/>
+  <text x="913" y="648" fill="#1a7f37" font-size="11" font-weight="700" text-anchor="middle">✓  HOLDS UNDER STRESS</text>
+  <text x="913" y="664" fill="#1a7f37" font-size="10" text-anchor="middle">Structural cancellation — no external dependencies</text>
 
 
   <!-- Footer -->
-  <line x1="30" y1="746" x2="1070" y2="746" stroke="#21262d" stroke-width="1"/>
-  <text x="550" y="758" fill="#3d4450" font-size="9.5" text-anchor="middle">Lambda Protocol · LVR ⇋ Funding Identity · Milionis et al. (2022) · Hane, arXiv:2603.19716 (2026) · Voronin et al., arXiv:2604.28017 (2025)</text>
+  <line x1="30" y1="746" x2="1070" y2="746" stroke="#d0d7de" stroke-width="1"/>
+  <text x="550" y="758" fill="#8c959f" font-size="9.5" text-anchor="middle">Lambda Protocol · LVR ⇋ Funding Identity · Milionis et al. (2022) · Hane, arXiv:2603.19716 (2026) · Voronin et al., arXiv:2604.28017 (2025)</text>
 
 </svg>
