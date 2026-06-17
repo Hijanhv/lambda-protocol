@@ -529,7 +529,7 @@ LVR is widely considered the most important unsolved problem for Uniswap liquidi
 
 This is Uniswap's own most-cited open problem, raised by Uniswap's own community on Uniswap's own forum, now solved in code and live on testnet. The case for a prize is not self-reported novelty — it is the community's own documented demand, met.
 
-### <img src="assets/lambda-mark.svg" height="20" align="absmiddle"> &nbsp;Reactive Network
+### <img src="assets/reactive-wordmark.svg" height="20" align="absmiddle"> &nbsp;Reactive Network
 
 Lambda is close to a perfect demonstration of what Reactive Network is for. The protocol's entire promise (*react to an on-chain event and trigger a transaction on another chain, with no centralized bot*) is exactly the hard part of Lambda, and exactly what Reactive solves:
 
@@ -787,12 +787,12 @@ npm run dev                     # → http://localhost:3000
 The protocol's design composes the following peer-reviewed and published work:
 
 1. Milionis, Moallemi, Roughgarden, Zhang (2022). *Automated Market Making and Loss-Versus-Rebalancing.* Columbia University & Microsoft Research (ACM EC). The `σ²/8` LVR rate.
-2. Chitra, Diamandis, et al. (2025). *Perpetual Demand Lending Pools.* Formalizes venues like Hyperliquid and shows they are well-suited to delta-hedging. (arXiv:2502.06028)
-3. Hane, A. (2026). *Optimal Hedge Ratio for Delta-Neutral Liquidity Provision under Liquidation Constraints.* arXiv:2603.19716. The basis for the `h ≈ 0.65` hedge ratio.
+2. Chitra, Diamandis, et al. (2025). *Perpetual Demand Lending Pools.* Formalizes venues like Hyperliquid and shows they are well-suited to delta-hedging. ([arXiv:2502.06028](https://arxiv.org/abs/2502.06028))
+3. Hane, A. (2026). *Optimal Hedge Ratio for Delta-Neutral Liquidity Provision under Liquidation Constraints.* [arXiv:2603.19716](https://arxiv.org/abs/2603.19716). The basis for the `h ≈ 0.65` hedge ratio.
 4. Maire & Wunsch (2024). *Market Neutral Liquidity Provision.* LEDGER Journal (DOI 10.5195/LEDGER.2024.389). The market-neutral LP construction.
 5. Cartea, Drissi, Monga. *Predictable Loss and Optimal Liquidity Provision in DeFi AMMs.* Empirical evidence that vanilla LPs trade at a loss on average.
 6. BELTA Labs (2025). *RFC: IL Hedge Hook — Automated Impermanent Loss Protection for Uniswap v4 LPs.* Uniswap Governance Forum. Independent community proposal converging on the same LVR/IL problem statement and a similar v4 hook + perps hedging architecture. [gov.uniswap.org](https://gov.uniswap.org/t/rfc-il-hedge-hook-automated-impermanent-loss-protection-for-uniswap-v4-lps/26059)
-7. Voronin, Vlasov, Gorgadze, Seoev, Yanovich (2025). *Path-Independent Fees and Zero Impermanent Loss in CPMMs.* arXiv:2604.28017. Characterizes fee functions that achieve path independence and proves an impossibility theorem: no single fee function can eliminate IL for all possible initial pool states, establishing fundamental limits of algebraic/fee-only IL elimination approaches.
+7. Voronin, Vlasov, Gorgadze, Seoev, Yanovich (2025). *Path-Independent Fees and Zero Impermanent Loss in CPMMs.* [arXiv:2604.28017](https://arxiv.org/abs/2604.28017). Characterizes fee functions that achieve path independence and proves an impossibility theorem: no single fee function can eliminate IL for all possible initial pool states, establishing fundamental limits of algebraic/fee-only IL elimination approaches.
 
 ---
 
