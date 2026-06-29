@@ -14,6 +14,7 @@ Project ID number: HK-UHI9-0872
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/UHI9-2x%20Sponsor%20Prize%20Winner-eab308?style=flat-square" alt="UHI9 — winner of two sponsor prizes">
   <img src="https://img.shields.io/badge/UHI9-HK--0872-B5276F?style=flat-square" alt="UHI9 Submission">
   <img src="https://img.shields.io/badge/forge%20test-142%20passing-1f7a4d?style=flat-square" alt="142 tests passing">
   <img src="https://img.shields.io/github/actions/workflow/status/Hijanhv/lambda-protocol/test.yml?style=flat-square&label=CI" alt="CI status">
@@ -27,6 +28,27 @@ Project ID number: HK-UHI9-0872
   &nbsp;&nbsp;
   <img src="assets/sponsor-reactive.svg" alt="Powered by Reactive Network" height="74">
 </p>
+
+---
+
+<h2 align="center">🏆 UHI9 Winner — Two Sponsor Prizes</h2>
+
+<p align="center">
+  Lambda won <b>two sponsor prizes</b> at the <b>Uniswap Hook Incubator (UHI9)</b>, announced by <a href="https://x.com/AtriumAcademy">Atrium</a> — one from each of the partners it's built on:<br>
+  🦄 &nbsp;<b>Uniswap — Impermanent Loss &amp; Yield Systems</b> ($1,000) &nbsp;·&nbsp; ⚡ &nbsp;<b>Reactive Network</b> ($1,500)
+</p>
+
+<p align="center">
+  <img src="assets/award-uniswap-il-yield.png" alt="Uniswap 'Impermanent Loss & Yield Systems' winners — Lambda, at the Uniswap Hook Incubator (Uniswap Foundation × Atrium)" width="45%">
+  &nbsp;&nbsp;
+  <img src="assets/award-reactive-network.png" alt="Reactive Network winners — Lambda, at the Uniswap Hook Incubator (Reactive × Atrium)" width="45%">
+</p>
+
+<p align="center">
+  <sub>Left: Uniswap's "Impermanent Loss &amp; Yield Systems" board. Right: the Reactive Network board. Lambda is listed on both.</sub>
+</p>
+
+---
 
 <p align="center">
   <b>Lambda turns the money liquidity providers quietly lose into money they earn.</b><br>
@@ -516,6 +538,8 @@ Full methodology and the honest list of what testnet can't exercise are in [`VER
   &nbsp;&nbsp;&nbsp;
   <img src="assets/sponsor-reactive.svg" alt="Powered by Reactive Network" height="86">
 </p>
+
+> 🏆 **Both sponsors backed this work at UHI9.** Lambda won the **Uniswap "Impermanent Loss & Yield Systems"** prize ($1,000) *and* the **Reactive Network** prize ($1,500) at the Uniswap Hook Incubator — see the winner boards at the [top of this README](#-uhi9-winner--two-sponsor-prizes). The case below is the one made *before* the awards; the awards are the answer to it.
 
 ### <img src="assets/uniswap-logo.svg" height="22" align="absmiddle"> &nbsp;Uniswap
 
